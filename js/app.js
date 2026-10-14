@@ -399,16 +399,20 @@ class App {
       await store.setMeta('last', this.board.id);
     }
 
+    // The first sounds to arrive lay themselves out, so there is a board to
+    // look at. After that the board belongs to the operator: anything added
+    // waits in the tree until they put it somewhere.
+    const startedEmpty = filled(this.board).length === 0;
     this.waiting = 0;
-    const placed = this.place(added);
-    const waiting = this.waiting;
-    this.pendingHandles = null;
-    if (refs.picker.open) refs.picker.close();
+    const placed = startedEmpty ? this.place(added) : 0;
+    const waiting = startedEmpty ? this.waiting : added.length;
 
     // Places waiting to be reconnected are still this board's places: adding a
     // sound while they are disconnected must not forget them.
     const places = [...(this.pendingHandles || []), ...this.library.handles];
     if (places.length) await store.saveHandles(this.board.id, places);
+    this.pendingHandles = null;
+    if (refs.picker.open) refs.picker.close();
 
     this.redraw();
     this.saveNow();
@@ -424,8 +428,9 @@ class App {
     } else if (placed) {
       toast(`${placed} sound${placed === 1 ? '' : 's'} added to the board.`);
     } else if (waiting) {
-      toast(`${waiting} sound${waiting === 1 ? '' : 's'} added, under Sounds in edit mode.`);
-    } else if (announce) toast('Those sounds are already on the board.');
+      toast(`${waiting} sound${waiting === 1 ? '' : 's'} added, under Sounds in edit mode. `
+        + 'The board is left as it is.');
+    } else if (announce) toast('Those sounds are already loaded.');
     else if (missing) toast(`${missing} pad${missing === 1 ? '' : 's'} point at sounds that are not open.`);
     say(`${this.library.entries.size} sounds open`);
   }

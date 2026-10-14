@@ -74,8 +74,10 @@ subfolders and all, and whatever arrives joins what is already open — so a boa
 can be built from several places and added to mid-rehearsal. A sound already on
 the board is recognised and left where it is.
 
-The first ten land on the board as a sample to start from; everything else waits
-in **Sounds**, the folder's own tree, which opens beside the board in edit mode.
+On an empty board the first ten lay themselves out, so there is something to look
+at; after that the board is yours and anything added waits in **Sounds**, the
+folder's own tree, which opens beside the board in edit mode. Adding a folder
+never moves a pad you have set.
 
 While editing, a tap is a listen: a sound in the tree plays where it is, and so
 does a pad, so a cue can be checked before and after it goes on the board. The
