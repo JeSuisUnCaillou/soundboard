@@ -582,7 +582,7 @@ select.field option:checked { background: var(--warn); color: #241a07; }
   /* Two lines: the master fader, then the three buttons under it. */
   .master { flex-wrap: wrap; }
   .master__label { order: 1; }
-  .slider { order: 2; flex: 1 1 50%; }
+  .master .slider { order: 2; flex: 1 1 50%; }
   .master__value { order: 3; }
   .master::after { content: ""; order: 4; flex-basis: 100%; height: 0; }
   #btnBook { order: 5; flex: 1; }
