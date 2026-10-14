@@ -50,6 +50,7 @@ body {
   font: 400 15px/1.5 var(--sans);
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 button, input, select { font: inherit; color: inherit; }
@@ -142,6 +143,7 @@ button, input, select { font: inherit; color: inherit; }
   padding: var(--gap);
   min-height: 0;
   min-width: 0;
+  overflow: auto;
 }
 
 .grid {
@@ -149,7 +151,9 @@ button, input, select { font: inherit; color: inherit; }
   gap: var(--gap);
   height: 100%;
   grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr));
-  grid-template-rows: repeat(var(--rows, 4), minmax(0, 1fr));
+  /* A floor on the row height: a tall board on a short window scrolls rather
+     than shrinking its pads past reading. */
+  grid-template-rows: repeat(var(--rows, 4), minmax(76px, 1fr));
 }
 
 /* ───────────────────────── pads ───────────────────────── */
@@ -410,7 +414,9 @@ button, input, select { font: inherit; color: inherit; }
 .welcome__card p { margin: 0 0 16px; color: var(--ink-dim); }
 .welcome__note { font-size: 13px; color: var(--ink-faint); }
 .welcome__note:empty { display: none; }
-.welcome .btn--go { margin-bottom: 16px; padding: 10px 20px; font-size: 16px; }
+.welcome__buttons { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 16px; }
+.welcome .btn--go { padding: 10px 20px; font-size: 16px; }
+.welcome__buttons .btn { padding: 10px 18px; font-size: 15px; }
 
 .keys { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0; padding-top: 14px; border-top: 1px solid var(--line-soft); }
 .keys dt { white-space: nowrap; }
@@ -457,6 +463,7 @@ kbd {
 .row--check { flex-direction: row; align-items: center; gap: 8px; color: var(--ink-dim); }
 .row--check input { accent-color: var(--go); width: 16px; height: 16px; }
 .row--buttons { flex-direction: row; gap: 8px; }
+.row--grow { flex: 2 1 12em; justify-content: flex-end; }
 .row--gels { gap: 7px; }
 .unit { color: var(--ink-faint); font: 400 12px/1 var(--mono); }
 .hint { margin: 0; color: var(--ink-faint); font-size: 13px; }
@@ -502,24 +509,123 @@ select.field option:checked { background: var(--warn); color: #241a07; }
 }
 .toast[hidden] { display: none; }
 
-/* ───────────────────────── smaller desks ───────────────────────── */
+/* ───────────────────────── tablets and phones ─────────────────────────
+
+   The board stays a fixed shell at every size: nothing about a show should
+   depend on having scrolled to the right place. On a narrow screen the prompt
+   book slides over the pads instead of sitting beside them, and the grid
+   reflows to whatever columns fit rather than squeezing the authored shape
+   into a phone. */
+
+#btnBook { display: none; }
 
 @media (max-width: 900px) {
-  body { overflow: auto; height: auto; min-height: 100%; grid-template-rows: auto auto auto; }
-  .desk { grid-template-columns: 1fr; }
-  .book { border-left: 0; border-top: 1px solid var(--line); max-height: 44vh; }
-  /* The page scrolls here, so the grid takes its height from its rows rather
-     than from a parent that no longer has one. */
-  .grid { height: auto; min-height: 56vh; grid-template-rows: repeat(var(--rows, 4), minmax(96px, 1fr)); }
-  .rail { flex-wrap: wrap; gap: 8px 14px; padding: 8px 12px; height: auto; }
-  .rail__folder { order: 3; width: 100%; }
-  /* Go stays reachable without scrolling back down mid-show. */
-  .transport { grid-template-columns: 1fr; gap: 10px; position: sticky; bottom: 0; z-index: 3; }
-  .master { flex-wrap: wrap; }
+  :root { --book: 100%; }
+
+  /* The rail wraps to two lines here, so it sizes itself. */
+  body { grid-template-rows: auto 1fr auto; }
+  .desk { grid-template-columns: 1fr; position: relative; }
+  .book {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    border-left: 0;
+    background: var(--console);
+  }
+  body:not([data-book="open"]) .book { display: none; }
+
+  /* Columns follow the screen; the pads keep their order and their cue numbers. */
+  /* Keep the board's own columns while they stay wide enough to hit, and only
+     then fold onto fewer: a 6-wide board is 6 wide on a tablet and 2 wide on a
+     phone, in the same reading order either way. */
+  .grid {
+    --pad-min: 148px;
+    grid-template-columns: repeat(auto-fill, minmax(max(var(--pad-min), calc((100% - (var(--cols, 5) - 1) * var(--gap)) / var(--cols, 5))), 1fr));
+    grid-template-rows: none;
+    grid-auto-rows: minmax(92px, 1fr);
+    height: 100%;
+  }
+
+  .rail {
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    height: auto;
+    padding: calc(8px + env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) 8px max(12px, env(safe-area-inset-left, 0px));
+  }
+  .rail__folder { order: 2; flex: 1; }
+  .rail__actions { order: 3; width: 100%; margin-left: 0; justify-content: space-between; }
+
+  #btnBook { display: inline-block; }
+
+  /* The transport is taller here, and a toast pinned above it would guess at
+     how much taller. Over the pads it never collides with anything. */
+  .toast { top: 50%; bottom: auto; transform: translate(-50%, -50%); max-width: calc(100vw - 32px); }
+  .transport {
+    grid-template-columns: 1fr auto;
+    gap: 8px 12px;
+    padding: 10px max(14px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
+  }
+  .go { grid-column: 1 / -1; }
+  .playing { grid-column: 1 / -1; max-width: none; }
+  .playing:empty { display: none; }
+  .master { grid-column: 1 / -1; }
+  .slider { flex: 1; width: auto; }
 }
 
 @media (max-width: 560px) {
+  .grid { --pad-min: 128px; grid-auto-rows: minmax(84px, 1fr); }
   .pad__key { display: none; }
+  .go { gap: 10px; }
   .go__btn { flex: 1; }
-  .slider { width: 100%; flex: 1; }
+  .voice { grid-template-columns: minmax(0, 1fr) 72px auto; }
+
+  /* Two lines: the master fader, then the three buttons under it. */
+  .master { flex-wrap: wrap; }
+  .master__label { order: 1; }
+  .slider { order: 2; flex: 1 1 50%; }
+  .master__value { order: 3; }
+  .master::after { content: ""; order: 4; flex-basis: 100%; height: 0; }
+  #btnBook { order: 5; flex: 1; }
+  #btnFadeAll { order: 6; flex: 1; }
+  #btnStopAll { order: 7; flex: 1; }
+  .rail__actions .btn { flex: 1; padding-left: 8px; padding-right: 8px; }
+
+  /* A phone has no room for pads holding nothing; they come back in edit mode. */
+  body:not([data-editing="on"]) .pad--empty { display: none; }
+
+  /* A sheet on a phone is the whole phone. */
+  .sheet, .sheet--narrow { width: 100vw; max-width: none; max-height: 100dvh; border-radius: 0; }
+  .sheet__form { max-height: 100dvh; }
+  .sheet__body { padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+  .row--split { flex-wrap: wrap; }
+  .row--split > .row { flex: 1 1 42%; }
+}
+
+/* ───────────────────────── touch ─────────────────────────
+
+   Fingers, not a mouse: targets grow, hover stops carrying meaning, and the
+   browser's own gestures on a pad (double-tap zoom, long-press selection)
+   get out of the way of a cue being fired. */
+
+.pad, .cue, .lib__item, .btn, .go__btn, .gel {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.pad, .cue, .lib__item {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+@media (pointer: coarse) {
+  .btn { min-height: 44px; padding: 10px 14px; }
+  .sheet__close { width: 44px; height: 44px; }
+  .cue { padding: 12px 8px; }
+  .lib__item { padding: 13px 8px; }
+  .gel { width: 38px; height: 38px; }
+  .slider { height: 32px; }
+  /* iOS zooms the page when a field under 16px takes focus. */
+  .field, select.field[size] { font-size: 16px; }
+  .pad--filled:hover { background: color-mix(in oklab, var(--gel) 14%, var(--pad)); }
+  .pad--filled.pad--playing:hover { background: color-mix(in oklab, var(--gel) 26%, var(--pad)); }
 }

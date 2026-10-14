@@ -10,8 +10,8 @@ export const refs = {};
 export function bindRefs() {
   const ids = [
     'grid', 'cues', 'cuesEmpty', 'lib', 'libEmpty', 'libFilter', 'panelCues', 'panelLibrary',
-    'folderName', 'folderCount', 'btnOpen', 'btnOpenBig', 'btnEdit', 'btnSetup',
-    'btnGo', 'goLabel', 'goLamp', 'playing', 'master', 'masterValue', 'btnFadeAll', 'btnStopAll',
+    'folderName', 'folderCount', 'btnOpen', 'btnOpenBig', 'btnOpenFiles', 'btnEdit', 'btnSetup',
+    'btnGo', 'goLabel', 'goLamp', 'playing', 'master', 'masterValue', 'btnFadeAll', 'btnStopAll', 'btnBook',
     'welcome', 'welcomeNote', 'live', 'toast',
   ];
   for (const id of ids) refs[id] = document.getElementById(id);
@@ -81,6 +81,9 @@ export function paintPads(board, engine, standby) {
   for (const [i, el] of padEls) {
     const pad = board.pads[i];
     if (!pad || !pad.file) continue;
+    // The pad was filled after this element was drawn empty; the redraw that
+    // gives it a lamp and a clock is already on its way.
+    if (!el.classList.contains('pad--filled')) continue;
     const st = engine.state(i);
     const playing = !!st && st.state === 'playing';
     const paused = !!st && st.state === 'paused';
@@ -155,13 +158,20 @@ export function markCues(board, engine, standby) {
 // ── folder library ────────────────────────────────────────────────────────
 
 export function drawLibrary(board, library, filter = '') {
-  const used = new Set(board.pads.filter((p) => p && p.file).map((p) => p.file));
+  // Which sounds are already on the board, and where: a folder read twice is
+  // how a cue ends up on two pads by accident.
+  const used = new Map();
+  board.pads.forEach((pad, i) => {
+    if (pad && pad.file && !used.has(pad.file)) {
+      used.set(pad.file, pad.cue ? `cue ${pad.cue}` : `pad ${i + 1}`);
+    }
+  });
   const needle = filter.trim().toLowerCase();
   const items = library.list.filter((e) => !needle || e.path.toLowerCase().includes(needle));
 
   refs.lib.replaceChildren();
   refs.libEmpty.textContent = library.isOpen
-    ? (items.length ? 'Drag a sound onto a pad, or click a pad to set it up.' : 'No sound here matches that.')
+    ? (items.length ? 'Tap a sound to put it on the next free pad, or drag it onto one.' : 'No sound here matches that.')
     : 'Open a folder to see what is in it.';
 
   for (const entry of items) {
@@ -170,7 +180,7 @@ export function drawLibrary(board, library, filter = '') {
     li.draggable = true;
     li.dataset.path = entry.path;
     li.title = entry.path;
-    li.append(span('lib__name', entry.name), span('lib__dir', entry.dir));
+    li.append(span('lib__name', entry.name), span('lib__dir', used.get(entry.path) || entry.dir));
     refs.lib.append(li);
   }
 }
@@ -245,10 +255,23 @@ export function drawGels(host, selected, onPick) {
 }
 
 export function setPanel(editing) {
+  document.body.dataset.editing = editing ? 'on' : '';
   refs.panelCues.hidden = editing;
   refs.panelLibrary.hidden = !editing;
   refs.btnEdit.setAttribute('aria-pressed', String(editing));
   refs.btnEdit.textContent = editing ? 'Done editing' : 'Edit board';
+  if (!bookOpen()) refs.btnBook.textContent = editing ? 'Sounds' : 'Cue sheet';
+}
+
+/** On a narrow screen the prompt book slides over the pads; this is its switch. */
+export function setBook(open, editing) {
+  document.body.dataset.book = open ? 'open' : 'closed';
+  refs.btnBook.setAttribute('aria-expanded', String(open));
+  refs.btnBook.textContent = open ? 'Hide' : (editing ? 'Sounds' : 'Cue sheet');
+}
+
+export function bookOpen() {
+  return document.body.dataset.book === 'open';
 }
 
 export function say(message) {

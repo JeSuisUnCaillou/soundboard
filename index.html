@@ -29,7 +29,7 @@
     <div id="grid" class="grid"></div>
   </section>
 
-  <aside class="book" aria-label="Prompt book">
+  <aside class="book" id="book" aria-label="Prompt book">
     <div class="book__panel" id="panelCues">
       <h2 class="book__title">Cue sheet</h2>
       <ol class="cues" id="cues"></ol>
@@ -40,7 +40,7 @@
       <h2 class="book__title">Sounds in folder</h2>
       <input type="search" id="libFilter" class="field field--search" placeholder="Filter by name" aria-label="Filter sounds by name">
       <ul class="lib" id="lib"></ul>
-      <p class="book__empty" id="libEmpty">Drag a sound onto a pad, or click a pad to set it up.</p>
+      <p class="book__empty" id="libEmpty">Tap a sound to put it on the next free pad, or drag it onto one.</p>
     </div>
   </aside>
 </main>
@@ -54,6 +54,7 @@
   <div class="playing" id="playing" aria-label="Now playing"></div>
 
   <div class="master">
+    <button type="button" id="btnBook" class="btn" aria-expanded="false" aria-controls="book">Cue sheet</button>
     <label class="master__label" for="master">Master</label>
     <input type="range" id="master" min="0" max="100" value="80" class="slider">
     <output class="master__value" id="masterValue" aria-hidden="true">80</output>
@@ -67,7 +68,10 @@
     <h2 class="welcome__title">Point it at a folder of sounds</h2>
     <p>Pick the folder that holds this show's audio. The files are read straight off your disk and stay
        there — nothing is uploaded, and the board works with the network off.</p>
-    <button type="button" id="btnOpenBig" class="btn btn--go">Open folder</button>
+    <p class="welcome__buttons">
+      <button type="button" id="btnOpenBig" class="btn btn--go">Open folder</button>
+      <button type="button" id="btnOpenFiles" class="btn" hidden>Choose sound files</button>
+    </p>
     <p class="welcome__note" id="welcomeNote"></p>
     <dl class="keys">
       <dt><kbd>Space</kbd></dt><dd>fire the standing-by cue</dd>
@@ -100,9 +104,19 @@
         <label class="row"><span class="row__label">Name on pad</span>
           <input type="text" id="padName" class="field" maxlength="40" placeholder="Thunder">
         </label>
+      </div>
+
+      <div class="row row--split">
+        <label class="row"><span class="row__label">Row</span>
+          <input type="number" id="padRow" class="field field--tiny" min="1" step="1">
+        </label>
+        <label class="row"><span class="row__label">Column</span>
+          <input type="number" id="padCol" class="field field--tiny" min="1" step="1">
+        </label>
         <label class="row"><span class="row__label">Key</span>
           <input type="text" id="padKey" class="field field--tiny" maxlength="1" placeholder="q">
         </label>
+        <span class="row row--grow"><span class="hint">Change the row or column to move the pad.</span></span>
       </div>
 
       <label class="row"><span class="row__label">Note in the book</span>

@@ -48,6 +48,10 @@ export class PadEditor {
     this.state = { board, i, pad };
 
     el('padWhere').textContent = `· row ${row + 1}, column ${col + 1}`;
+    el('padRow').value = row + 1;
+    el('padRow').max = board.rows;
+    el('padCol').value = col + 1;
+    el('padCol').max = board.cols;
     el('padFileFilter').value = '';
     this.fillFiles(pad.file);
     el('padCue').value = pad.cue;
@@ -150,8 +154,15 @@ export class PadEditor {
 
     if (next.file !== pad.file) next.duration = 0;
     el('padName').dataset.auto = '';
+
+    // Moving a pad by typing its row and column: the drag that does the same
+    // thing with a mouse has no equivalent under a finger.
+    const row = clamp(num(el('padRow').value, 0), 1, board.rows) - 1;
+    const col = clamp(num(el('padCol').value, 0), 1, board.cols) - 1;
+    const moveTo = row * board.cols + col;
+
     this.dlg.close();
-    this.onSave(i, next);
+    this.onSave(i, next, moveTo === i ? null : moveTo);
   }
 }
 

@@ -1,13 +1,15 @@
-// Reading a folder off the local disk, three ways.
+// Reading sounds off the local disk, four ways, in order of how much the
+// browser is willing to remember afterwards.
 //
-//  1. File System Access API (Chrome, Edge, Chrome for Android): a real folder
+//  1. File System Access API (Chrome and Edge on the desktop): a real folder
 //     handle that can be stored and reopened on the next launch.
-//  2. A folder dropped onto the window: same handle where available, otherwise
-//     the older webkitGetAsEntry walk, which Firefox and Safari both do.
-//  3. <input type="file" webkitdirectory>: works everywhere, but the browser
-//     hands over a snapshot of files and nothing that outlives the session.
+//  2. A folder dropped onto the window: the same handle where available,
+//     otherwise the older webkitGetAsEntry walk, which Firefox and Safari do.
+//  3. <input type="file" webkitdirectory>: a snapshot of the folder's files
+//     and nothing that outlives the session. Chrome on Android included.
+//  4. Plain multi-file picking, for iOS, where a folder cannot be chosen at all.
 //
-// Either way the audio is read straight from disk and never leaves the machine.
+// Every one of them reads the audio straight from disk; none of them upload it.
 
 const AUDIO = /\.(mp3|m4a|m4r|aac|wav|aif|aiff|flac|ogg|oga|opus|weba|webm)$/i;
 const SKIP = /^(\.|__MACOSX$|node_modules$)/;
@@ -48,7 +50,18 @@ export class Library {
       await this.useHandle(handle);
       return true;
     }
-    const files = await pickWithInput();
+    const files = await pickWithInput(true);
+    if (!files) return false;
+    await this.useFiles(files);
+    return true;
+  }
+
+  /**
+   * Picking the sounds themselves rather than the folder holding them, for
+   * iOS and anywhere else the folder picker is missing or comes back empty.
+   */
+  async pickFiles() {
+    const files = await pickWithInput(false);
     if (!files) return false;
     await this.useFiles(files);
     return true;
@@ -87,7 +100,7 @@ export class Library {
       if (parts.some((p) => SKIP.test(p))) continue;
       this.entries.set(path, { path, name: f.name, dir: path.split('/').slice(0, -1).join('/'), file: f });
     }
-    this.name = root || 'Dropped files';
+    this.name = root || (files.length ? 'Chosen sounds' : 'Dropped files');
     return this.entries.size;
   }
 
@@ -191,12 +204,13 @@ function walkEntry(dir, prefix, out, depth = 0) {
   });
 }
 
-function pickWithInput() {
+function pickWithInput(wholeFolder) {
   return new Promise((resolve) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
-    input.webkitdirectory = true;
+    if (wholeFolder) input.webkitdirectory = true;
+    else input.accept = 'audio/*';
     input.style.display = 'none';
     document.body.append(input);
     const done = (value) => {

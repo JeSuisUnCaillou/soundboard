@@ -48,6 +48,32 @@ export class Engine {
     if (this.out) this.out.gain.setTargetAtTime(level, this.ctx.currentTime, 0.015);
   }
 
+  /**
+   * iOS will not let a media element make a sound until that element has been
+   * started inside a gesture, however willing the audio context is. On the
+   * first touch every primed element is nudged at silence so that the pad it
+   * belongs to answers the next tap instead of the one after.
+   */
+  async wake() {
+    await this.unlock();
+    this.woke = true;
+    await Promise.all([...this.channels.values()].map((ch) => this._nudge(ch)));
+  }
+
+  async _nudge(ch) {
+    if (ch.state !== 'idle') return;
+    this._set(ch.gain, FLOOR);
+    try {
+      await ch.el.play();
+      // A pad fired in the meantime owns this element now; leave it alone.
+      if (ch.state !== 'idle') return;
+      ch.el.pause();
+      ch.el.currentTime = (ch.pad && ch.pad.trimStart) || 0;
+    } catch {
+      /* no gesture yet, or nothing loaded: the pad's own tap will do it */
+    }
+  }
+
   /** Buffer a pad's file ahead of the show without playing it. */
   async prime(i, pad) {
     if (!pad || !pad.file || !this.lib.has(pad.file)) return;
@@ -88,6 +114,7 @@ export class Engine {
     voice.stopTimer = null;
     voice.pad = pad;
     voice.fading = false;
+    voice.state = 'starting'; // claimed, so a silent wake nudge cannot pause it
 
     const level = clamp01(pad.gain ?? 1);
     const fade = Math.max(0, fadeIn ?? pad.fadeIn ?? 0);
@@ -233,6 +260,7 @@ export class Engine {
       };
       el.addEventListener('ended', ch.onEnded);
       this.channels.set(i, ch);
+      if (this.woke) this._nudge(ch);
     }
     if (ch.path !== pad.file) {
       ch.el.src = await this.lib.url(pad.file);

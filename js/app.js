@@ -5,17 +5,20 @@ import { Library, CAN_PERSIST } from './library.js';
 import { Engine, probeDuration } from './engine.js';
 import { store } from './store.js';
 import {
-  newBoard, newPad, migrate, resize, fitPads, filled, slug, move, padByKey, nextCue,
+  newBoard, newPad, migrate, resize, fitPads, filled, slug, move, padByKey, nextCue, rowCol,
   MAX_ROWS, MAX_COLS,
 } from './model.js';
 import { PadEditor, SetupSheet } from './editor.js';
 import {
   refs, bindRefs, drawGrid, paintPads, drawCues, markCues, drawLibrary, drawPlaying,
-  paintPlaying, drawStandby, drawFolder, setPanel, say, toast,
+  paintPlaying, drawStandby, drawFolder, setPanel, setBook, bookOpen, say, toast,
 } from './ui.js';
 
 const PATH_TYPE = 'application/x-soundboard-path';
 const PAD_TYPE = 'application/x-soundboard-pad';
+
+// Below this width the prompt book covers the pads instead of sitting beside them.
+const NARROW = window.matchMedia('(max-width: 900px)');
 
 class App {
   constructor() {
@@ -27,6 +30,7 @@ class App {
     this.raf = null;
     this.saveTimer = null;
     this.pendingHandle = null;
+    this.wakeLock = null;
 
     this.engine.onchange = () => {
       drawPlaying(this.board, this.engine);
@@ -39,7 +43,7 @@ class App {
     bindRefs();
     this.padEditor = new PadEditor({
       library: this.library,
-      onSave: (i, pad) => this.setPad(i, pad),
+      onSave: (i, pad, moveTo) => this.setPad(i, pad, moveTo),
       onClear: (i) => this.setPad(i, null),
       onLevel: (i, level) => this.engine.setPadLevel(i, level),
     });
@@ -50,6 +54,9 @@ class App {
     });
 
     this.wire();
+    // Where a folder cannot be held on to, offer picking the sounds directly:
+    // iOS has no folder picker at all.
+    refs.btnOpenFiles.hidden = CAN_PERSIST;
     refs.welcomeNote.textContent = CAN_PERSIST
       ? 'This browser can reopen the same folder next time, with one click to confirm.'
       : 'This browser cannot hold on to a folder between visits, so the board asks for it again each launch. '
@@ -63,9 +70,11 @@ class App {
   wire() {
     refs.btnOpen.addEventListener('click', () => this.openFolder());
     refs.btnOpenBig.addEventListener('click', () => (this.pendingHandle ? this.reopen() : this.openFolder()));
+    refs.btnOpenFiles.addEventListener('click', () => this.openFiles());
     refs.btnEdit.addEventListener('click', () => this.setEditing(!this.editing));
     refs.btnSetup.addEventListener('click', () => this.board && this.setup.open(this.board));
 
+    refs.btnBook.addEventListener('click', () => setBook(!bookOpen(), this.editing));
     refs.btnGo.addEventListener('click', () => this.go());
     refs.btnFadeAll.addEventListener('click', () => this.engine.stopAll({ fade: this.fadeTime() }));
     refs.btnStopAll.addEventListener('click', () => this.engine.stopAll({ fade: 0 }));
@@ -97,13 +106,37 @@ class App {
       if (!el) return;
       const i = Number(el.dataset.i);
       this.setStandby(i);
-      refs.grid.querySelector(`.pad[data-i="${i}"]`)?.focus();
+      if (NARROW.matches) setBook(false, this.editing);
+      else refs.grid.querySelector(`.pad[data-i="${i}"]`)?.focus();
     });
+
+    // Dragging a sound onto a pad has no equivalent under a finger, so a tap
+    // puts it on the first free pad instead.
+    refs.lib.addEventListener('click', (e) => {
+      const item = e.target.closest('.lib__item');
+      if (item) this.assignToFreePad(item.dataset.path);
+    });
+
+    // First touch or key: let the audio out, and keep the screen awake.
+    const woken = () => {
+      this.engine.wake();
+      this.keepAwake();
+      document.removeEventListener('pointerdown', woken);
+      document.removeEventListener('keydown', woken);
+    };
+    document.addEventListener('pointerdown', woken);
+    document.addEventListener('keydown', woken);
 
     this.wireDragging();
     document.addEventListener('keydown', (e) => this.onKey(e));
     window.addEventListener('beforeunload', () => this.saveNow());
-    document.addEventListener('visibilitychange', () => this.run());
+    document.addEventListener('visibilitychange', () => {
+      this.run();
+      if (!document.hidden) this.keepAwake();
+    });
+    NARROW.addEventListener('change', (e) => {
+      if (!e.matches) setBook(false, this.editing);
+    });
   }
 
   wireDragging() {
@@ -263,6 +296,15 @@ class App {
     }
   }
 
+  async openFiles() {
+    try {
+      if (!(await this.library.pickFiles())) return;
+      await this.afterFolder();
+    } catch (err) {
+      toast(`Those files could not be opened: ${err.message}`);
+    }
+  }
+
   /** A folder is open: find or build its board, then draw everything. */
   async afterFolder() {
     this.engine.reset();
@@ -316,10 +358,17 @@ class App {
     }
   }
 
-  setPad(i, pad) {
+  setPad(i, pad, moveTo = null) {
     this.board.pads[i] = pad;
     if (pad && !pad.cue) pad.cue = nextCue(this.board);
     this.engine.stop(i, { fade: 0 });
+    if (moveTo != null && moveTo !== i && moveTo >= 0 && moveTo < this.board.pads.length) {
+      move(this.board, i, moveTo);
+      this.engine.reset();
+      this.primeAll();
+      const { row, col } = rowCol(this.board, moveTo);
+      toast(`Moved to row ${row + 1}, column ${col + 1}.`);
+    }
     this.redraw();
     this.queueSave();
     if (pad) {
@@ -327,6 +376,19 @@ class App {
       if (!pad.duration) this.measure();
     }
     if (this.standby == null) this.standby = filled(this.board)[0]?.i ?? null;
+  }
+
+  /** Tap a sound in the folder panel: it lands on the first pad with nothing on it. */
+  assignToFreePad(path) {
+    if (!this.board || !this.library.has(path)) return;
+    const free = this.board.pads.findIndex((pad) => !pad || !pad.file);
+    if (free === -1) {
+      toast('Every pad is taken. Add rows in Board setup, or tap a pad to replace what is on it.');
+      return;
+    }
+    this.setPad(free, newPad(this.board, free, path));
+    const { row, col } = rowCol(this.board, free);
+    toast(`${this.board.pads[free].name} is on row ${row + 1}, column ${col + 1}.`);
   }
 
   applySetup({ name, rows, cols, fadeIn, fadeOut }) {
@@ -436,6 +498,7 @@ class App {
     this.editing = on;
     setPanel(on);
     if (on) drawLibrary(this.board, this.library, refs.libFilter.value);
+    if (NARROW.matches) setBook(on, on);
     this.redraw();
   }
 
@@ -499,6 +562,20 @@ class App {
       drawCues(this.board, this.standby);
       this.paint();
       this.queueSave();
+    }
+  }
+
+  /** A show lasts longer than a tablet's screen timeout. */
+  async keepAwake() {
+    if (!('wakeLock' in navigator) || !this.board || document.hidden) return;
+    if (this.wakeLock && !this.wakeLock.released) return;
+    try {
+      this.wakeLock = await navigator.wakeLock.request('screen');
+      this.wakeLock.addEventListener('release', () => {
+        this.wakeLock = null;
+      });
+    } catch {
+      /* the browser said no; the board works all the same */
     }
   }
 

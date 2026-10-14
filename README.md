@@ -7,11 +7,14 @@ of pads, and fire them by click, by key, or by hitting **Go** down the cue sheet
 No build step, no server, no account, and nothing is uploaded: the files are read
 straight off the disk by the browser and never leave it.
 
-![The board: a grid of coloured pads on the left, cue sheet on the right, Go bar along the bottom](docs/board.png)
+![The board on a laptop: a grid of coloured pads on the left, the cue sheet on the right, the Go bar along the bottom](docs/board.png)
+
+<img src="docs/phone.png" alt="The same board on a phone: two columns of pads, the Go bar and the master fader underneath" width="300">
 
 ## Running it
 
-Open the hosted copy, or serve the folder yourself:
+It is live at **https://jesuisuncaillou.github.io/soundboard/** — or serve the
+folder yourself:
 
 ```sh
 python3 -m http.server 8000     # then open http://localhost:8000
@@ -23,16 +26,20 @@ folder access and ES modules in a secure context.
 
 ## Browsers
 
-| Browser | Opening a folder | Remembering it between launches |
+| Browser | Choosing the sounds | Remembering the folder between launches |
 | --- | --- | --- |
-| Chrome, Edge, Opera (desktop and Android) | Folder picker, or drag the folder onto the window | Yes — one click to confirm on each launch |
-| Firefox, Safari | Folder picker (file-by-file under the hood), or drag the folder onto the window | No — the board is remembered, the folder has to be picked again |
+| Chrome, Edge, Opera on the desktop | Folder picker, or drag the folder onto the window | Yes — one click to confirm on each launch |
+| Firefox and Safari on the desktop | Folder picker, or drag the folder onto the window | No |
+| Chrome on Android | Folder picker | No |
+| Safari on iPhone and iPad | **Choose sound files** — iOS has no folder picker | No |
 
 The difference is the [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker),
-which only Chromium browsers implement. Everywhere else the board falls back to
-`<input type="file" webkitdirectory>`: everything works for the session, but the
-browser refuses to hold a folder reference, so the folder is re-picked each time.
-Pads, cues, fades and the rest are stored either way.
+which only desktop Chromium browsers implement. Everywhere else the board falls
+back to `<input type="file" webkitdirectory>`, or on iOS to picking the sounds
+themselves: everything works for the session, but the browser will not hold on to
+a folder, so it is chosen again on the next launch. The board itself — pads,
+cues, colours, fades — is remembered either way, and finds its files again by
+name as soon as the folder is reopened.
 
 Audio formats are whatever the browser plays: MP3, M4A, AAC, WAV, FLAC, OGG/Opus,
 and on Safari also AIFF.
@@ -40,9 +47,9 @@ and on Safari also AIFF.
 ## Using it
 
 **Setting up.** Open a folder and the sounds are laid out in order to start with.
-Switch on **Edit board** and the right-hand panel becomes the folder's contents:
-drag a sound onto a pad, drag pads around to reorder, or click a pad to open its
-settings. **Board setup** sets the grid size, the board name, and the fades new
+Switch on **Edit board** and the prompt book becomes the folder's contents: tap a
+sound to put it on the next free pad, drag one onto a particular pad, drag pads
+around to reorder, or click a pad to open its settings. **Board setup** sets the grid size, the board name, and the fades new
 pads start with.
 
 **Each pad holds**: the file, a cue number, the name shown on the pad, a note for
@@ -65,6 +72,15 @@ and a travel bar along the bottom edge.
 | `Esc` | fade everything out |
 | `Shift` `Esc` | cut everything dead |
 
+**On a tablet or a phone.** The board is the whole screen: the prompt book slides
+over the pads from the **Cue sheet** button rather than sitting beside them, and
+the grid folds onto fewer columns when the board's own columns would get too
+narrow to hit — a six-wide board stays six wide on a tablet and becomes two wide
+on a phone, in the same order either way. Dragging a sound onto a pad is a mouse
+gesture, so under a finger: tap a sound to put it on the next free pad, and set a
+pad's row and column in its settings to move it. The screen is kept awake while a
+board is open.
+
 **Carrying a board around.** Board setup saves the whole board as a JSON file and
 loads one back. Pads refer to files by their path inside the folder, so a board
 travels with its folder to another machine or another browser. A pad whose file
@@ -79,7 +95,7 @@ index.html        the shell
 css/app.css       all of the styling
 js/app.js         wiring: state, taps, keys, redraws
 js/engine.js      Web Audio: one media element and gain node per pad
-js/library.js     reading the folder, three ways
+js/library.js     reading the folder, four ways
 js/model.js       the board and its pads
 js/store.js       IndexedDB: boards, folder handles
 js/editor.js      the pad and board setup sheets
