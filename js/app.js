@@ -3,7 +3,7 @@
 
 import { Library, CAN_PERSIST } from './library.js';
 import { Engine, probeDuration } from './engine.js';
-import { store } from './store.js';
+import { store, prefs } from './store.js';
 import {
   newBoard, newPad, migrate, setCols, fitPads, filled, slug, move, padByKey, rowCol,
 } from './model.js';
@@ -57,10 +57,20 @@ class App {
       onImport: (file) => this.importBoard(file),
     });
 
+    // Read where the operator was before anything here overwrites it.
+    const was = { editing: prefs.get('editing', false), book: prefs.get('book', false) };
+
     this.wire();
     setPanel(false);
+    refs.libFilter.value = prefs.get('filter', '');
     this.redraw();
     await this.restore();
+
+    // A reload should land where they left off, not at the beginning.
+    if (this.board && was.editing) {
+      this.setEditing(true);
+      if (NARROW.matches && was.book) setBook(true);
+    }
   }
 
   // ── events ──────────────────────────────────────────────────────────────
@@ -91,6 +101,7 @@ class App {
     });
 
     refs.libFilter.addEventListener('input', () => {
+      prefs.set('filter', refs.libFilter.value);
       if (this.board) drawLibrary(this.board, this.library, refs.libFilter.value);
     });
 
@@ -526,9 +537,10 @@ class App {
   }
 
   /**
-   * Keep a copy of every sound that is on a pad, so the next launch has
-   * something to play before the browser has granted anything. Copies for
-   * pads that have gone are dropped.
+   * Keep a copy of every sound that has been loaded, so the next launch comes
+   * back with the whole folder — pads playing and the tree intact — before the
+   * browser has granted anything. Pads are copied first, because those are the
+   * ones a show needs; copies of sounds that have gone are dropped.
    */
   async keepSounds() {
     if (!this.board || this.keeping || this.outOfRoom) return;
@@ -540,24 +552,29 @@ class App {
         this.askedToPersist = true;
         navigator.storage.persist().catch(() => {});
       }
-      const wanted = new Set(filled(this.board).map(({ pad }) => pad.file));
+      const onPads = filled(this.board).map(({ pad }) => pad.file);
+      const wanted = [...new Set([...onPads, ...this.library.list.map((e) => e.path)])];
+      const inLibrary = new Set(wanted);
       const have = new Map((await store.soundsFor(id)).map((rec) => [rec.path, rec]));
 
       for (const path of have.keys()) {
-        if (!wanted.has(path)) await store.deleteSound(id, path);
+        if (!inLibrary.has(path)) await store.deleteSound(id, path);
       }
 
+      let copied = 0;
       for (const path of wanted) {
         if (!this.library.has(path) || this.library.isCached(path)) continue;
         const file = await this.library.file(path);
         const rec = have.get(path);
         if (rec && rec.size === file.size && rec.lastModified === (file.lastModified || 0)) continue;
         await store.putSound(id, path, file);
+        copied += 1;
       }
+      if (copied > 20) toast(`${copied} sounds kept in this browser, ready for next time.`);
     } catch (err) {
       if (err && err.name === 'QuotaExceededError') {
         this.outOfRoom = true;
-        toast('This browser is out of room, so the board will ask for the sounds again next launch.');
+        toast('This browser is out of room. What is already kept will come back; the rest needs the folder again.');
       }
     } finally {
       this.keeping = false;
@@ -831,7 +848,11 @@ class App {
 // it on every launch.
 const SECURE = location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname);
 if ('serviceWorker' in navigator && SECURE) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  // updateViaCache: 'none' so the worker script itself is never answered from
+  // the HTTP cache — otherwise a deploy can sit behind a ten-minute max-age.
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
+  });
 }
 
 const app = new App();

@@ -29,10 +29,11 @@ folder access and ES modules in a secure context.
 
 ## Coming back to it
 
-Reload the page and the board is already there, playing: every sound that is on
-a pad is kept inside the browser, so nothing has to be picked again and no
-permission has to be granted. That holds in every browser, with the network off,
-and on a phone.
+Reload the page and nothing has changed: the same board, the whole folder in the
+tree, the same folders open, still in edit mode if that is where you were. Every
+sound that has been loaded is kept inside the browser — not only the ones on
+pads — so nothing has to be picked again and no permission has to be granted.
+That holds in every browser, with the network off, and on a phone.
 
 Where the browser allows it — Chrome, Edge and Opera on the desktop — the board
 also keeps a handle on the places the sounds came from, and goes back to the real
@@ -46,8 +47,8 @@ browser menu (Chrome and Edge offer it in the address bar; on iOS, Share → Add
 Home Screen) and it runs in its own window, offline, and can hold on to folder
 permission instead of asking at every launch.
 
-To clear the copies, clear the site's data in the browser; emptying a pad drops
-the copy of the sound that was on it.
+To clear the copies, clear the site's data in the browser. A sound that is no
+longer loaded has its copy dropped on the next change.
 
 ## Browsers
 

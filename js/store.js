@@ -43,6 +43,34 @@ async function run(storeName, mode, fn) {
   });
 }
 
+// Small, instant state that says where the operator was: which folders are
+// open, whether they were editing. Kept in localStorage so a reload can apply
+// it before anything is drawn.
+const PREFS = 'soundboard:ui';
+
+export const prefs = {
+  all() {
+    try {
+      return JSON.parse(localStorage.getItem(PREFS)) || {};
+    } catch {
+      return {};
+    }
+  },
+  get(key, fallback) {
+    const value = this.all()[key];
+    return value === undefined ? fallback : value;
+  },
+  set(key, value) {
+    const all = this.all();
+    all[key] = value;
+    try {
+      localStorage.setItem(PREFS, JSON.stringify(all));
+    } catch {
+      /* private mode, or full: the board works, it just forgets */
+    }
+  },
+};
+
 export const store = {
   saveBoard(board) {
     return run('boards', 'readwrite', (s) => s.put(board));

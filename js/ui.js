@@ -4,6 +4,7 @@
 
 import { fmtTime, filled, rowCol } from './model.js';
 import { GELS, gelHex } from './gels.js';
+import { prefs } from './store.js';
 
 export const refs = {};
 
@@ -23,8 +24,9 @@ export function bindRefs() {
 const padEls = new Map();
 const voiceEls = new Map();
 // Which folders the operator has opened. The panel is redrawn on every edit,
-// and a tree that folds itself back up under your hand is unusable.
-const openDirs = new Set();
+// and a tree that folds itself back up under your hand is unusable — so is one
+// that forgets where you were when the page reloads.
+const openDirs = new Set(prefs.get('openDirs', []));
 
 // ── grid ──────────────────────────────────────────────────────────────────
 
@@ -179,6 +181,7 @@ function branch(node, used, parent) {
   box.addEventListener('toggle', () => {
     if (box.open) openDirs.add(path);
     else openDirs.delete(path);
+    prefs.set('openDirs', [...openDirs]);
   });
 
   const head = document.createElement('summary');
@@ -283,6 +286,7 @@ export function drawGels(host, selected, onPick) {
 /** The folder's sounds are only wanted while the board is being built. */
 export function setPanel(editing) {
   document.body.dataset.editing = editing ? 'on' : '';
+  prefs.set('editing', editing);
   refs.book.hidden = !editing;
   refs.btnBook.hidden = !editing;
   refs.btnEmpty.hidden = !editing;
@@ -293,6 +297,7 @@ export function setPanel(editing) {
 /** On a narrow screen the sounds list slides over the pads; this is its switch. */
 export function setBook(open) {
   document.body.dataset.book = open ? 'open' : 'closed';
+  prefs.set('book', open);
   refs.btnBook.setAttribute('aria-expanded', String(open));
   refs.btnBook.textContent = open ? 'Back to the pads' : 'Sounds';
 }
