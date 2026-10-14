@@ -38,14 +38,29 @@ export function newBoard({ id, cols = 3, rows = 3 }) {
   return board;
 }
 
-// Under this, a sound is a hit — a shot, a door, a slap — and pressing it twice
-// means two of them rather than a restart. Above it, it is a cue, and a second
-// press is the operator saying "enough".
+// Under this, a sound is a hit — a shot, a door, a slap. Above it, it is a cue
+// that runs: music, ambience, a recording.
 export const SHORT_SOUND = 5;
 
-/** What a sound of this length does when its pad is tapped again. */
-export function tapForLength(seconds) {
-  return seconds > 0 && seconds < SHORT_SOUND ? 'overlay' : 'fadeout';
+// Hits keep the default blue; anything that runs comes up green, so a glance
+// at the board says which pads will still be making noise in a minute.
+const LONG_GEL = 'moss';
+
+/**
+ * A sound's length says what it probably is, which settles what the operator
+ * would otherwise set by hand: a hit layers when it is tapped again and starts
+ * at full level — faded in, a gunshot is not a gunshot — while a cue is green.
+ * Only fields still at their untouched default move, and a length that could
+ * not be read decides nothing.
+ */
+export function applyLengthDefaults(board, pad) {
+  if (!pad.duration) return;
+  if (pad.duration < SHORT_SOUND) {
+    if (pad.tap === 'fadeout') pad.tap = 'overlay';
+    if (pad.fadeIn === board.defaults.fadeIn) pad.fadeIn = 0;
+  } else if (pad.gel === DEFAULT_GEL) {
+    pad.gel = LONG_GEL;
+  }
 }
 
 export function newPad(board, i, file) {

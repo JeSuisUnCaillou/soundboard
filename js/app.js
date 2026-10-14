@@ -6,7 +6,7 @@ import { Engine, probeDuration } from './engine.js';
 import { store, prefs } from './store.js';
 import {
   newBoard, newPad, migrate, setCols, setRows, fitPads, filled, slug, move, padByKey, rowCol, padTitle,
-  tapForLength,
+  applyLengthDefaults,
 } from './model.js';
 import { bundledPaths } from './bundled.js';
 import { PadEditor, SetupSheet } from './editor.js';
@@ -898,9 +898,8 @@ class App {
       if (!job) return;
       try {
         job.pad.duration = await probeDuration(await this.library.url(job.pad.file));
-        // The length is known only now, so this is where a short sound gets
-        // the tap that suits it — never over an answer already given.
-        if (job.pad.tap === 'fadeout') job.pad.tap = tapForLength(job.pad.duration);
+        // The length is known only now, so this is where it gets its say.
+        applyLengthDefaults(this.board, job.pad);
       } catch {
         job.pad.duration = 0;
       }
