@@ -226,6 +226,21 @@ export class Library {
     return this.entries.has(path);
   }
 
+  /**
+   * How long a sound is, in seconds, once something has measured it — 0 until
+   * then. Kept here rather than on the pad because it belongs to the file, and
+   * a pad made from it should not have to wait to know what it is holding.
+   */
+  lengthOf(path) {
+    const entry = this.entries.get(path);
+    return (entry && entry.duration) || 0;
+  }
+
+  setLength(path, seconds) {
+    const entry = this.entries.get(path);
+    if (entry && seconds > 0) entry.duration = seconds;
+  }
+
   async file(path) {
     const entry = this.entries.get(path);
     if (!entry) throw new Error(`“${path}” is not among the sounds that are open`);

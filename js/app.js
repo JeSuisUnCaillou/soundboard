@@ -198,7 +198,7 @@ class App {
       e.target.closest('.pad')?.classList.remove('pad--drop');
     });
 
-    refs.grid.addEventListener('drop', (e) => {
+    refs.grid.addEventListener('drop', async (e) => {
       const el = e.target.closest('.pad');
       if (!el) return;
       e.preventDefault();
@@ -207,7 +207,15 @@ class App {
       const path = e.dataTransfer.getData(PATH_TYPE);
       if (!path || !this.library.has(path)) return;
       const existing = this.board.pads[to];
-      this.setPad(to, existing ? { ...existing, file: path, duration: 0 } : newPad(this.board, to, path));
+      if (!existing) {
+        this.setPad(to, await this.padFor(to, path));
+        return;
+      }
+      // A pad that is being given a different sound keeps everything the
+      // operator set on it, and takes the new sound's length.
+      const pad = { ...existing, file: path, duration: await this.lengthOf(path) };
+      applyLengthDefaults(this.board, pad);
+      this.setPad(to, pad);
     });
 
     this.wirePadDragging();
@@ -454,7 +462,7 @@ class App {
     // waits in the tree until they put it somewhere.
     const startedEmpty = filled(this.board).length === 0;
     this.waiting = 0;
-    const placed = startedEmpty ? this.place(added) : 0;
+    const placed = startedEmpty ? await this.place(added) : 0;
     const waiting = startedEmpty ? this.waiting : added.length;
 
     // Places waiting to be reconnected are still this board's places: adding a
@@ -489,26 +497,28 @@ class App {
    * The first few new sounds go on the first free pads, in the order they were
    * found. A folder of two hundred effects is a library, not a board.
    */
-  place(paths) {
+  async place(paths) {
     const onBoard = new Set(filled(this.board).map(({ pad }) => pad.file));
-    let placed = 0;
+    const taking = [];
     for (const path of paths) {
       if (onBoard.has(path)) continue;
-      if (placed >= AUTO_PLACE) {
-        this.waiting = (this.waiting || 0) + 1;
-        continue;
-      }
-      const i = this.board.pads.findIndex((pad) => !pad || !pad.file);
+      const i = taking.length < AUTO_PLACE
+        ? this.board.pads.findIndex((pad, at) => (!pad || !pad.file) && !taking.some((t) => t.i === at))
+        : -1;
       if (i === -1) {                       // the board is full; the rest wait
         this.waiting = (this.waiting || 0) + 1;
         continue;
       }
-      this.board.pads[i] = newPad(this.board, i, path);
+      taking.push({ i, path });
       onBoard.add(path);
-      placed += 1;
     }
+    // Measured together, so the whole lot is drawn once, in the right colours.
+    const pads = await Promise.all(taking.map(({ i, path }) => this.padFor(i, path)));
+    taking.forEach(({ i }, n) => {
+      this.board.pads[i] = pads[n];
+    });
     fitPads(this.board);
-    return placed;
+    return taking.length;
   }
 
   /**
@@ -592,7 +602,7 @@ class App {
       rows: await store.getMeta('rows'),
     }));
     await store.setMeta('last', this.board.id);
-    this.place(bundledPaths());
+    await this.place(bundledPaths());
     this.redraw();
     this.saveNow();
     this.primeAll();
@@ -684,6 +694,31 @@ class App {
     this.keepSounds();
   }
 
+  /** The length of a sound: measured once, then remembered by the library. */
+  async lengthOf(path) {
+    const known = this.library.lengthOf(path);
+    if (known) return known;
+    try {
+      const seconds = await probeDuration(await this.library.url(path));
+      this.library.setLength(path, seconds);
+      return seconds;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * A pad for a sound, measured before it is drawn: a pad that arrives blue and
+   * turns green a moment later is the board correcting itself in front of the
+   * operator, which is worse than taking the moment first.
+   */
+  async padFor(i, path) {
+    const pad = newPad(this.board, i, path);
+    pad.duration = await this.lengthOf(path);
+    applyLengthDefaults(this.board, pad);
+    return pad;
+  }
+
   /**
    * An empty pad that has been clicked is waiting for a sound; clicking it
    * again, or filling it, lets it go. Nothing else on the board moves.
@@ -694,7 +729,7 @@ class App {
     if (was !== this.padWanting) this.redraw();
   }
 
-  assignToPad(path) {
+  async assignToPad(path) {
     if (!this.board || !this.library.has(path)) return;
     // The pad that asked for a sound gets it; otherwise the first free one.
     const asked = this.padWanting;
@@ -706,7 +741,7 @@ class App {
       return;
     }
     this.wantSound(-1);
-    this.setPad(free, newPad(this.board, free, path));
+    this.setPad(free, await this.padFor(free, path));
     const { row, col } = rowCol(this.board, free);
     // Show the pad it landed on rather than the list it came from.
     if (NARROW.matches) setBook(false);
@@ -920,8 +955,8 @@ class App {
       const job = todo.pop();
       if (!job) return;
       try {
-        job.pad.duration = await probeDuration(await this.library.url(job.pad.file));
-        // The length is known only now, so this is where it gets its say.
+        job.pad.duration = await this.lengthOf(job.pad.file);
+        // A board restored from storage can hold pads nothing has measured yet.
         applyLengthDefaults(this.board, job.pad);
       } catch {
         job.pad.duration = 0;
