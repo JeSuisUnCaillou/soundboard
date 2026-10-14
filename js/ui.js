@@ -265,6 +265,7 @@ export function drawFolder(library) {
   refs.folderCount.textContent = own
     ? `${library.entries.size} sound${library.entries.size === 1 ? '' : 's'}`
     : '';
+  refs.folderName.parentElement.hidden = !own;
 }
 
 // ── gels, chrome, chatter ─────────────────────────────────────────────────

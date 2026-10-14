@@ -95,6 +95,7 @@ button, input, select { font: inherit; color: inherit; }
   vertical-align: 1px;
 }
 
+.rail__folder[hidden] { display: none; }
 .rail__folder {
   margin: 0;
   min-width: 0;
@@ -747,8 +748,12 @@ select.field option:checked { background: var(--warn); color: #241a07; }
     height: auto;
     padding: calc(8px + env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) 8px max(12px, env(safe-area-inset-left, 0px));
   }
-  .rail__folder { order: 2; flex: 1; }
-  .rail__actions { order: 3; width: 100%; margin-left: 0; flex-wrap: wrap; justify-content: flex-end; }
+  /* The title and the board's buttons share the top line; where the sounds
+     came from goes underneath, and says nothing at all when there is nothing
+     to say. */
+  .rail { align-items: center; }
+  .rail__actions { order: 2; width: auto; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+  .rail__folder { order: 3; width: 100%; }
 
 
   /* The transport is taller here, and a toast pinned above it would guess at
