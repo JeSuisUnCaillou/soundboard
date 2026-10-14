@@ -571,7 +571,7 @@ select.field option:checked { background: var(--warn); color: #241a07; }
   .rail__folder { order: 2; flex: 1; }
   .rail__actions { order: 3; width: 100%; margin-left: 0; justify-content: space-between; }
 
-  #btnBook { display: inline-block; }
+  #btnBook:not([hidden]) { display: inline-block; }
 
   /* The transport is taller here, and a toast pinned above it would guess at
      how much taller. Over the pads it never collides with anything. */

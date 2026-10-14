@@ -53,11 +53,13 @@ class App {
     });
 
     this.wire();
+    setPanel(false);
     // Where a folder cannot be held on to, offer picking the sounds directly:
     // iOS has no folder picker at all.
     refs.btnOpenFiles.hidden = CAN_PERSIST;
     refs.welcomeNote.textContent = CAN_PERSIST
-      ? 'This browser can reopen the same folder next time, with one click to confirm.'
+      ? 'This browser reopens the same folder next time. Install the board from the browser menu '
+        + 'and it can keep that permission instead of asking at every launch.'
       : 'This browser cannot hold on to a folder between visits, so the board asks for it again each launch. '
         + 'The pads themselves are remembered.';
 
@@ -601,6 +603,14 @@ class App {
     clearTimeout(this.saveTimer);
     if (this.board) store.saveBoard(structuredClone(this.board)).catch(() => {});
   }
+}
+
+// Installed, the board keeps working with the network off — and Chrome will
+// hold on to the folder permission for an installed app instead of asking for
+// it on every launch.
+const SECURE = location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname);
+if ('serviceWorker' in navigator && SECURE) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 
 const app = new App();

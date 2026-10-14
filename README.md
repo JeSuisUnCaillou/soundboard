@@ -24,6 +24,15 @@ It has to be served over `http://localhost` or `https://` — opening
 `index.html` from the file system will not work, because browsers only hand out
 folder access and ES modules in a secure context.
 
+## Installing it
+
+The board is a progressive web app: **Install** it from the browser menu (Chrome
+and Edge offer it in the address bar; on iOS, Share → Add to Home Screen) and it
+runs in its own window, works with the network off, and — on Chrome and Edge —
+can hold on to permission for the show's folder instead of asking at every
+launch. Without installing, the folder is a single click away each time the page
+is loaded: the browser, not the board, is what insists on asking.
+
 ## Browsers
 
 | Browser | Choosing the sounds | Remembering the folder between launches |

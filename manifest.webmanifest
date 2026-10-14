@@ -1,0 +1,18 @@
+{
+  "name": "Soundboard — sound cues for the stage",
+  "short_name": "Soundboard",
+  "description": "Fire sound cues from a folder on your own machine. A grid of pads with fades, loops and keys. Nothing is uploaded.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1a1512",
+  "theme_color": "#1a1512",
+  "categories": ["music", "productivity", "utilities"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
