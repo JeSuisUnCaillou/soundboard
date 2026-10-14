@@ -203,7 +203,11 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   border-top-color: var(--gel);
   background: color-mix(in oklab, var(--gel) 14%, var(--pad));
 }
-.pad--filled:hover { background: color-mix(in oklab, var(--gel) 18%, var(--pad)); }
+/* Hover must not undo a lit pad: the ink on one is dark, and a hover that
+   takes the light away leaves dark on dark. */
+.pad--filled:not(.pad--playing):not(.pad--paused):hover { background: color-mix(in oklab, var(--gel) 18%, var(--pad)); }
+.pad--playing:hover { background: color-mix(in oklab, white 12%, var(--gel)); }
+.pad--paused:hover { background: color-mix(in oklab, var(--gel) 56%, var(--pad)); }
 .pad--empty { color: var(--ink-faint); border-style: dashed; background: none; }
 .pad--empty:hover { color: var(--ink-dim); background: var(--console); }
 
@@ -737,6 +741,7 @@ select.field option:checked { background: var(--warn); color: #241a07; }
   .slider { height: 32px; }
   /* iOS zooms the page when a field under 16px takes focus. */
   .field, select.field[size] { font-size: 16px; }
-  .pad--filled:hover { background: color-mix(in oklab, var(--gel) 14%, var(--pad)); }
-  .pad--filled.pad--playing:hover { background: color-mix(in oklab, var(--gel) 26%, var(--pad)); }
+  /* A finger has no hover; the pad under it should look like itself. */
+  .pad--filled:not(.pad--playing):not(.pad--paused):hover { background: color-mix(in oklab, var(--gel) 14%, var(--pad)); }
+  .pad--playing:hover { background: var(--gel); }
 }
