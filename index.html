@@ -22,9 +22,9 @@
 
 <header class="rail">
   <h1 class="wordmark">Soundboard</h1>
-  <p class="rail__folder"><span id="folderName">No folder open</span><span class="rail__count" id="folderCount"></span></p>
+  <p class="rail__folder"><span id="folderName">No sounds yet</span><span class="rail__count" id="folderCount"></span></p>
   <div class="rail__actions">
-    <button type="button" id="btnOpen" class="btn">Open folder</button>
+    <button type="button" id="btnAdd" class="btn">Add files</button>
     <button type="button" id="btnEdit" class="btn" aria-pressed="false">Edit board</button>
     <button type="button" id="btnSetup" class="btn">Board setup</button>
   </div>
@@ -33,6 +33,10 @@
 <main class="desk">
   <section class="stage" aria-label="Sound pads">
     <div id="grid" class="grid"></div>
+    <p class="stage__empty" id="stageEmpty">
+      Nothing on the board yet.
+      <button type="button" class="btn btn--go" id="btnAddEmpty">Add files</button>
+    </p>
   </section>
 
   <aside class="book" id="book" aria-label="Sounds in folder" hidden>
@@ -60,23 +64,34 @@
   </div>
 </footer>
 
-<section class="welcome" id="welcome">
-  <div class="welcome__card">
-    <h2 class="welcome__title">Point it at a folder of sounds</h2>
-    <p>Pick the folder that holds this show's audio. The files are read straight off your disk and stay
-       there — nothing is uploaded, and the board works with the network off.</p>
-    <p class="welcome__buttons">
-      <button type="button" id="btnOpenBig" class="btn btn--go">Open folder</button>
-      <button type="button" id="btnOpenFiles" class="btn" hidden>Choose sound files</button>
-    </p>
-    <p class="welcome__note" id="welcomeNote"></p>
-    <dl class="keys">
-      <dt><kbd>Space</kbd></dt><dd>stop what is playing, fading it out</dd>
-      <dt><kbd>Esc</kbd></dt><dd>cut everything dead</dd>
-      <dt>pad keys</dt><dd>fire that pad, from the key shown on it</dd>
-    </dl>
+<dialog id="picker" class="sheet sheet--narrow picker">
+  <div class="sheet__form">
+    <header class="sheet__head">
+      <h2 class="sheet__title" id="pickerTitle">Point it at the show's sounds</h2>
+      <button type="button" class="sheet__close" id="pickerClose" aria-label="Close">&times;</button>
+    </header>
+
+    <div class="sheet__body">
+      <p id="pickerBlurb">Choose the folder that holds this show's audio, or pick the sounds one by one.
+         They are read straight off your disk and stay there — nothing is uploaded, and the board works
+         with the network off.</p>
+
+      <div class="row row--buttons">
+        <button type="button" id="btnReopen" class="btn btn--go" hidden></button>
+        <button type="button" id="btnAddFolder" class="btn btn--go">Add a folder</button>
+        <button type="button" id="btnAddFiles" class="btn">Add sound files</button>
+      </div>
+
+      <p class="hint" id="pickerNote"></p>
+
+      <dl class="keys" id="pickerKeys">
+        <dt><kbd>Space</kbd></dt><dd>stop what is playing, fading it out</dd>
+        <dt><kbd>Esc</kbd></dt><dd>cut everything dead</dd>
+        <dt>pad keys</dt><dd>fire that pad, from the key shown in its corner</dd>
+      </dl>
+    </div>
   </div>
-</section>
+</dialog>
 
 <dialog id="padEditor" class="sheet">
   <form method="dialog" id="padForm" class="sheet__form">

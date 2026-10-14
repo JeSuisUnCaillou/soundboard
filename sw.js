@@ -40,8 +40,12 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
 
+  // Revalidate rather than trust the HTTP cache: a stale module next to a
+  // fresh one is how a deploy breaks an app that was working a minute ago.
+  const fresh = new Request(req, { cache: 'no-cache' });
+
   e.respondWith(
-    fetch(req)
+    fetch(fresh)
       .then((res) => {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});

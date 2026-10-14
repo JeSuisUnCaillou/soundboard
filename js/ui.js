@@ -9,10 +9,12 @@ export const refs = {};
 
 export function bindRefs() {
   const ids = [
-    'grid', 'book', 'lib', 'libEmpty', 'libFilter',
-    'folderName', 'folderCount', 'btnOpen', 'btnOpenBig', 'btnOpenFiles', 'btnEdit', 'btnSetup',
+    'grid', 'stageEmpty', 'btnAddEmpty', 'book', 'lib', 'libEmpty', 'libFilter',
+    'folderName', 'folderCount', 'btnAdd', 'btnEdit', 'btnSetup',
+    'picker', 'pickerTitle', 'pickerBlurb', 'pickerNote', 'pickerKeys', 'pickerClose',
+    'btnAddFolder', 'btnAddFiles', 'btnReopen',
     'btnStop', 'playing', 'master', 'masterValue', 'btnBook',
-    'welcome', 'welcomeNote', 'live', 'toast',
+    'live', 'toast',
   ];
   for (const id of ids) refs[id] = document.getElementById(id);
   return refs;
@@ -191,8 +193,10 @@ export function drawStop(engine) {
 }
 
 export function drawFolder(library) {
-  refs.folderName.textContent = library.isOpen ? library.name : 'No folder open';
-  refs.folderCount.textContent = library.isOpen ? `${library.entries.size} sound${library.entries.size === 1 ? '' : 's'}` : '';
+  refs.folderName.textContent = library.isOpen ? library.label : 'No sounds yet';
+  refs.folderCount.textContent = library.isOpen
+    ? `${library.entries.size} sound${library.entries.size === 1 ? '' : 's'}`
+    : '';
 }
 
 // ── gels, chrome, chatter ─────────────────────────────────────────────────

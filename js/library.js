@@ -1,20 +1,26 @@
-// Reading sounds off the local disk, four ways, in order of how much the
-// browser is willing to remember afterwards.
+// The sounds the board can reach, gathered from one or more places on the local
+// disk and added to, never swapped out: a folder, a handful of files, another
+// folder later in the week. Nothing is uploaded; every read goes straight to
+// the file the operator chose.
 //
-//  1. File System Access API (Chrome and Edge on the desktop): a real folder
-//     handle that can be stored and reopened on the next launch.
-//  2. A folder dropped onto the window: the same handle where available,
-//     otherwise the older webkitGetAsEntry walk, which Firefox and Safari do.
-//  3. <input type="file" webkitdirectory>: a snapshot of the folder's files
-//     and nothing that outlives the session. Chrome on Android included.
-//  4. Plain multi-file picking, for iOS, where a folder cannot be chosen at all.
-//
-// Every one of them reads the audio straight from disk; none of them upload it.
+// Where the File System Access API exists (Chrome and Edge on the desktop),
+// each source is kept as a handle, which can be stored and reopened on the next
+// launch. Elsewhere the browser hands over a snapshot of files and nothing that
+// outlives the session, and on iOS, where no folder can be chosen at all, the
+// sounds are picked one by one.
 
 const AUDIO = /\.(mp3|m4a|m4r|aac|wav|aif|aiff|flac|ogg|oga|opus|weba|webm)$/i;
 const SKIP = /^(\.|__MACOSX$|node_modules$)/;
 
+const PICKER_TYPES = [{
+  description: 'Audio',
+  accept: {
+    'audio/*': ['.mp3', '.m4a', '.m4r', '.aac', '.wav', '.aif', '.aiff', '.flac', '.ogg', '.oga', '.opus', '.weba', '.webm'],
+  },
+}];
+
 export const CAN_PERSIST = typeof window.showDirectoryPicker === 'function';
+export const CAN_PICK_FILE_HANDLES = typeof window.showOpenFilePicker === 'function';
 
 function sortPaths(a, b) {
   return a.path.localeCompare(b.path, undefined, { numeric: true, sensitivity: 'base' });
@@ -22,106 +28,135 @@ function sortPaths(a, b) {
 
 export class Library {
   constructor() {
-    this.mode = null;        // 'handle' | 'files'
-    this.name = '';
-    this.handle = null;
-    this.entries = new Map(); // path -> { path, name, dir, handle?, file? }
+    this.sources = [];        // { key, kind: 'dir' | 'file' | 'files', name, handle? }
+    this.entries = new Map(); // path -> { path, name, dir, src, handle?, file? }
     this._urls = new Map();   // path -> blob URL
+    this._nextKey = 1;
   }
 
   get isOpen() {
-    return this.entries.size > 0 || !!this.handle;
+    return this.entries.size > 0;
+  }
+
+  /** The first place sounds came from — what the board is named and keyed by. */
+  get rootName() {
+    return this.sources[0] ? this.sources[0].name : '';
+  }
+
+  get label() {
+    if (!this.sources.length) return '';
+    const extra = this.sources.length - 1;
+    return extra ? `${this.rootName} + ${extra} more` : this.rootName;
   }
 
   get list() {
     return [...this.entries.values()].sort(sortPaths);
   }
 
-  /** Ask for a folder. Returns false when the picker is dismissed. */
-  async pick() {
+  get handles() {
+    return this.sources.map((s) => s.handle).filter(Boolean);
+  }
+
+  /** Add a whole folder. Returns the paths added, or null if the picker was dismissed. */
+  async addFolder() {
     if (CAN_PERSIST) {
       let handle;
       try {
         handle = await window.showDirectoryPicker({ id: 'soundboard-folder', mode: 'read' });
       } catch (err) {
-        if (err && err.name === 'AbortError') return false;
+        if (err && err.name === 'AbortError') return null;
         throw err;
       }
-      await this.useHandle(handle);
-      return true;
+      return this.addHandle(handle);
     }
     const files = await pickWithInput(true);
-    if (!files) return false;
-    await this.useFiles(files);
-    return true;
+    return files ? this.addFiles(files) : null;
   }
 
-  /**
-   * Picking the sounds themselves rather than the folder holding them, for
-   * iOS and anywhere else the folder picker is missing or comes back empty.
-   */
-  async pickFiles() {
+  /** Add sounds one by one — the only way in on iOS, and handy everywhere. */
+  async addSounds() {
+    if (CAN_PICK_FILE_HANDLES) {
+      let handles;
+      try {
+        handles = await window.showOpenFilePicker({ id: 'soundboard-files', multiple: true, types: PICKER_TYPES });
+      } catch (err) {
+        if (err && err.name === 'AbortError') return null;
+        throw err;
+      }
+      const added = [];
+      for (const handle of handles) added.push(...await this.addHandle(handle));
+      return added;
+    }
     const files = await pickWithInput(false);
-    if (!files) return false;
-    await this.useFiles(files);
-    return true;
+    return files ? this.addFiles(files) : null;
   }
 
-  async useHandle(handle) {
-    if ((await handle.queryPermission({ mode: 'read' })) !== 'granted') {
-      const granted = await handle.requestPermission({ mode: 'read' });
-      if (granted !== 'granted') throw new DOMException('Permission to read the folder was refused', 'NotAllowedError');
-    }
-    this.reset();
-    this.mode = 'handle';
-    this.handle = handle;
-    this.name = handle.name;
-    await walkHandle(handle, '', this.entries);
-    return this.entries.size;
-  }
-
-  /** Reopen a stored handle without prompting. Returns false if it needs a click. */
-  async tryHandle(handle) {
-    if ((await handle.queryPermission({ mode: 'read' })) !== 'granted') return false;
-    await this.useHandle(handle);
-    return true;
-  }
-
-  async useFiles(fileList) {
-    this.reset();
-    this.mode = 'files';
-    const files = [...fileList].filter((f) => AUDIO.test(f.name));
-    let root = '';
-    for (const f of files) {
-      const rel = f.webkitRelativePath || f.name;
-      const parts = rel.split('/');
-      if (parts.length > 1 && !root) root = parts[0];
-      const path = parts.length > 1 ? parts.slice(1).join('/') : rel;
-      if (parts.some((p) => SKIP.test(p))) continue;
-      this.entries.set(path, { path, name: f.name, dir: path.split('/').slice(0, -1).join('/'), file: f });
-    }
-    this.name = root || (files.length ? 'Chosen sounds' : 'Dropped files');
-    return this.entries.size;
-  }
-
-  /** A folder dragged onto the window. */
-  async useDrop(dataTransfer) {
+  /** A folder or a few files dropped onto the window. */
+  async addDrop(dataTransfer) {
     const items = [...dataTransfer.items].filter((i) => i.kind === 'file');
-    if (!items.length) return 0;
+    if (!items.length) return [];
 
     if (CAN_PERSIST && typeof items[0].getAsFileSystemHandle === 'function') {
-      const handle = await items[0].getAsFileSystemHandle();
-      if (handle && handle.kind === 'directory') return this.useHandle(handle);
+      const added = [];
+      for (const item of items) {
+        const handle = await item.getAsFileSystemHandle();
+        if (handle) added.push(...await this.addHandle(handle));
+      }
+      return added;
     }
 
     const entries = items.map((i) => (i.webkitGetAsEntry ? i.webkitGetAsEntry() : null)).filter(Boolean);
     const dir = entries.find((e) => e.isDirectory);
-    if (!dir) return 0;
-    this.reset();
-    this.mode = 'files';
-    this.name = dir.name;
-    await walkEntry(dir, '', this.entries);
-    return this.entries.size;
+    if (dir) {
+      const src = this._source({ kind: 'dir', name: dir.name });
+      const found = new Map();
+      await walkEntry(dir, '', found);
+      return this._merge([...found.values()], src);
+    }
+    return dataTransfer.files.length ? this.addFiles(dataTransfer.files) : [];
+  }
+
+  /** A stored handle, reopened. Throws if permission is refused. */
+  async addHandle(handle) {
+    if ((await handle.queryPermission({ mode: 'read' })) !== 'granted') {
+      if ((await handle.requestPermission({ mode: 'read' })) !== 'granted') {
+        throw new DOMException(`Permission to read “${handle.name}” was refused`, 'NotAllowedError');
+      }
+    }
+
+    if (handle.kind === 'directory') {
+      const src = this._source({ kind: 'dir', name: handle.name, handle });
+      const found = new Map();
+      await walkHandle(handle, '', found);
+      return this._merge([...found.values()], src);
+    }
+
+    if (!AUDIO.test(handle.name)) return [];
+    const src = this._source({ kind: 'file', name: handle.name, handle });
+    return this._merge([{ path: handle.name, name: handle.name, dir: '', handle }], src);
+  }
+
+  /** Files from an <input>: a session's worth of sound, with nothing to store. */
+  async addFiles(fileList) {
+    const files = [...fileList].filter((f) => AUDIO.test(f.name));
+    if (!files.length) return [];
+
+    let root = '';
+    const found = [];
+    for (const file of files) {
+      const rel = file.webkitRelativePath || file.name;
+      const parts = rel.split('/');
+      if (parts.some((p) => SKIP.test(p))) continue;
+      if (parts.length > 1 && !root) root = parts[0];
+      const path = parts.length > 1 ? parts.slice(1).join('/') : rel;
+      found.push({ path, name: file.name, dir: path.split('/').slice(0, -1).join('/'), file });
+    }
+
+    const src = this._source({
+      kind: root ? 'dir' : 'files',
+      name: root || (found.length === 1 ? found[0].name : 'Chosen sounds'),
+    });
+    return this._merge(found, src);
   }
 
   has(path) {
@@ -130,7 +165,7 @@ export class Library {
 
   async file(path) {
     const entry = this.entries.get(path);
-    if (!entry) throw new Error(`"${path}" is not in this folder`);
+    if (!entry) throw new Error(`“${path}” is not among the sounds that are open`);
     if (entry.file) return entry.file;
     const file = await entry.handle.getFile();
     entry.file = file;
@@ -150,10 +185,63 @@ export class Library {
     for (const url of this._urls.values()) URL.revokeObjectURL(url);
     this._urls.clear();
     this.entries.clear();
-    this.handle = null;
-    this.name = '';
-    this.mode = null;
+    this.sources = [];
   }
+
+  _source(src) {
+    const full = { ...src, key: this._nextKey };
+    this._nextKey += 1;
+    this.sources.push(full);
+    return full;
+  }
+
+  /**
+   * Fold what was found into what is already open. The same sound found again —
+   * the same folder picked twice, say — is left where it is, pads and all; a
+   * different sound that happens to share a name gets a path of its own, so a
+   * pad pointing at one never plays the other.
+   */
+  async _merge(found, src) {
+    const added = [];
+    for (const entry of [...found].sort(sortPaths)) {
+      let path = entry.path;
+      const clash = this.entries.get(path);
+      if (clash) {
+        if (await sameSound(clash, entry)) continue;
+        path = this._freePath(entry.path);
+      }
+      this.entries.set(path, { ...entry, path, src: src.key });
+      added.push(path);
+    }
+    if (!added.length) this.sources = this.sources.filter((s) => s !== src);
+    return added;
+  }
+
+  _freePath(path) {
+    const dot = path.lastIndexOf('.');
+    const stem = dot > 0 ? path.slice(0, dot) : path;
+    const ext = dot > 0 ? path.slice(dot) : '';
+    let n = 2;
+    while (this.entries.has(`${stem} (${n})${ext}`)) n += 1;
+    return `${stem} (${n})${ext}`;
+  }
+}
+
+/** Is this the same file as the one already open under that path? */
+async function sameSound(a, b) {
+  if (a.handle && b.handle) {
+    try {
+      return await a.handle.isSameEntry(b.handle);
+    } catch {
+      return a.handle.name === b.handle.name;
+    }
+  }
+  if (a.file && b.file) {
+    return a.file.name === b.file.name
+      && a.file.size === b.file.size
+      && a.file.lastModified === b.file.lastModified;
+  }
+  return false;
 }
 
 async function walkHandle(dir, prefix, out, depth = 0) {

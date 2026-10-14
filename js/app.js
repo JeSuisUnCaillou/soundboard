@@ -26,7 +26,7 @@ class App {
     this.editing = false;
     this.raf = null;
     this.saveTimer = null;
-    this.pendingHandle = null;
+    this.pendingHandles = null;
     this.wakeLock = null;
 
     this.engine.onchange = () => {
@@ -53,24 +53,19 @@ class App {
 
     this.wire();
     setPanel(false);
-    // Where a folder cannot be held on to, offer picking the sounds directly:
-    // iOS has no folder picker at all.
-    refs.btnOpenFiles.hidden = CAN_PERSIST;
-    refs.welcomeNote.textContent = CAN_PERSIST
-      ? 'This browser reopens the same folder next time. Install the board from the browser menu '
-        + 'and it can keep that permission instead of asking at every launch.'
-      : 'This browser cannot hold on to a folder between visits, so the board asks for it again each launch. '
-        + 'The pads themselves are remembered.';
-
+    this.redraw();
     await this.restore();
   }
 
   // ── events ──────────────────────────────────────────────────────────────
 
   wire() {
-    refs.btnOpen.addEventListener('click', () => this.openFolder());
-    refs.btnOpenBig.addEventListener('click', () => (this.pendingHandle ? this.reopen() : this.openFolder()));
-    refs.btnOpenFiles.addEventListener('click', () => this.openFiles());
+    refs.btnAdd.addEventListener('click', () => this.openPicker());
+    refs.btnAddEmpty.addEventListener('click', () => this.openPicker());
+    refs.btnAddFolder.addEventListener('click', () => this.add('folder'));
+    refs.btnAddFiles.addEventListener('click', () => this.add('files'));
+    refs.btnReopen.addEventListener('click', () => this.reopen());
+    refs.pickerClose.addEventListener('click', () => refs.picker.close());
     refs.btnEdit.addEventListener('click', () => this.setEditing(!this.editing));
     refs.btnSetup.addEventListener('click', () => this.board && this.setup.open(this.board));
 
@@ -171,14 +166,14 @@ class App {
       if (!e.dataTransfer || !e.dataTransfer.types.includes('Files')) return;
       e.preventDefault();
       try {
-        const count = await this.library.useDrop(e.dataTransfer);
-        if (!count) {
-          toast('Drop a folder, not a single file.');
+        const added = await this.library.addDrop(e.dataTransfer);
+        if (!added.length) {
+          toast('Nothing there the board can play.');
           return;
         }
-        await this.afterFolder();
+        await this.absorb(added, { announce: true });
       } catch (err) {
-        toast(`That folder could not be read: ${err.message}`);
+        toast(`That could not be read: ${err.message}`);
       }
     });
   }
@@ -285,111 +280,140 @@ class App {
     }
   }
 
-  // ── folder and board lifecycle ──────────────────────────────────────────
+  // ── sounds and board lifecycle ──────────────────────────────────────────
 
+  /**
+   * The one way sounds get in: a folder, or files one by one, added to
+   * whatever is already open rather than replacing it.
+   */
+  openPicker() {
+    const first = !this.library.isOpen;
+    refs.pickerTitle.textContent = first ? "Point it at the show's sounds" : 'Add more sounds';
+    refs.pickerBlurb.textContent = first
+      ? "Choose the folder that holds this show's audio, or pick the sounds one by one. They are read "
+        + 'straight off your disk and stay there — nothing is uploaded, and the board works with the network off.'
+      : 'Whatever you add joins the sounds already open, and lands on the first free pads.';
+    refs.pickerKeys.hidden = !first;
+    refs.btnReopen.hidden = !this.pendingHandles;
+    refs.pickerNote.textContent = CAN_PERSIST
+      ? 'Install the board from the browser menu and it can hold on to these folders instead of asking at every launch.'
+      : 'This browser cannot hold on to a folder between visits, so the sounds are chosen again each launch. '
+        + 'The pads themselves are remembered.';
+    refs.picker.showModal();
+    (this.pendingHandles ? refs.btnReopen : refs.btnAddFolder).focus();
+  }
+
+  async add(what) {
+    try {
+      const added = what === 'folder' ? await this.library.addFolder() : await this.library.addSounds();
+      if (added === null) return;            // the picker was dismissed
+      await this.absorb(added, { announce: true });
+    } catch (err) {
+      toast(err.name === 'NotAllowedError'
+        ? 'Without permission to read them, there is nothing to play.'
+        : `That could not be opened: ${err.message}`);
+    }
+  }
+
+  /** Sounds have arrived: make sure there is a board, and put them on it. */
+  async absorb(added, { announce = false } = {}) {
+    if (!this.board) {
+      const id = slug(this.library.rootName);
+      const saved = await store.loadBoard(id);
+      // A board built today starts as wide as the last one the operator set.
+      this.board = (saved && migrate(saved, { id }))
+        || newBoard({ id, name: this.library.rootName, cols: await store.getMeta('cols') });
+      fitPads(this.board);
+      refs.master.value = Math.round(this.board.master * 100);
+      refs.masterValue.textContent = String(Math.round(this.board.master * 100));
+      this.engine.setMaster(this.board.master);
+      await store.setMeta('last', this.board.id);
+    }
+
+    const placed = this.place(added);
+    this.pendingHandles = null;
+    if (refs.picker.open) refs.picker.close();
+
+    if (this.library.handles.length) {
+      await store.saveHandles(this.board.id, this.library.handles);
+    }
+
+    this.redraw();
+    this.saveNow();
+    this.primeAll();
+    this.measure();
+    this.keepAwake();
+
+    const missing = filled(this.board).filter(({ pad }) => !this.library.has(pad.file)).length;
+    if (placed) toast(`${placed} sound${placed === 1 ? '' : 's'} added to the board.`);
+    else if (announce) toast('Those sounds are already on the board.');
+    else if (missing) toast(`${missing} pad${missing === 1 ? '' : 's'} point at sounds that are not open.`);
+    say(`${this.library.entries.size} sounds open`);
+  }
+
+  /** New sounds go on the first free pads, in the order they were found. */
+  place(paths) {
+    const onBoard = new Set(filled(this.board).map(({ pad }) => pad.file));
+    let placed = 0;
+    for (const path of paths) {
+      if (onBoard.has(path)) continue;
+      let i = this.board.pads.findIndex((pad) => !pad || !pad.file);
+      if (i === -1) {
+        i = this.board.pads.length;
+        for (let c = 0; c < this.board.cols; c += 1) this.board.pads.push(null);
+      }
+      this.board.pads[i] = newPad(this.board, i, path);
+      onBoard.add(path);
+      placed += 1;
+    }
+    fitPads(this.board);
+    return placed;
+  }
+
+  /** On launch: the board that was open last, and the places its sounds live. */
   async restore() {
     const lastId = await store.getMeta('last');
-    if (!lastId) return;
+    if (!lastId) {
+      this.openPicker();
+      return;
+    }
 
-    if (CAN_PERSIST) {
-      const handle = await store.loadHandle(lastId);
-      if (handle) {
-        try {
-          if (await this.library.tryHandle(handle)) {
-            await this.afterFolder();
-            return;
-          }
-          this.pendingHandle = handle;
-          refs.btnOpenBig.textContent = `Reopen “${handle.name}”`;
-          refs.welcomeNote.textContent = 'Browsers ask again for permission to read a folder each time the page loads.';
-          return;
-        } catch {
-          /* fall through to a plain open */
-        }
+    const handles = await store.loadHandles(lastId);
+    if (handles.length) {
+      const states = await Promise.all(handles.map((h) => h.queryPermission({ mode: 'read' })));
+      if (states.every((state) => state === 'granted')) {
+        for (const handle of handles) await this.library.addHandle(handle);
+        await this.absorb([]);
+        return;
       }
+      this.pendingHandles = handles;
+      refs.btnReopen.hidden = false;
+      refs.btnReopen.textContent = handles.length === 1
+        ? `Reopen “${handles[0].name}”`
+        : `Reopen ${handles.length} places`;
+      this.openPicker();
+      refs.pickerBlurb.textContent = 'The board is here. Browsers ask again for permission to read your '
+        + 'sounds each time the page loads — once you have granted it, everything is where you left it.';
+      return;
     }
 
     const saved = await store.loadBoard(lastId);
+    this.openPicker();
     if (saved) {
-      refs.welcomeNote.textContent = `“${saved.name}” is ready. Point it at its folder again to use it.`;
+      refs.pickerBlurb.textContent = `“${saved.name}” is here, with its pads. Point it at the sounds again to play them.`;
     }
   }
 
   async reopen() {
+    const handles = this.pendingHandles || [];
     try {
-      await this.library.useHandle(this.pendingHandle);
-      this.pendingHandle = null;
-      await this.afterFolder();
+      for (const handle of handles) await this.library.addHandle(handle);
+      refs.btnReopen.hidden = true;
+      await this.absorb([]);
     } catch (err) {
-      toast(err.name === 'NotAllowedError' ? 'Without permission to read the folder, there is nothing to play.' : err.message);
-    }
-  }
-
-  async openFolder() {
-    try {
-      if (!(await this.library.pick())) return;
-      await this.afterFolder();
-    } catch (err) {
-      toast(`That folder could not be opened: ${err.message}`);
-    }
-  }
-
-  async openFiles() {
-    try {
-      if (!(await this.library.pickFiles())) return;
-      await this.afterFolder();
-    } catch (err) {
-      toast(`Those files could not be opened: ${err.message}`);
-    }
-  }
-
-  /** A folder is open: find or build its board, then draw everything. */
-  async afterFolder() {
-    this.engine.reset();
-    const id = slug(this.library.name);
-    const saved = await store.loadBoard(id);
-    // A board built today starts as wide as the last one the operator set.
-    this.board = (saved && migrate(saved, { id }))
-      || newBoard({ id, name: this.library.name, cols: await store.getMeta('cols') });
-    fitPads(this.board);
-
-    if (!filled(this.board).length) this.autoFill();
-
-    this.pendingHandle = null;
-    refs.welcome.hidden = true;
-    refs.master.value = Math.round(this.board.master * 100);
-    refs.masterValue.textContent = String(Math.round(this.board.master * 100));
-    this.engine.setMaster(this.board.master);
-
-    if (this.library.mode === 'handle' && this.library.handle) {
-      await store.saveHandle(id, this.library.handle);
-    }
-    await store.setMeta('last', id);
-
-    this.redraw();
-    this.saveNow();
-
-    const missing = filled(this.board).filter(({ pad }) => !this.library.has(pad.file)).length;
-    if (missing) toast(`${missing} pad${missing === 1 ? '' : 's'} point at files that are not in this folder.`);
-
-    this.primeAll();
-    this.measure();
-    say(`${this.library.name} open, ${this.library.entries.size} sounds`);
-  }
-
-  /**
-   * First time with a folder: lay the sounds out in order so there is a board.
-   * The column count is the operator's, not the folder's, so it is left alone.
-   */
-  autoFill() {
-    const files = this.library.list;
-    files.forEach((entry, i) => {
-      this.board.pads[i] = newPad(this.board, i, entry.path);
-      this.board.pads[i].cue = String(i + 1);
-    });
-    fitPads(this.board);
-    if (files.length) {
-      toast(`${files.length} sound${files.length === 1 ? '' : 's'} laid out in order. Edit the board to rearrange.`);
+      toast(err.name === 'NotAllowedError'
+        ? 'Without permission to read them, there is nothing to play.'
+        : `Those sounds could not be reopened: ${err.message}`);
     }
   }
 
@@ -529,8 +553,10 @@ class App {
   }
 
   redraw() {
-    if (!this.board) return;
     drawFolder(this.library);
+    refs.stageEmpty.hidden = !!this.board;
+    refs.grid.hidden = !this.board;
+    if (!this.board) return;
     drawGrid(this.board, { editing: this.editing, missing: (path) => !this.library.has(path) });
     drawPlaying(this.board, this.engine);
     drawStop(this.engine);

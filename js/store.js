@@ -48,13 +48,16 @@ export const store = {
     return run('boards', 'readwrite', (s) => s.delete(id));
   },
 
-  // Directory handles survive a reload in browsers with the File System Access
-  // API; the permission does not, so expect to ask for it again on first use.
-  saveHandle(id, handle) {
-    return run('handles', 'readwrite', (s) => s.put(handle, id));
+  // Handles for every place a board's sounds came from. They survive a reload
+  // in browsers with the File System Access API; the permission does not, so
+  // expect to ask for it again unless the board has been installed.
+  saveHandles(id, handles) {
+    return run('handles', 'readwrite', (s) => s.put(handles, id));
   },
-  loadHandle(id) {
-    return run('handles', 'readonly', (s) => s.get(id));
+  async loadHandles(id) {
+    const stored = await run('handles', 'readonly', (s) => s.get(id));
+    if (!stored) return [];
+    return Array.isArray(stored) ? stored : [stored];
   },
 
   setMeta(key, value) {

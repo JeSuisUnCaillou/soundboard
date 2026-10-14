@@ -1,8 +1,9 @@
 # Soundboard
 
-A sound-cue board for theatre, run from a folder of audio on your own machine.
-Point it at the folder that holds the show's sound, lay the files out on a grid
-of pads, and fire them by click or by key.
+A sound-cue board for theatre, run from the audio on your own machine. Point it
+at the folder that holds the show's sound — or at a handful of files, and more
+of them whenever you like — lay them out on a grid of pads, and fire them by
+click or by key.
 
 No build step, no server, no account, and nothing is uploaded: the files are read
 straight off the disk by the browser and never leave it.
@@ -35,27 +36,30 @@ is loaded: the browser, not the board, is what insists on asking.
 
 ## Browsers
 
-| Browser | Choosing the sounds | Remembering the folder between launches |
+| Browser | Adding sounds | Remembering where they live |
 | --- | --- | --- |
-| Chrome, Edge, Opera on the desktop | Folder picker, or drag the folder onto the window | Yes — one click to confirm on each launch |
-| Firefox and Safari on the desktop | Folder picker, or drag the folder onto the window | No |
-| Chrome on Android | Folder picker | No |
-| Safari on iPhone and iPad | **Choose sound files** — iOS has no folder picker | No |
+| Chrome, Edge, Opera on the desktop | A folder or single files, by picker or dropped on the window | Yes — kept once the board is installed, otherwise one click per launch |
+| Firefox and Safari on the desktop | A folder or single files, by picker or dropped on the window | No |
+| Chrome on Android | A folder, or single files | No |
+| Safari on iPhone and iPad | Single files — iOS has no folder picker | No |
 
 The difference is the [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker),
 which only desktop Chromium browsers implement. Everywhere else the board falls
 back to `<input type="file" webkitdirectory>`, or on iOS to picking the sounds
 themselves: everything works for the session, but the browser will not hold on to
 a folder, so it is chosen again on the next launch. The board itself — pads,
-cues, colours, fades — is remembered either way, and finds its files again by
-name as soon as the folder is reopened.
+cues, colours, fades — is remembered either way, and finds its sounds again by
+name as soon as they are added back.
 
 Audio formats are whatever the browser plays: MP3, M4A, AAC, WAV, FLAC, OGG/Opus,
 and on Safari also AIFF.
 
 ## Using it
 
-**Setting up.** Open a folder and the sounds are laid out in order to start with.
+**Setting up.** **Add files** takes a whole folder or a few sounds at a time, and
+whatever arrives joins what is already open and lands on the first free pads —
+so a board can be built from several places and added to mid-rehearsal. A sound
+already on the board is recognised and left where it is.
 **Edit board** keeps the board in front of you and opens the folder's contents
 beside it: tap a sound to put it on the next free pad, or drag one onto a
 particular pad. Each pad grows a grip in its corner — drag that to move the pad,

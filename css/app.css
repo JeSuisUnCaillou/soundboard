@@ -147,6 +147,20 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   overflow: auto;
 }
 
+.stage__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  height: 100%;
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: 15px;
+}
+.stage__empty[hidden] { display: none; }
+
+.grid[hidden] { display: none; }
 .grid {
   display: grid;
   gap: var(--gap);
@@ -408,37 +422,23 @@ body[data-editing="on"] .pad__lamp { display: none; }
 
 .slider { accent-color: var(--warn); width: 130px; }
 
-/* ───────────────────────── welcome ───────────────────────── */
+/* ───────────────────────── the picker ───────────────────────── */
 
-.welcome {
-  position: fixed;
-  inset: 0;
+.picker .sheet__body { gap: 16px; }
+.picker p { margin: 0; color: var(--ink-dim); }
+.picker .row--buttons { flex-wrap: wrap; }
+.picker .btn { padding: 10px 18px; font-size: 15px; }
+
+.keys {
   display: grid;
-  place-items: center;
-  padding: 20px;
-  background: color-mix(in oklab, var(--black) 92%, transparent);
-  backdrop-filter: blur(3px);
-  z-index: 5;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
 }
-.welcome[hidden] { display: none; }
-.welcome__card {
-  max-width: 44ch;
-  padding: 26px 28px 22px;
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--alert);
-  border-radius: 6px;
-  background: var(--console);
-}
-.welcome__title { margin: 0 0 10px; font: 700 26px/1.1 var(--cond); }
-.welcome__card p { margin: 0 0 16px; color: var(--ink-dim); }
-.welcome__note { font-size: 13px; color: var(--ink-faint); }
-.welcome__note:empty { display: none; }
-.welcome__buttons { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 16px; }
-.welcome .btn--go { padding: 10px 20px; font-size: 16px; }
-.welcome__buttons .btn { padding: 10px 18px; font-size: 15px; }
-
-.keys { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0; padding-top: 14px; border-top: 1px solid var(--line-soft); }
-.keys dt { white-space: nowrap; }
+.keys[hidden] { display: none; }
+.keys dt { white-space: nowrap; color: var(--ink-dim); font-size: 13.5px; }
 .keys dd { margin: 0; color: var(--ink-dim); font-size: 13.5px; }
 kbd {
   padding: 1px 6px;
