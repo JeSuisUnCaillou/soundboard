@@ -9,7 +9,8 @@
 export const BUNDLED_DIR = 'default';
 
 export const BUNDLED = [
-  { file: 'gunshot.mp3', pad: { fadeIn: 0 } },   // a gunshot that fades in is not a gunshot
+  // A gunshot that fades in is not a gunshot, and two shots are two shots.
+  { file: 'gunshot.mp3', pad: { fadeIn: 0, tap: 'overlay' } },
   { file: 'crickets ambiance.wav', pad: { gel: 'moss' } },
   { file: 'sexy.mp3', pad: { gel: 'surprise-pink' } },
 ];

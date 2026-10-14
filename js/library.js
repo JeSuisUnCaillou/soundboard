@@ -45,17 +45,10 @@ export class Library {
     return this.sources.filter((s) => s.kind !== 'bundled');
   }
 
-  /** The first place sounds came from — what the board is named and keyed by. */
+  /** The first place sounds came from — what the board is keyed by. */
   get rootName() {
     const first = this.chosen[0] || this.sources[0];
     return first ? first.name : '';
-  }
-
-  /** The place the operator opened, named for the rail. Empty until there is one. */
-  get label() {
-    if (!this.chosen.length) return '';
-    const extra = this.chosen.length - 1;
-    return extra ? `${this.rootName} + ${extra} more` : this.rootName;
   }
 
   get list() {

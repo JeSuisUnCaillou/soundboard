@@ -11,7 +11,7 @@ export const refs = {};
 export function bindRefs() {
   const ids = [
     'grid', 'stageEmpty', 'btnAddEmpty', 'book', 'lib', 'libEmpty', 'libFilter',
-    'folderName', 'folderCount', 'btnReconnect', 'btnAdd', 'btnEdit', 'btnEmpty', 'btnSetup',
+    'btnReconnect', 'btnAdd', 'btnEdit', 'btnEmpty', 'btnSetup',
     'browse', 'btnBrowse', 'btnBrowseDone',
     'picker', 'pickerTitle', 'pickerBlurb', 'pickerNote', 'pickerKeys', 'pickerClose',
     'btnAddFolder', 'btnAddFiles', 'btnReopen',
@@ -222,17 +222,6 @@ export function drawStop(engine) {
     'aria-label',
     live ? `Stop ${live === 1 ? 'the sound playing' : `the ${live} sounds playing`}` : 'Stop',
   );
-}
-
-export function drawFolder(library) {
-  // The rail says where the sounds came from, and only when that is somewhere
-  // the operator chose: the ones that ship with the app need no announcing.
-  const own = library.label;
-  refs.folderName.textContent = own;
-  refs.folderCount.textContent = own
-    ? `${library.entries.size} sound${library.entries.size === 1 ? '' : 's'}`
-    : '';
-  refs.folderName.parentElement.hidden = !own;
 }
 
 // ── gels, chrome, chatter ─────────────────────────────────────────────────

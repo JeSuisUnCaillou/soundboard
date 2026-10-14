@@ -11,7 +11,7 @@ import { bundledPad } from './bundled.js';
 // moved to Daylight Blue follow it rather than keeping a colour nobody picked.
 const OLD_DEFAULT_GEL = 'bastard-amber';
 
-export const BOARD_VERSION = 2;
+export const BOARD_VERSION = 3;
 export const MAX_COLS = 12;
 export const MAX_ROWS = 12;
 
@@ -36,6 +36,16 @@ export function newBoard({ id, cols = 3, rows = 3 }) {
   };
   fitPads(board);
   return board;
+}
+
+// Under this, a sound is a hit — a shot, a door, a slap — and pressing it twice
+// means two of them rather than a restart. Above it, it is a cue, and a second
+// press is the operator saying "enough".
+export const SHORT_SOUND = 5;
+
+/** What a sound of this length does when its pad is tapped again. */
+export function tapForLength(seconds) {
+  return seconds > 0 && seconds < SHORT_SOUND ? 'overlay' : 'fadeout';
 }
 
 export function newPad(board, i, file) {
@@ -179,6 +189,9 @@ function migratePad(board, i, raw, version) {
   pad.solo = !!raw.solo;
   pad.key = typeof raw.key === 'string' ? raw.key.slice(0, 1) : '';
   pad.duration = clampNum(raw.duration, 0, 1e5, 0);
+  // Pads made from the sounds that ship with the app take their settings again
+  // when those settings change, once.
+  if (version < 3) Object.assign(pad, bundledPad(pad.file) || {});
   return pad;
 }
 

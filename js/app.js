@@ -6,12 +6,13 @@ import { Engine, probeDuration } from './engine.js';
 import { store, prefs } from './store.js';
 import {
   newBoard, newPad, migrate, setCols, setRows, fitPads, filled, slug, move, padByKey, rowCol, padTitle,
+  tapForLength,
 } from './model.js';
 import { bundledPaths } from './bundled.js';
 import { PadEditor, SetupSheet } from './editor.js';
 import {
   refs, bindRefs, drawGrid, paintPads, drawLibrary,
-  drawStop, drawFolder, setPanel, setBook, markPreview, say, toast,
+  drawStop, setPanel, setBook, markPreview, say, toast,
 } from './ui.js';
 
 const PATH_TYPE = 'application/x-soundboard-path';
@@ -858,7 +859,6 @@ class App {
   }
 
   redraw() {
-    drawFolder(this.library);
     refs.stageEmpty.hidden = !!this.board;
     refs.grid.hidden = !this.board;
     if (!this.board) return;
@@ -898,6 +898,9 @@ class App {
       if (!job) return;
       try {
         job.pad.duration = await probeDuration(await this.library.url(job.pad.file));
+        // The length is known only now, so this is where a short sound gets
+        // the tap that suits it — never over an answer already given.
+        if (job.pad.tap === 'fadeout') job.pad.tap = tapForLength(job.pad.duration);
       } catch {
         job.pad.duration = 0;
       }
@@ -970,3 +973,4 @@ app.boot().catch((err) => {
   console.error(err);
   toast(`The board could not start: ${err.message}`);
 });
+
