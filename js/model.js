@@ -4,6 +4,7 @@
 // count re-wraps the same pads in the same order and never loses one.
 
 import { DEFAULT_GEL } from './gels.js';
+import { bundledPad } from './bundled.js';
 
 // Pads used to be handed Bastard Amber by default. Boards from before that
 // moved to Daylight Blue follow it rather than keeping a colour nobody picked.
@@ -38,6 +39,7 @@ export function newBoard({ id, name, cols = 4 }) {
 
 export function newPad(board, i, file) {
   const name = file ? prettyName(file) : '';
+  // A sound that ships with the board can ask for settings of its own.
   return {
     file: file || '',
     name,
@@ -53,6 +55,7 @@ export function newPad(board, i, file) {
     solo: false,
     key: defaultKey(board, i),
     duration: 0,
+    ...(file ? bundledPad(file) || {} : {}),
   };
 }
 

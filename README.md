@@ -69,6 +69,12 @@ and on Safari also AIFF.
 
 ## Using it
 
+**The first launch** opens a **Default board** with the three sounds that come
+with the app — a gunshot, crickets, something slinky. They sit under `default`
+in the tree and stay there whatever else you open: they are served with the
+board, so they need no folder, no permission and no copy. Press them, move them,
+or empty the board and build your own.
+
 **Setting up.** **Add files** takes a whole folder or a few sounds at a time,
 subfolders and all, and whatever arrives joins what is already open — so a board
 can be built from several places and added to mid-rehearsal. A sound already on

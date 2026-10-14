@@ -9,6 +9,8 @@
 // outlives the session, and on iOS, where no folder can be chosen at all, the
 // sounds are picked one by one.
 
+import { BUNDLED, BUNDLED_DIR } from './bundled.js';
+
 const AUDIO = /\.(mp3|m4a|m4r|aac|wav|aif|aiff|flac|ogg|oga|opus|weba|webm)$/i;
 const SKIP = /^(\.|__MACOSX$|node_modules$)/;
 
@@ -38,14 +40,20 @@ export class Library {
     return this.entries.size > 0;
   }
 
+  /** The places the operator chose; the sounds that ship with the board are not one. */
+  get chosen() {
+    return this.sources.filter((s) => s.kind !== 'bundled');
+  }
+
   /** The first place sounds came from — what the board is named and keyed by. */
   get rootName() {
-    return this.sources[0] ? this.sources[0].name : '';
+    const first = this.chosen[0] || this.sources[0];
+    return first ? first.name : '';
   }
 
   get label() {
-    if (!this.sources.length) return '';
-    const extra = this.sources.length - 1;
+    if (!this.chosen.length) return this.sources.length ? 'Sounds that came with the board' : '';
+    const extra = this.chosen.length - 1;
     return extra ? `${this.rootName} + ${extra} more` : this.rootName;
   }
 
@@ -55,6 +63,35 @@ export class Library {
 
   get handles() {
     return this.sources.map((s) => s.handle).filter(Boolean);
+  }
+
+  /**
+   * The sounds that came with the app. They are served alongside it, so there
+   * is nothing to read off disk and nothing to keep: a pad points at the URL.
+   */
+  addBundled() {
+    if (this.sources.some((s) => s.kind === 'bundled')) return [];
+    const src = this._source({ kind: 'bundled', name: BUNDLED_DIR });
+    const added = [];
+    for (const sound of BUNDLED) {
+      const path = `${BUNDLED_DIR}/${sound.file}`;
+      if (this.entries.has(path)) continue;
+      this.entries.set(path, {
+        path,
+        name: sound.file,
+        dir: BUNDLED_DIR,
+        url: `sounds/${encodeURIComponent(sound.file)}`,
+        bundled: true,
+        src: src.key,
+      });
+      added.push(path);
+    }
+    return added;
+  }
+
+  isBundled(path) {
+    const entry = this.entries.get(path);
+    return !!entry && !!entry.bundled;
   }
 
   /** Add a whole folder. Returns the paths added, or null if the picker was dismissed. */
@@ -194,18 +231,25 @@ export class Library {
     const entry = this.entries.get(path);
     if (!entry) throw new Error(`“${path}” is not among the sounds that are open`);
     if (entry.file) return entry.file;
+    if (entry.url) {
+      const res = await fetch(entry.url);
+      entry.file = new File([await res.blob()], entry.name, { lastModified: 0 });
+      return entry.file;
+    }
     const file = await entry.handle.getFile();
     entry.file = file;
     return file;
   }
 
-  /** A blob URL for the file, made once and kept for the session. */
+  /** Where the audio can be read from: the app's own URL, or a blob for a file. */
   async url(path) {
+    const entry = this.entries.get(path);
+    if (entry && entry.url) return entry.url;
     const cached = this._urls.get(path);
     if (cached) return cached;
-    const url = URL.createObjectURL(await this.file(path));
-    this._urls.set(path, url);
-    return url;
+    const made = URL.createObjectURL(await this.file(path));
+    this._urls.set(path, made);
+    return made;
   }
 
   reset() {

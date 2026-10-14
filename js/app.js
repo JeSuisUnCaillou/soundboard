@@ -7,6 +7,7 @@ import { store, prefs } from './store.js';
 import {
   newBoard, newPad, migrate, setCols, fitPads, filled, slug, move, padByKey, rowCol,
 } from './model.js';
+import { bundledPaths } from './bundled.js';
 import { PadEditor, SetupSheet } from './editor.js';
 import {
   refs, bindRefs, drawGrid, paintPads, drawLibrary, drawPlaying,
@@ -62,6 +63,9 @@ class App {
 
     this.wire();
     setPanel(false);
+    // The sounds that come with the app are there at every launch, whatever
+    // else is open.
+    this.library.addBundled();
     refs.libFilter.value = prefs.get('filter', '');
     this.redraw();
     await this.restore();
@@ -466,7 +470,7 @@ class App {
   async restore() {
     const lastId = await store.getMeta('last');
     if (!lastId) {
-      this.openPicker();
+      await this.firstBoard();
       return;
     }
 
@@ -513,6 +517,26 @@ class App {
     this.openPicker();
     refs.pickerBlurb.textContent = 'The board is here. Browsers ask again for permission to read your '
       + 'sounds each time the page loads — once you have granted it, everything is where you left it.';
+  }
+
+  /**
+   * Nothing has ever been opened here: lay out the sounds that came with the
+   * app so there is a board to press, rather than an empty screen and a
+   * question.
+   */
+  async firstBoard() {
+    this.useBoard(newBoard({
+      id: 'default-board',
+      name: 'Default board',
+      cols: await store.getMeta('cols'),
+    }));
+    await store.setMeta('last', this.board.id);
+    this.place(bundledPaths());
+    this.redraw();
+    this.saveNow();
+    this.primeAll();
+    this.measure();
+    toast('A board to start with. Add files when you have your own.');
   }
 
   /** Put the real files back behind the pads, in place of the kept copies. */
@@ -566,7 +590,7 @@ class App {
 
       let copied = 0;
       for (const path of wanted) {
-        if (!this.library.has(path) || this.library.isCached(path)) continue;
+        if (!this.library.has(path) || this.library.isCached(path) || this.library.isBundled(path)) continue;
         const file = await this.library.file(path);
         const rec = have.get(path);
         if (rec && rec.size === file.size && rec.lastModified === (file.lastModified || 0)) continue;
