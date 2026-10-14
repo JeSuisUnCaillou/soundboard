@@ -122,12 +122,12 @@ hit it.
 
 **On a tablet or a phone.** The board is the whole screen, and it keeps the shape
 you gave it: a six-column board is six columns wide everywhere, scrolling rather
-than rearranging itself under the operator. While editing, the folder's sounds
-take the bottom of the screen and the pads keep the top, both in view at once;
-**All sounds** trades one for the other when a long tree needs the room. Pads are
-moved by their grip, which works the same under a finger as under a mouse; a
-pad's row and column can also be typed into its settings. The screen is kept
-awake while a board is open.
+than rearranging itself under the operator. While editing, Stop and the volume
+give their place to **Browse files**, which opens the folder over the whole
+screen — the pads and the files are never half each — and **Back to the pads**
+closes it. Pads are moved by their grip, which works the same under a finger as
+under a mouse; a pad's row and column can also be typed into its settings. The
+screen is kept awake while a board is open.
 
 **Carrying a board around.** Board setup saves the whole board as a JSON file and
 loads one back. Pads refer to files by their path inside the folder, so a board

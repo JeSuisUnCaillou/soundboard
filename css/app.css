@@ -421,10 +421,11 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
 }
 .book__panel { display: flex; flex-direction: column; min-height: 0; flex: 1; padding: var(--gap); gap: 8px; }
 .book__panel[hidden] { display: none; }
+.book__head { display: flex; align-items: center; gap: 10px; }
 .book__title { margin: 0; font: 700 15px/1 var(--cond); }
 .book__empty { margin: 0; color: var(--ink-faint); font-size: 13px; }
 
-.lib { margin: 0; padding: 0; list-style: none; overflow-y: auto; min-height: 0; }
+.lib { margin: 0; padding: 0; list-style: none; overflow-y: auto; overflow-x: hidden; min-height: 0; }
 .lib__item {
   display: flex;
   justify-content: space-between;
@@ -456,7 +457,7 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
 }
 .tree__dir[open] > .tree__name::before { transform: rotate(90deg) translateY(1px); }
 .tree__name:hover { background: var(--pad); }
-.tree__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tree__count { margin-left: auto; color: var(--ink-faint); font: 400 12px/1 var(--mono); }
 .tree__body { padding-left: 13px; border-left: 1px solid var(--line-soft); margin-left: 9px; }
 .tree__body > .tree__dir:last-child, .tree__body > .lib__item:last-child { border-bottom: 0; }
@@ -493,15 +494,17 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
 .lib__add::after { transform: translateY(-50%) rotate(90deg); }
 .lib__add:hover { border-color: var(--go); background: color-mix(in oklab, var(--go) 22%, transparent); }
 .lib__item--used .lib__add::before, .lib__item--used .lib__add::after { background: var(--ink-faint); }
-.lib__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
-.lib__dir { color: var(--ink-faint); font: 400 11.5px/1.6 var(--mono); flex: none; }
+/* A flex item will not shrink below its content unless it is told it may, and
+   these names are long enough to push a whole row off a phone. */
+.lib__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.lib__dir { flex: none; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-faint); font: 400 11.5px/1.6 var(--mono); }
 
 /* ───────────────────────── transport ───────────────────────── */
 
 .transport {
   display: grid;
-  grid-template-columns: var(--stop-col) minmax(0, 1fr) auto auto;
-  grid-template-areas: "go playing master book";
+  grid-template-columns: var(--stop-col) minmax(0, 1fr) auto;
+  grid-template-areas: "go playing master";
   align-items: center;
   gap: 16px;
   min-height: var(--transport);
@@ -559,7 +562,12 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
   -webkit-mask: var(--speaker) center / contain no-repeat;
   mask: var(--speaker) center / contain no-repeat;
 }
-#btnBook { grid-area: book; }
+/* Both of these belong to the narrow layout, where the folder covers the board
+   instead of sharing it. A wide screen shows the two side by side and needs
+   neither. */
+.browse { display: none; grid-area: go / go / master / master; }
+.browse .btn { flex: 1; padding: 14px; font-size: 16px; }
+.book__done { display: none; }
 .master__value, .num { font: 400 12px/1 var(--mono); color: var(--ink-dim); min-width: 2.4em; text-align: right; font-variant-numeric: tabular-nums; }
 
 .slider { accent-color: var(--warn); width: 130px; }
@@ -688,22 +696,31 @@ select.field option:checked { background: var(--warn); color: #241a07; }
 
   /* The rail wraps to two lines here, so it sizes itself. */
   body { grid-template-rows: auto 1fr auto; }
-  /* No room for a column beside the board, so while editing the folder takes
-     the bottom of the screen and the pads keep the top. The Sounds button
-     trades one for the other when a long tree needs the room. */
+  /* No room for a column beside the board: the folder opens over the whole
+     screen, so the pads and the files are never half each. */
   .desk, body[data-editing="on"] .desk { grid-template-columns: 1fr; position: relative; }
-  body[data-editing="on"] .desk { grid-template-rows: minmax(0, 1.4fr) minmax(150px, 1fr); }
-  body[data-editing="on"][data-book="open"] .desk { grid-template-rows: 0 minmax(0, 1fr); }
-  body[data-editing="on"][data-book="open"] .stage { padding: 0; }
+  body[data-editing="on"]:not([data-book="open"]) .book { display: none; }
+  body[data-editing="on"][data-book="open"] .book {
+    position: fixed;
+    inset: 0;
+    z-index: 7;
+    border: 0;
+  }
+  .book__done { display: inline-block; margin-left: auto; }
+  .book__title { display: block; }
+
+  /* Editing is not running the show: the transport makes way for the way in. */
+  body[data-editing="on"] .go,
+  body[data-editing="on"] .playing,
+  body[data-editing="on"] .master { display: none; }
+  body[data-editing="on"] .browse { display: flex; }
   .book {
     border-left: 0;
     border-top: 1px solid var(--line);
     background: var(--console);
   }
-  /* Short panel: every line it spends on itself is a line of folder lost. */
-  .book__panel { padding: 8px var(--gap); gap: 6px; }
-  .book__title { display: none; }
-  .hint--keys { font-size: 12px; }
+  .book__panel { padding: 10px var(--gap); gap: 8px; }
+  .hint--keys { font-size: 12.5px; }
 
   /* Columns follow the screen; the pads keep their order. */
   /* The board keeps the shape it was given. Pads have a floor on their size,
@@ -723,7 +740,6 @@ select.field option:checked { background: var(--warn); color: #241a07; }
   .rail__folder { order: 2; flex: 1; }
   .rail__actions { order: 3; width: 100%; margin-left: 0; flex-wrap: wrap; justify-content: flex-end; }
 
-  #btnBook:not([hidden]) { display: inline-block; justify-self: stretch; }
 
   /* The transport is taller here, and a toast pinned above it would guess at
      how much taller. Over the pads it never collides with anything. */
@@ -732,8 +748,7 @@ select.field option:checked { background: var(--warn); color: #241a07; }
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
       "go      master"
-      "playing playing"
-      "book    book";
+      "playing playing";
     gap: 8px 12px;
     padding: 10px max(14px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
   }

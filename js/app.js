@@ -10,7 +10,7 @@ import {
 import { PadEditor, SetupSheet } from './editor.js';
 import {
   refs, bindRefs, drawGrid, paintPads, drawLibrary, drawPlaying,
-  paintPlaying, drawStop, drawFolder, setPanel, setBook, bookOpen, markPreview, say, toast,
+  paintPlaying, drawStop, drawFolder, setPanel, setBook, markPreview, say, toast,
 } from './ui.js';
 
 const PATH_TYPE = 'application/x-soundboard-path';
@@ -87,7 +87,8 @@ class App {
     refs.btnEmpty.addEventListener('click', () => this.emptyBoard());
     refs.btnSetup.addEventListener('click', () => this.board && this.setup.open(this.board));
 
-    refs.btnBook.addEventListener('click', () => setBook(!bookOpen()));
+    refs.btnBrowse.addEventListener('click', () => setBook(true));
+    refs.btnBrowseDone.addEventListener('click', () => setBook(false));
     refs.btnStop.addEventListener('click', () => this.stop());
 
     refs.master.addEventListener('input', (e) => {

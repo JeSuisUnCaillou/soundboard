@@ -12,9 +12,10 @@ export function bindRefs() {
   const ids = [
     'grid', 'stageEmpty', 'btnAddEmpty', 'book', 'lib', 'libEmpty', 'libFilter',
     'folderName', 'folderCount', 'btnReconnect', 'btnAdd', 'btnEdit', 'btnEmpty', 'btnSetup',
+    'browse', 'btnBrowse', 'btnBrowseDone',
     'picker', 'pickerTitle', 'pickerBlurb', 'pickerNote', 'pickerKeys', 'pickerClose',
     'btnAddFolder', 'btnAddFiles', 'btnReopen',
-    'btnStop', 'playing', 'master', 'masterValue', 'btnBook',
+    'btnStop', 'playing', 'master', 'masterValue',
     'live', 'toast',
   ];
   for (const id of ids) refs[id] = document.getElementById(id);
@@ -289,23 +290,17 @@ export function setPanel(editing) {
   document.body.dataset.editing = editing ? 'on' : '';
   prefs.set('editing', editing);
   refs.book.hidden = !editing;
-  refs.btnBook.hidden = !editing;
   refs.btnEmpty.hidden = !editing;
-  refs.btnBook.textContent = bookOpen() ? 'Show the pads' : 'All sounds';
+  refs.browse.hidden = !editing;
   refs.btnEdit.setAttribute('aria-pressed', String(editing));
   refs.btnEdit.textContent = editing ? 'Done editing' : 'Edit board';
 }
 
-/** On a narrow screen the sounds list slides over the pads; this is its switch. */
+/** On a narrow screen the folder opens over the board, never beside it. */
 export function setBook(open) {
   document.body.dataset.book = open ? 'open' : 'closed';
   prefs.set('book', open);
-  refs.btnBook.setAttribute('aria-expanded', String(open));
-  refs.btnBook.textContent = open ? 'Show the pads' : 'All sounds';
-}
-
-export function bookOpen() {
-  return document.body.dataset.book === 'open';
+  refs.btnBrowse.setAttribute('aria-expanded', String(open));
 }
 
 export function say(message) {
