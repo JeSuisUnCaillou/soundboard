@@ -20,8 +20,14 @@ function open() {
       // play before — or without — the browser granting the folder again.
       if (!db.objectStoreNames.contains('sounds')) db.createObjectStore('sounds', { keyPath: 'key' });
     };
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = () => {
+      // Another tab opening the same board later must not be left waiting on
+      // this one holding an older version of the store open.
+      req.result.onversionchange = () => req.result.close();
+      resolve(req.result);
+    };
     req.onerror = () => reject(req.error);
+    req.onblocked = () => reject(new Error('the board is open in another tab — close it and reload'));
   });
   return dbPromise;
 }
