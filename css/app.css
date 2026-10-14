@@ -196,7 +196,7 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   background: var(--pad);
   cursor: pointer;
   overflow: hidden;
-  container-type: size;
+  container: pad / size;
   transition: background 90ms linear, border-color 90ms linear;
 }
 .pad--filled {
@@ -226,6 +226,25 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   -webkit-line-clamp: 3;
   line-clamp: 3;
   overflow-wrap: anywhere;
+  /* Never taller than the row it was given, whatever the name is. */
+  min-height: 0;
+  max-height: 100%;
+}
+
+/* A short pad has room for fewer lines of name, and none for a note. These
+   heights are the pad's content box, which is what a container query measures:
+   about twenty pixels less than the pad itself. */
+@container pad (max-height: 98px) {
+  .pad__name { -webkit-line-clamp: 2; line-clamp: 2; }
+  .pad__note { display: none; }
+}
+@container pad (max-height: 70px) {
+  body[data-editing="on"] .pad--filled { padding-top: 30px; }
+}
+/* Only when two lines genuinely cannot fit: one line of a long filename says
+   little, and three pads reading "mixkit…" say nothing at all. */
+@container pad (max-height: 46px) {
+  .pad__name { -webkit-line-clamp: 1; line-clamp: 1; }
 }
 .pad__note {
   grid-area: note;

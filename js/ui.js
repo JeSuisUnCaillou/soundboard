@@ -61,6 +61,7 @@ export function drawGrid(board, { editing, missing = () => false }) {
         pencil(),
       );
       el.setAttribute('aria-label', `${padLabel(pad, row, col)}${missing(pad.file) ? ', file missing' : ''}`);
+      if (!el.title) el.title = pad.name || pad.file;   // the whole name, when it is clipped
     } else {
       el.classList.add('pad--empty');
       el.append(span('pad__add', editing ? 'Add sound' : ''));
