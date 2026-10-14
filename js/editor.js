@@ -6,11 +6,12 @@ import { newPad, rowCol, rowCount, prettyName, MAX_COLS } from './model.js';
 const el = (id) => document.getElementById(id);
 
 export class PadEditor {
-  constructor({ library, onSave, onClear, onLevel }) {
+  constructor({ library, onSave, onClear, onLevel, onHear }) {
     this.library = library;
     this.onSave = onSave;
     this.onClear = onClear;
     this.onLevel = onLevel || (() => {});
+    this.onHear = onHear || (() => {});
     this.dlg = el('padEditor');
     this.state = null;
 
@@ -38,6 +39,11 @@ export class PadEditor {
       el(id).addEventListener('input', () => this.preview());
     }
     el('padFile').addEventListener('dblclick', () => this.save());
+    // Hear the file before committing a pad to it.
+    el('padHear').addEventListener('click', () => {
+      const path = el('padFile').value;
+      if (path) this.onHear(path);
+    });
     el('padKey').addEventListener('input', (e) => {
       e.target.value = e.target.value.trim().slice(0, 1).toLowerCase();
       this.preview();

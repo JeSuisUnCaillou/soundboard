@@ -47,8 +47,10 @@
     <div class="book__panel">
       <h2 class="book__title">Sounds in folder</h2>
       <input type="search" id="libFilter" class="field field--search" placeholder="Filter by name" aria-label="Filter sounds by name">
+      <p class="hint hint--keys">Tap a sound or a pad to hear it. <b>+</b> puts a sound on the next free pad,
+         the pencil sets a pad up, the dots move it.</p>
       <ul class="lib" id="lib"></ul>
-      <p class="book__empty" id="libEmpty">Tap a sound to put it on the next free pad, or drag it onto one.</p>
+      <p class="book__empty" id="libEmpty"></p>
     </div>
   </aside>
 </main>
@@ -108,7 +110,10 @@
     <div class="sheet__body">
       <label class="row"><span class="row__label">Sound</span>
         <span class="row__field">
-          <input type="search" id="padFileFilter" class="field field--search" placeholder="Filter files" aria-label="Filter files">
+          <span class="row__field--unit">
+            <input type="search" id="padFileFilter" class="field field--search" placeholder="Filter files" aria-label="Filter files">
+            <button type="button" id="padHear" class="btn btn--quiet">Hear it</button>
+          </span>
           <select id="padFile" class="field" size="6"></select>
         </span>
       </label>

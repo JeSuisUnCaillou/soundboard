@@ -57,6 +57,7 @@ export function drawGrid(board, { editing, missing = () => false }) {
         span('pad__key', pad.key || ''),
         span('pad__travel', ''),
         grip(),
+        pencil(),
       );
       el.setAttribute('aria-label', `${padLabel(pad, row, col)}${missing(pad.file) ? ', file missing' : ''}`);
     } else {
@@ -138,7 +139,7 @@ export function drawLibrary(board, library, filter = '') {
 
   refs.lib.replaceChildren();
   refs.libEmpty.textContent = library.isOpen
-    ? (items.length ? 'Tap a sound to put it on the next free pad, or drag it onto one.' : 'No sound here matches that.')
+    ? (items.length ? '' : 'No sound here matches that.')
     : 'Add files to see what you have.';
 
   // Searching flattens the tree: the point of a search is to stop navigating.
@@ -207,6 +208,7 @@ function soundRow(entry, used, showPath) {
   li.append(
     span('lib__name', showPath ? entry.path : entry.name),
     span('lib__dir', used.get(entry.path) || ''),
+    add('Put it on the next free pad'),
   );
   return li;
 }
@@ -220,21 +222,21 @@ export function drawPlaying(board, engine) {
 
   for (const { i, pad } of active) {
     const row = document.createElement('div');
-    row.className = 'voice';
+    row.className = `voice${pad.preview ? ' voice--preview' : ''}`;
     row.style.setProperty('--gel', gelHex(pad.gel));
     const bar = document.createElement('div');
     bar.className = 'voice__bar';
     bar.append(document.createElement('i'));
     const time = span('voice__time', '');
     row.append(span('voice__name', pad.name || pad.file), bar, time);
-    voiceEls.set(i, { row, bar, time });
+    voiceEls.set(i, { row, bar, time, pad });
     refs.playing.append(row);
   }
 }
 
 export function paintPlaying(board, engine) {
   for (const [i, els] of voiceEls) {
-    const pad = board.pads[i];
+    const pad = board.pads[i] || els.pad;
     const st = engine.state(i);
     if (!pad || !st) continue;
     const len = (pad.trimEnd || st.duration || pad.duration) - (pad.trimStart || 0);
@@ -329,12 +331,37 @@ function span(cls, text) {
   return el;
 }
 
+/** The plus on a row in the tree: puts that sound on the next free pad. */
+function add(label) {
+  const el = document.createElement('span');
+  el.className = 'lib__add';
+  el.title = label;
+  el.setAttribute('aria-hidden', 'true');
+  return el;
+}
+
+/** Mark whichever sound is being heard, so a second tap is a knowing one. */
+export function markPreview(path) {
+  for (const row of refs.lib.querySelectorAll('.lib__item')) {
+    row.classList.toggle('lib__item--playing', row.dataset.path === path);
+  }
+}
+
 /** The handle a pad is dragged by, in edit mode. */
 function grip() {
   const el = document.createElement('span');
   el.className = 'pad__grip';
   el.setAttribute('aria-hidden', 'true');
   el.title = 'Drag to move this pad';
+  return el;
+}
+
+/** Opens the pad's settings. In edit mode the pad itself plays. */
+function pencil() {
+  const el = document.createElement('span');
+  el.className = 'pad__pencil';
+  el.setAttribute('aria-hidden', 'true');
+  el.title = 'Set this pad up';
   return el;
 }
 

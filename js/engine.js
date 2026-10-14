@@ -11,6 +11,9 @@
 const FLOOR = 0.0001;
 const EPS = 0.02;
 
+// Previews are voices like any other, on a channel no pad can have.
+export const PREVIEW = -1;
+
 export class Engine {
   constructor(library) {
     this.lib = library;
@@ -84,6 +87,38 @@ export class Engine {
     }
   }
 
+  /**
+   * Hear a sound that is not on a pad yet — or one that is, straight from the
+   * folder. Tapping the same sound again stops it.
+   */
+  async preview(path) {
+    const was = this.previewPath;
+    this.stopPreview();
+    if (was === path) return null;
+    this.previewPath = path;
+    const pad = {
+      file: path,
+      name: path.split('/').pop(),
+      gel: 'straw',
+      gain: 1,
+      fadeIn: 0,
+      fadeOut: 0.15,
+      preview: true,
+    };
+    try {
+      return await this.start(PREVIEW, pad, { layer: true });
+    } catch (err) {
+      this.previewPath = null;
+      throw err;
+    }
+  }
+
+  stopPreview() {
+    if (!this.previewPath) return;
+    this.previewPath = null;
+    this.stop(PREVIEW, { fade: 0 });
+  }
+
   /** What tapping the pad does, given what it is doing now. */
   async fire(i, pad) {
     const ch = this.channels.get(i);
@@ -143,6 +178,7 @@ export class Engine {
   }
 
   async stopAll({ fade = 0, except = null } = {}) {
+    if (except !== PREVIEW) this.previewPath = null;
     for (const [i, ch] of this.channels) {
       if (i !== except) this._stopVoice(ch, fade);
     }
@@ -281,6 +317,7 @@ export class Engine {
     src.connect(gain).connect(this.out);
     const voice = { i, el, src, gain, pad, path: pad.file, state: 'idle', fading: false, stopTimer: null, transient: true };
     voice.onEnded = () => {
+      if (voice.i === PREVIEW) this.previewPath = null;
       this._drop(voice);
       this.onchange();
     };

@@ -25,6 +25,8 @@
 
   --gel: #c9bdb0;
 
+  --pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M11.6 1.1l3.3 3.3-8.3 8.3-4.3.9.9-4.3zM10.2 2.5l3.3 3.3' fill='none' stroke='%23000' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");
+
   --sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --cond: "IBM Plex Sans Condensed", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -235,7 +237,6 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   line-clamp: 2;
 }
 .pad__note:empty { display: none; }
-.pad--playing .pad__note { color: var(--ink); }
 
 .pad__time {
   grid-area: time;
@@ -264,13 +265,27 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   transform-origin: left;
 }
 
+/* A pad that is playing lights up in its own gel, the way a lamp does: from
+   across a dark booth it has to be obvious which ones are running. */
 .pad--playing {
-  background: color-mix(in oklab, var(--gel) 26%, var(--pad));
-  border-color: color-mix(in oklab, var(--gel) 45%, var(--line));
+  background: var(--gel);
+  border-color: var(--gel);
+  box-shadow: 0 0 22px color-mix(in oklab, var(--gel) 38%, transparent);
 }
-.pad--playing .pad__name { color: #fff; }
-.pad--paused { background: color-mix(in oklab, var(--gel) 16%, var(--pad)); }
-.pad--paused .pad__travel { opacity: 0.45; }
+.pad--playing .pad__name { color: #140f0b; }
+.pad--playing .pad__cue,
+.pad--playing .pad__time,
+.pad--playing .pad__note { color: color-mix(in oklab, #140f0b 72%, var(--gel)); }
+.pad--playing .pad__key { border-color: rgba(0, 0, 0, 0.28); color: rgba(0, 0, 0, 0.5); }
+.pad--playing .pad__travel { background: rgba(0, 0, 0, 0.42); height: 4px; }
+.pad--playing .pad__lamp { display: none; }
+.pad--playing .pad__grip, .pad--playing .pad__pencil { color: rgba(0, 0, 0, 0.45); }
+
+.pad--paused {
+  background: color-mix(in oklab, var(--gel) 48%, var(--pad));
+  border-color: color-mix(in oklab, var(--gel) 60%, var(--line));
+}
+.pad--paused .pad__travel { opacity: 0.6; }
 
 
 /* A pad whose file is not in the open folder: shown, but plainly not ready. */
@@ -312,6 +327,26 @@ body[data-editing="on"] .pad--filled .pad__grip::before {
   background-position: center;
 }
 body[data-editing="on"] .pad__lamp { display: none; }
+
+/* The pencil sits beside the grip while editing; the pad itself plays. */
+.pad__pencil { display: none; }
+body[data-editing="on"] .pad--filled .pad__pencil {
+  position: absolute;
+  top: 0; right: 38px;
+  display: grid;
+  place-items: center;
+  width: 36px; height: 38px;
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+body[data-editing="on"] .pad--filled .pad__pencil::before {
+  content: "";
+  width: 15px; height: 15px;
+  background: currentColor;
+  -webkit-mask: var(--pencil) center / contain no-repeat;
+  mask: var(--pencil) center / contain no-repeat;
+}
+body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
 
 .pad--ghost {
   position: fixed;
@@ -390,6 +425,37 @@ body[data-editing="on"] .pad__lamp { display: none; }
 .tree__body > .tree__dir:last-child, .tree__body > .lib__item:last-child { border-bottom: 0; }
 .lib__item:hover { background: var(--pad); }
 .lib__item--used { color: var(--ink-faint); }
+.lib__item--playing { background: color-mix(in oklab, var(--go) 20%, transparent); color: var(--ink); }
+.lib__item--playing .lib__name::before {
+  content: "";
+  display: inline-block;
+  width: 7px; height: 7px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--go);
+}
+
+/* Put this one on a pad. The row itself is for hearing it. */
+.lib__add {
+  flex: none;
+  position: relative;
+  width: 24px; height: 24px;
+  margin: -3px 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.lib__add::before, .lib__add::after {
+  content: "";
+  position: absolute;
+  inset: 50% 5px auto 5px;
+  height: 1.5px;
+  background: var(--ink-dim);
+  transform: translateY(-50%);
+}
+.lib__add::after { transform: translateY(-50%) rotate(90deg); }
+.lib__add:hover { border-color: var(--go); background: color-mix(in oklab, var(--go) 22%, transparent); }
+.lib__item--used .lib__add::before, .lib__item--used .lib__add::after { background: var(--ink-faint); }
 .lib__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
 .lib__dir { color: var(--ink-faint); font: 400 11.5px/1.6 var(--mono); flex: none; }
 
@@ -443,6 +509,7 @@ body[data-editing="on"] .pad__lamp { display: none; }
 .voice__bar { height: 4px; border-radius: 2px; background: var(--line-soft); overflow: hidden; }
 .voice__bar i { display: block; height: 100%; background: var(--gel); transform-origin: left; transform: scaleX(var(--travel, 0)); }
 .voice--paused { opacity: 0.55; }
+.voice--preview .voice__name::after { content: " · hearing it"; color: var(--ink-faint); font-weight: 400; }
 .voice--paused .voice__name::after { content: " · held"; color: var(--ink-faint); font-weight: 400; }
 .voice__time { font: 400 12px/1 var(--mono); color: var(--ink-dim); font-variant-numeric: tabular-nums; }
 
@@ -506,7 +573,8 @@ kbd {
 .row { display: flex; flex-direction: column; gap: 5px; margin: 0; min-width: 0; border: 0; padding: 0; }
 .row__label { color: var(--ink-dim); font: 600 13px/1 var(--cond); }
 .row__field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
-.row__field--slider, .row__field--unit { flex-direction: row; align-items: center; gap: 8px; }
+.row__field--slider, .row__field--unit { display: flex; flex-direction: row; align-items: center; gap: 8px; }
+.row__field--unit .field--search { flex: 1; min-width: 0; }
 .row--split { flex-direction: row; gap: 12px; align-items: flex-end; }
 .row--split > .row { flex: 1; }
 .row--check { flex-direction: row; align-items: center; gap: 8px; color: var(--ink-dim); }
@@ -516,6 +584,8 @@ kbd {
 .row--gels { gap: 7px; }
 .unit { color: var(--ink-faint); font: 400 12px/1 var(--mono); }
 .hint { margin: 0; color: var(--ink-faint); font-size: 13px; }
+.hint--keys { line-height: 1.45; }
+.hint--keys b { color: var(--ink-dim); font-weight: 600; }
 .hint--warn { color: var(--warn); }
 
 .field {

@@ -10,7 +10,7 @@ import {
 import { PadEditor, SetupSheet } from './editor.js';
 import {
   refs, bindRefs, drawGrid, paintPads, drawLibrary, drawPlaying,
-  paintPlaying, drawStop, drawFolder, setPanel, setBook, bookOpen, say, toast,
+  paintPlaying, drawStop, drawFolder, setPanel, setBook, bookOpen, markPreview, say, toast,
 } from './ui.js';
 
 const PATH_TYPE = 'application/x-soundboard-path';
@@ -36,6 +36,7 @@ class App {
     this.engine.onchange = () => {
       drawPlaying(this.board, this.engine);
       drawStop(this.engine);
+      markPreview(this.engine.previewPath);
       this.paint();
       this.run();
     };
@@ -48,6 +49,7 @@ class App {
       onSave: (i, pad, moveTo) => this.setPad(i, pad, moveTo),
       onClear: (i) => this.setPad(i, null),
       onLevel: (i, level) => this.engine.setPadLevel(i, level),
+      onHear: (path) => this.preview(path),
     });
     this.setup = new SetupSheet({
       onApply: (values) => this.applySetup(values),
@@ -96,15 +98,26 @@ class App {
       const el = e.target.closest('.pad');
       if (!el) return;
       const i = Number(el.dataset.i);
-      if (this.editing) this.padEditor.open(this.board, i);
-      else this.tap(i);
+      const pad = this.board.pads[i];
+      // While editing: the pencil sets the pad up, the pad itself is heard.
+      if (this.editing && (e.target.closest('.pad__pencil') || !pad || !pad.file)) {
+        this.padEditor.open(this.board, i);
+        return;
+      }
+      if (this.editing && e.shiftKey) {
+        this.padEditor.open(this.board, i);
+        return;
+      }
+      this.tap(i);
     });
 
-    // Dragging a sound onto a pad has no equivalent under a finger, so a tap
-    // puts it on the first free pad instead.
     refs.lib.addEventListener('click', (e) => {
       const item = e.target.closest('.lib__item');
-      if (item) this.assignToFreePad(item.dataset.path);
+      if (!item) return;
+      // Dragging a sound onto a pad has no equivalent under a finger, so the
+      // plus puts it on the first free pad; the row itself is just heard.
+      if (e.target.closest('.lib__add')) this.assignToFreePad(item.dataset.path);
+      else this.preview(item.dataset.path);
     });
 
     // First touch or key: let the audio out, and keep the screen awake.
@@ -595,6 +608,22 @@ class App {
   }
 
   // ── playing ─────────────────────────────────────────────────────────────
+
+  /** Hear a sound from the folder, on or off the board. */
+  async preview(path) {
+    if (!this.library.has(path)) {
+      toast(`“${path}” is not among the sounds that are open.`);
+      return;
+    }
+    try {
+      await this.engine.preview(path);
+      markPreview(this.engine.previewPath);
+      say(this.engine.previewPath ? `Hearing ${path.split('/').pop()}` : 'Stopped');
+    } catch (err) {
+      markPreview(null);
+      toast(`“${path}” would not play: ${err.message}`);
+    }
+  }
 
   async tap(i) {
     const pad = this.board.pads[i];

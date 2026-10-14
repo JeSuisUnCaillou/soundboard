@@ -3,7 +3,7 @@
 // need, and the board scrolls. Index = row * cols + col, so changing the column
 // count re-wraps the same pads in the same order and never loses one.
 
-import { DEFAULT_GEL, gelForIndex } from './gels.js';
+import { DEFAULT_GEL } from './gels.js';
 
 export const BOARD_VERSION = 1;
 export const MAX_COLS = 12;
@@ -39,7 +39,7 @@ export function newPad(board, i, file) {
     name,
     cue: nextCue(board),
     note: '',
-    gel: file ? gelForIndex(i) : DEFAULT_GEL,
+    gel: DEFAULT_GEL,
     gain: 1,
     fadeIn: board.defaults.fadeIn,
     fadeOut: board.defaults.fadeOut,

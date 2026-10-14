@@ -17,6 +17,7 @@ export const GELS = [
 
 const BY_ID = new Map(GELS.map((g) => [g.id, g]));
 
+// Every pad starts the same colour. A gel means something when it is chosen.
 export const DEFAULT_GEL = GELS[0].id;
 
 export function gel(id) {
@@ -25,9 +26,4 @@ export function gel(id) {
 
 export function gelHex(id) {
   return gel(id).hex;
-}
-
-// Spread colours around the board so a fresh pad does not match its neighbour.
-export function gelForIndex(i) {
-  return GELS[i % GELS.length].id;
 }
