@@ -136,6 +136,9 @@ button, input, select { font: inherit; color: inherit; }
 .btn--danger { background: none; border-color: color-mix(in oklab, var(--alert) 50%, var(--line)); color: color-mix(in oklab, var(--alert) 70%, var(--ink)); }
 .btn--danger:hover { background: color-mix(in oklab, var(--alert) 22%, transparent); }
 .btn:disabled { opacity: 0.4; cursor: default; }
+/* The rail must be the same height whether the board is being played or
+   edited: a second line of buttons would shorten every pad on the board. */
+.btn__short { display: none; }
 
 /* ───────────────────────── desk ───────────────────────── */
 
@@ -238,9 +241,6 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   .pad__name { -webkit-line-clamp: 2; line-clamp: 2; }
   .pad__note { display: none; }
 }
-@container pad (max-height: 70px) {
-  body[data-editing="on"] .pad--filled { padding-top: 30px; }
-}
 /* Only when two lines genuinely cannot fit: one line of a long filename says
    little, and three pads reading "mixkit…" say nothing at all. */
 @container pad (max-height: 46px) {
@@ -301,7 +301,7 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
     inset 0 0 0 1px color-mix(in oklab, var(--gel) 45%, transparent);
 }
 .pad--playing .pad__travel { background: var(--gel); height: 4px; }
-.pad--playing .pad__grip, .pad--playing .pad__pencil { color: rgba(255, 255, 255, 0.75); }
+.pad--playing .pad__pencil { color: rgba(255, 255, 255, 0.78); }
 
 .pad--paused {
   background: color-mix(in oklab, var(--gel) 28%, var(--pad));
@@ -328,44 +328,31 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   font: 500 11px/16px var(--mono);
 }
 
-/* The handle a pad is dragged by. Only the handle takes the pointer, so the
-   board still scrolls under a finger while the layout is being rearranged. */
-.pad__grip { display: none; }
-body[data-editing="on"] .pad--filled .pad__grip {
-  position: absolute;
-  top: 0; right: 0;
-  display: grid;
-  place-items: center;
-  width: 38px; height: 38px;
-  color: var(--ink-dim);
-  touch-action: none;
-  cursor: grab;
-}
-body[data-editing="on"] .pad--filled .pad__grip::before {
-  content: "";
-  width: 11px; height: 16px;
-  background-image: radial-gradient(currentColor 1.3px, transparent 1.5px);
-  background-size: 5px 5px;
-  background-position: center;
-}
+/* The pencil stands exactly where the go light stands, so a pad's name sits in
+   the same place whether the board is being played or being built. */
 body[data-editing="on"] .pad__lamp { display: none; }
-/* The pencil and the dots keep the top of the pad to themselves. */
-body[data-editing="on"] .pad--filled { padding-top: 36px; }
 
-/* The pencil sits beside the grip while editing; the pad itself plays. */
 .pad__pencil { display: none; }
 body[data-editing="on"] .pad--filled .pad__pencil {
-  position: absolute;
-  top: 0; right: 38px;
+  grid-area: lamp;
+  justify-self: end;
+  position: relative;
   display: grid;
   place-items: center;
-  width: 36px; height: 38px;
+  width: 16px; height: 16px;
   color: var(--ink-dim);
   cursor: pointer;
 }
+/* The area a finger can hit, spread outside the box so the layout is exactly
+   the lamp's and the pad does not shift when editing starts. */
+body[data-editing="on"] .pad--filled .pad__pencil::after {
+  content: "";
+  position: absolute;
+  inset: -11px;
+}
 body[data-editing="on"] .pad--filled .pad__pencil::before {
   content: "";
-  width: 15px; height: 15px;
+  width: 16px; height: 16px;
   background: currentColor;
   -webkit-mask: var(--pencil) center / contain no-repeat;
   mask: var(--pencil) center / contain no-repeat;
@@ -380,7 +367,6 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
   opacity: 0.94;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
 }
-.pad--ghost .pad__grip { cursor: grabbing; }
 /* Over the sounds panel, the pad is on its way off the board. */
 .pad--ghost-off { opacity: 0.55; filter: grayscale(0.6); }
 
@@ -398,16 +384,26 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
 .sheet__preview { width: 136px; height: 74px; flex: none; margin-left: auto; }
 .pad--preview { width: 100%; height: 100%; cursor: default; padding: 7px 8px 9px; }
 
-/* cue lights, the one piece of language borrowed wholesale from the booth */
+/* cue lights, the one piece of language borrowed wholesale from the booth.
+   The lamp is a box the size of the pencil with the dot drawn inside it, so the
+   two can stand in the same place without the pad shifting around them. */
 .lamp {
-  width: 9px; height: 9px;
-  border-radius: 50%;
-  background: color-mix(in oklab, var(--ink) 14%, transparent);
-  display: inline-block;
+  --lamp: color-mix(in oklab, var(--ink) 14%, transparent);
+  --lamp-glow: transparent;
+  width: 16px; height: 16px;
+  display: grid;
+  place-items: center;
   flex: none;
 }
-.lamp--go { background: var(--go); box-shadow: 0 0 9px color-mix(in oklab, var(--go) 65%, transparent); }
-.lamp--off { background: color-mix(in oklab, var(--ink) 14%, transparent); box-shadow: none; }
+.lamp::before {
+  content: "";
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--lamp);
+  box-shadow: 0 0 9px var(--lamp-glow);
+}
+.lamp--go { --lamp: var(--go); --lamp-glow: color-mix(in oklab, var(--go) 65%, transparent); }
+.lamp--off { --lamp: color-mix(in oklab, var(--ink) 14%, transparent); --lamp-glow: transparent; }
 
 /* ───────────────────────── the folder's sounds ───────────────────────── */
 
@@ -767,6 +763,8 @@ select.field option:checked { background: var(--warn); color: #241a07; }
   .master { gap: 8px; }
   .master__value { min-width: 2.2em; }
   .rail__actions .btn { padding-left: 10px; padding-right: 10px; }
+  .btn__long { display: none; }
+  .btn__short { display: inline; }
 
 
   /* A sheet on a phone is the whole phone. */

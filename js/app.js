@@ -10,7 +10,7 @@ import {
 import { PadEditor, SetupSheet } from './editor.js';
 import {
   refs, bindRefs, drawGrid, paintPads, drawLibrary, drawPlaying,
-  paintPlaying, drawStop, drawFolder, setPanel, setBook, markPreview, say, toast,
+  paintPlaying, drawStop, drawFolder, setPanel, setBook, markPreview, label, say, toast,
 } from './ui.js';
 
 const PATH_TYPE = 'application/x-soundboard-path';
@@ -214,10 +214,10 @@ class App {
    * Dragging a pad somewhere else. Pointer events rather than HTML5 drag and
    * drop, which does not exist under a finger.
    *
-   * With a mouse the whole pad is a handle: press anywhere below the corner
-   * where the pencil sits and move, and the pad comes with you; press and
-   * release without moving and it simply plays. A finger keeps to the grip,
-   * because a touch that starts on a pad has to stay free to scroll the board.
+   * With a mouse the whole pad is a handle: press anywhere but the pencil and
+   * move, and the pad comes with you; press and release without moving and it
+   * simply plays. A touch that starts on a pad is left to scroll the board — a
+   * pad is moved under a finger by typing its row and column in its settings.
    */
   wirePadDragging() {
     let drag = null;
@@ -267,11 +267,6 @@ class App {
       const from = Number(el.dataset.i);
       if (!this.board.pads[from] || !this.board.pads[from].file) return;
 
-      if (e.target.closest('.pad__grip')) {
-        e.preventDefault();
-        begin(el, from, e, e.target.closest('.pad__grip'));
-        return;
-      }
       if (e.pointerType === 'touch') return;             // a finger is probably scrolling
       armed = { el, from, x: e.clientX, y: e.clientY, id: e.pointerId };
     });
@@ -723,7 +718,7 @@ class App {
     if (!this.board) return;
     if (!this.armed) {
       this.armed = true;
-      refs.btnEmpty.textContent = 'Really empty it?';
+      label(refs.btnEmpty, 'Really empty it?', 'Sure?');
       refs.btnEmpty.classList.add('btn--danger');
       clearTimeout(this.armTimer);
       this.armTimer = setTimeout(() => this.disarm(), 4000);
@@ -743,7 +738,7 @@ class App {
   disarm() {
     clearTimeout(this.armTimer);
     this.armed = false;
-    refs.btnEmpty.textContent = 'Empty the board';
+    label(refs.btnEmpty, 'Empty the board', 'Empty');
     refs.btnEmpty.classList.remove('btn--danger');
   }
 

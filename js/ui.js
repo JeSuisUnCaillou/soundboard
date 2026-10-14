@@ -58,7 +58,6 @@ export function drawGrid(board, { editing, missing = () => false }) {
         span('pad__time', pad.duration ? fmtTime(pad.duration) : ''),
         span('pad__key', pad.key || ''),
         span('pad__travel', ''),
-        grip(),
         pencil(),
       );
       el.setAttribute('aria-label', `${padLabel(pad, row, col)}${missing(pad.file) ? ', file missing' : ''}`);
@@ -286,6 +285,12 @@ export function drawGels(host, selected, onPick) {
 }
 
 /** The folder's sounds are only wanted while the board is being built. */
+/** A button carries both its full name and its short one. */
+export function label(el, long, short) {
+  el.querySelector('.btn__long').textContent = long;
+  el.querySelector('.btn__short').textContent = short;
+}
+
 export function setPanel(editing) {
   document.body.dataset.editing = editing ? 'on' : '';
   prefs.set('editing', editing);
@@ -293,7 +298,7 @@ export function setPanel(editing) {
   refs.btnEmpty.hidden = !editing;
   refs.browse.hidden = !editing;
   refs.btnEdit.setAttribute('aria-pressed', String(editing));
-  refs.btnEdit.textContent = editing ? 'Done editing' : 'Edit board';
+  label(refs.btnEdit, editing ? 'Done editing' : 'Edit board', editing ? 'Done' : 'Edit');
 }
 
 /** On a narrow screen the folder opens over the board, never beside it. */
@@ -344,16 +349,7 @@ export function markPreview(path) {
   }
 }
 
-/** The handle a pad is dragged by, in edit mode. */
-function grip() {
-  const el = document.createElement('span');
-  el.className = 'pad__grip';
-  el.setAttribute('aria-hidden', 'true');
-  el.title = 'Drag to move this pad';
-  return el;
-}
-
-/** Opens the pad's settings. In edit mode the pad itself plays. */
+/** Opens the pad's settings, in the place the go light has otherwise. */
 function pencil() {
   const el = document.createElement('span');
   el.className = 'pad__pencil';

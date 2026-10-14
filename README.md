@@ -83,11 +83,11 @@ While editing, a tap is a listen: a sound in the tree plays where it is, and so
 does a pad, so a cue can be checked before and after it goes on the board. The
 **+** beside a sound puts it on the next free pad and the pencil on a pad opens
 its settings — where **Hear it** auditions a file before the pad is committed to
-it. With a mouse the whole pad is a handle: press anywhere below the pencil and
-move, and the pad comes with you; press and release without moving and it just
-plays. Under a finger the dots in the corner do the dragging, so a touch that
-lands on a pad is still free to scroll the board. Dragging a pad onto the sounds
-panel takes it off the board, leaving the sound where it is. There is no limit on how many sounds a board holds. **Empty the
+it. With a mouse the whole pad is a handle: press anywhere but the pencil and move,
+and the pad comes with you; press and release without moving and it just plays.
+A touch that lands on a pad is left free to scroll the board, so under a finger a
+pad is moved by typing its row and column in its settings. Dragging a pad onto
+the sounds panel takes it off the board, leaving the sound where it is. There is no limit on how many sounds a board holds. **Empty the
 board** clears the pads without touching the sounds, and asks twice.
 **Edit board** keeps the board in front of you and opens the folder's contents
 beside it: tap a sound to put it on the next free pad, or drag one onto a

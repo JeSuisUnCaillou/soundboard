@@ -27,10 +27,10 @@
     <button type="button" id="btnReconnect" class="btn btn--quiet btn--small" hidden></button>
   </p>
   <div class="rail__actions">
-    <button type="button" id="btnAdd" class="btn">Add files</button>
-    <button type="button" id="btnEdit" class="btn" aria-pressed="false">Edit board</button>
-    <button type="button" id="btnEmpty" class="btn" hidden>Empty the board</button>
-    <button type="button" id="btnSetup" class="btn">Board setup</button>
+    <button type="button" id="btnAdd" class="btn"><span class="btn__long">Add files</span><span class="btn__short">Add</span></button>
+    <button type="button" id="btnEdit" class="btn" aria-pressed="false"><span class="btn__long">Edit board</span><span class="btn__short">Edit</span></button>
+    <button type="button" id="btnEmpty" class="btn" hidden><span class="btn__long">Empty the board</span><span class="btn__short">Empty</span></button>
+    <button type="button" id="btnSetup" class="btn"><span class="btn__long">Board setup</span><span class="btn__short">Setup</span></button>
   </div>
 </header>
 
@@ -51,7 +51,7 @@
       </header>
       <input type="search" id="libFilter" class="field field--search" placeholder="Filter by name" aria-label="Filter sounds by name">
       <p class="hint hint--keys">Tap to hear it · <b>+</b> puts it on a pad · the pencil sets a pad up ·
-         the dots move it</p>
+         drag a pad to move it</p>
       <ul class="lib" id="lib"></ul>
       <p class="book__empty" id="libEmpty"></p>
     </div>
