@@ -136,6 +136,33 @@ export class Library {
     return this._merge([{ path: handle.name, name: handle.name, dir: '', handle }], src);
   }
 
+  /**
+   * The copies the board keeps for itself. They stand in for the real files
+   * until — or unless — the browser hands those back.
+   */
+  addCached(records, name) {
+    if (!records.length) return [];
+    const src = this._source({ kind: 'cache', name });
+    for (const rec of records) {
+      if (this.entries.has(rec.path)) continue;
+      this.entries.set(rec.path, {
+        path: rec.path,
+        name: rec.name,
+        dir: rec.path.split('/').slice(0, -1).join('/'),
+        file: new File([rec.blob], rec.name, { lastModified: rec.lastModified }),
+        cached: true,
+        src: src.key,
+      });
+    }
+    return [...this.entries.keys()];
+  }
+
+  /** Is this sound only here as a copy, with no file behind it? */
+  isCached(path) {
+    const entry = this.entries.get(path);
+    return !!entry && !!entry.cached;
+  }
+
   /** Files from an <input>: a session's worth of sound, with nothing to store. */
   async addFiles(fileList) {
     const files = [...fileList].filter((f) => AUDIO.test(f.name));
@@ -207,6 +234,17 @@ export class Library {
       let path = entry.path;
       const clash = this.entries.get(path);
       if (clash) {
+        // The real file turning up for a sound the board was holding a copy
+        // of: take the file, keep the path, leave the pad pointing at it.
+        if (clash.cached) {
+          this.entries.set(path, { ...entry, path, src: src.key });
+          const stale = this._urls.get(path);
+          if (stale) {
+            URL.revokeObjectURL(stale);
+            this._urls.delete(path);
+          }
+          continue;
+        }
         if (await sameSound(clash, entry)) continue;
         path = this._freePath(entry.path);
       }

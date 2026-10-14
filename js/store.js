@@ -3,7 +3,7 @@
 // which board was open last.
 
 const DB_NAME = 'soundboard';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbPromise = null;
 
@@ -16,6 +16,9 @@ function open() {
       if (!db.objectStoreNames.contains('boards')) db.createObjectStore('boards', { keyPath: 'id' });
       if (!db.objectStoreNames.contains('handles')) db.createObjectStore('handles');
       if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta');
+      // A copy of the audio each board needs, so a reload has something to
+      // play before — or without — the browser granting the folder again.
+      if (!db.objectStoreNames.contains('sounds')) db.createObjectStore('sounds', { keyPath: 'key' });
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -58,6 +61,28 @@ export const store = {
     const stored = await run('handles', 'readonly', (s) => s.get(id));
     if (!stored) return [];
     return Array.isArray(stored) ? stored : [stored];
+  },
+
+  /** Keep this sound against this board. Throws if the browser is out of room. */
+  putSound(boardId, path, file) {
+    return run('sounds', 'readwrite', (s) => s.put({
+      key: `${boardId}\n${path}`,
+      boardId,
+      path,
+      name: file.name,
+      size: file.size,
+      lastModified: file.lastModified || 0,
+      blob: file,
+    }));
+  },
+
+  soundsFor(boardId) {
+    const range = IDBKeyRange.bound(`${boardId}\n`, `${boardId}\n\uffff`);
+    return run('sounds', 'readonly', (s) => s.getAll(range));
+  },
+
+  deleteSound(boardId, path) {
+    return run('sounds', 'readwrite', (s) => s.delete(`${boardId}\n${path}`));
   },
 
   setMeta(key, value) {

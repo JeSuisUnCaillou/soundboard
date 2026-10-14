@@ -25,31 +25,41 @@ It has to be served over `http://localhost` or `https://` — opening
 `index.html` from the file system will not work, because browsers only hand out
 folder access and ES modules in a secure context.
 
-## Installing it
+## Coming back to it
 
-The board is a progressive web app: **Install** it from the browser menu (Chrome
-and Edge offer it in the address bar; on iOS, Share → Add to Home Screen) and it
-runs in its own window, works with the network off, and — on Chrome and Edge —
-can hold on to permission for the show's folder instead of asking at every
-launch. Without installing, the folder is a single click away each time the page
-is loaded: the browser, not the board, is what insists on asking.
+Reload the page and the board is already there, playing: every sound that is on
+a pad is kept inside the browser, so nothing has to be picked again and no
+permission has to be granted. That holds in every browser, with the network off,
+and on a phone.
+
+Where the browser allows it — Chrome, Edge and Opera on the desktop — the board
+also keeps a handle on the places the sounds came from, and goes back to the real
+files on disk when it can, so a file edited between rehearsals is the file that
+plays. If the browser wants permission again, a **Reconnect** button appears next
+to the folder's name; until it is used the board plays from its own copies, so
+nothing stops a show.
+
+Those copies are the reason the board installs well. **Install** it from the
+browser menu (Chrome and Edge offer it in the address bar; on iOS, Share → Add to
+Home Screen) and it runs in its own window, offline, and can hold on to folder
+permission instead of asking at every launch.
+
+To clear the copies, clear the site's data in the browser; emptying a pad drops
+the copy of the sound that was on it.
 
 ## Browsers
 
-| Browser | Adding sounds | Remembering where they live |
+| Browser | Adding sounds | Going back to the files on disk |
 | --- | --- | --- |
-| Chrome, Edge, Opera on the desktop | A folder or single files, by picker or dropped on the window | Yes — kept once the board is installed, otherwise one click per launch |
-| Firefox and Safari on the desktop | A folder or single files, by picker or dropped on the window | No |
-| Chrome on Android | A folder, or single files | No |
-| Safari on iPhone and iPad | Single files — iOS has no folder picker | No |
+| Chrome, Edge, Opera on the desktop | A folder or single files, by picker or dropped on the window | Yes |
+| Firefox and Safari on the desktop | A folder or single files, by picker or dropped on the window | No — the board plays its own copies |
+| Chrome on Android | A folder, or single files | No — the board plays its own copies |
+| Safari on iPhone and iPad | Single files — iOS has no folder picker | No — the board plays its own copies |
 
 The difference is the [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker),
-which only desktop Chromium browsers implement. Everywhere else the board falls
-back to `<input type="file" webkitdirectory>`, or on iOS to picking the sounds
-themselves: everything works for the session, but the browser will not hold on to
-a folder, so it is chosen again on the next launch. The board itself — pads,
-cues, colours, fades — is remembered either way, and finds its sounds again by
-name as soon as they are added back.
+which only desktop Chromium browsers implement. It is what lets a folder be
+reopened as a folder; everywhere else the browser hands over a snapshot of files
+and nothing that outlives the session, which is what the kept copies are for.
 
 Audio formats are whatever the browser plays: MP3, M4A, AAC, WAV, FLAC, OGG/Opus,
 and on Safari also AIFF.

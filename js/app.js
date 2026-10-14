@@ -64,7 +64,8 @@ class App {
     refs.btnAddEmpty.addEventListener('click', () => this.openPicker());
     refs.btnAddFolder.addEventListener('click', () => this.add('folder'));
     refs.btnAddFiles.addEventListener('click', () => this.add('files'));
-    refs.btnReopen.addEventListener('click', () => this.reopen());
+    refs.btnReopen.addEventListener('click', () => this.reconnect(this.pendingHandles || []));
+    refs.btnReconnect.addEventListener('click', () => this.reconnect(this.pendingHandles || []));
     refs.pickerClose.addEventListener('click', () => refs.picker.close());
     refs.btnEdit.addEventListener('click', () => this.setEditing(!this.editing));
     refs.btnSetup.addEventListener('click', () => this.board && this.setup.open(this.board));
@@ -321,12 +322,8 @@ class App {
       const id = slug(this.library.rootName);
       const saved = await store.loadBoard(id);
       // A board built today starts as wide as the last one the operator set.
-      this.board = (saved && migrate(saved, { id }))
-        || newBoard({ id, name: this.library.rootName, cols: await store.getMeta('cols') });
-      fitPads(this.board);
-      refs.master.value = Math.round(this.board.master * 100);
-      refs.masterValue.textContent = String(Math.round(this.board.master * 100));
-      this.engine.setMaster(this.board.master);
+      this.useBoard((saved && migrate(saved, { id }))
+        || newBoard({ id, name: this.library.rootName, cols: await store.getMeta('cols') }));
       await store.setMeta('last', this.board.id);
     }
 
@@ -334,15 +331,17 @@ class App {
     this.pendingHandles = null;
     if (refs.picker.open) refs.picker.close();
 
-    if (this.library.handles.length) {
-      await store.saveHandles(this.board.id, this.library.handles);
-    }
+    // Places waiting to be reconnected are still this board's places: adding a
+    // sound while they are disconnected must not forget them.
+    const places = [...(this.pendingHandles || []), ...this.library.handles];
+    if (places.length) await store.saveHandles(this.board.id, places);
 
     this.redraw();
     this.saveNow();
     this.primeAll();
     this.measure();
     this.keepAwake();
+    this.keepSounds();
 
     const missing = filled(this.board).filter(({ pad }) => !this.library.has(pad.file)).length;
     if (placed) toast(`${placed} sound${placed === 1 ? '' : 's'} added to the board.`);
@@ -370,7 +369,10 @@ class App {
     return placed;
   }
 
-  /** On launch: the board that was open last, and the places its sounds live. */
+  /**
+   * On launch: the board that was open last, playing from the copies it keeps,
+   * and then from the real files as soon as the browser allows it.
+   */
   async restore() {
     const lastId = await store.getMeta('last');
     if (!lastId) {
@@ -378,42 +380,111 @@ class App {
       return;
     }
 
+    const saved = await store.loadBoard(lastId);
+    const board = saved && migrate(saved, { id: lastId });
+    const kept = board ? await store.soundsFor(lastId) : [];
+    if (board && kept.length) {
+      this.useBoard(board);
+      this.library.addCached(kept, board.name);
+      await this.absorb([]);
+    }
+
     const handles = await store.loadHandles(lastId);
-    if (handles.length) {
-      const states = await Promise.all(handles.map((h) => h.queryPermission({ mode: 'read' })));
-      if (states.every((state) => state === 'granted')) {
-        for (const handle of handles) await this.library.addHandle(handle);
-        await this.absorb([]);
-        return;
+    if (!handles.length) {
+      if (!this.board) {
+        this.openPicker();
+        if (board) {
+          refs.pickerBlurb.textContent = `“${board.name}” is here, with its pads. Point it at the sounds again to play them.`;
+        }
       }
-      this.pendingHandles = handles;
-      refs.btnReopen.hidden = false;
-      refs.btnReopen.textContent = handles.length === 1
-        ? `Reopen “${handles[0].name}”`
-        : `Reopen ${handles.length} places`;
-      this.openPicker();
-      refs.pickerBlurb.textContent = 'The board is here. Browsers ask again for permission to read your '
-        + 'sounds each time the page loads — once you have granted it, everything is where you left it.';
       return;
     }
 
-    const saved = await store.loadBoard(lastId);
-    this.openPicker();
-    if (saved) {
-      refs.pickerBlurb.textContent = `“${saved.name}” is here, with its pads. Point it at the sounds again to play them.`;
+    const states = await Promise.all(handles.map((h) => h.queryPermission({ mode: 'read' })));
+    if (states.every((state) => state === 'granted')) {
+      await this.reconnect(handles);
+      return;
     }
+
+    // The board plays from its own copies meanwhile; reconnecting is an offer,
+    // not a toll gate.
+    this.pendingHandles = handles;
+    refs.btnReconnect.hidden = !this.board;
+    if (this.board) {
+      refs.btnReconnect.textContent = handles.length === 1
+        ? `Reconnect “${handles[0].name}”`
+        : `Reconnect ${handles.length} places`;
+      return;
+    }
+    refs.btnReopen.hidden = false;
+    refs.btnReopen.textContent = handles.length === 1
+      ? `Reopen “${handles[0].name}”`
+      : `Reopen ${handles.length} places`;
+    this.openPicker();
+    refs.pickerBlurb.textContent = 'The board is here. Browsers ask again for permission to read your '
+      + 'sounds each time the page loads — once you have granted it, everything is where you left it.';
   }
 
-  async reopen() {
-    const handles = this.pendingHandles || [];
+  /** Put the real files back behind the pads, in place of the kept copies. */
+  async reconnect(handles) {
     try {
       for (const handle of handles) await this.library.addHandle(handle);
+      this.pendingHandles = null;
+      refs.btnReconnect.hidden = true;
       refs.btnReopen.hidden = true;
+      this.engine.reset();                   // drop anything primed from a copy
       await this.absorb([]);
     } catch (err) {
       toast(err.name === 'NotAllowedError'
-        ? 'Without permission to read them, there is nothing to play.'
+        ? 'Without permission to read them, the board stays on the copies it kept.'
         : `Those sounds could not be reopened: ${err.message}`);
+    }
+  }
+
+  useBoard(board) {
+    this.board = board;
+    fitPads(board);
+    refs.master.value = Math.round(board.master * 100);
+    refs.masterValue.textContent = String(Math.round(board.master * 100));
+    this.engine.setMaster(board.master);
+  }
+
+  /**
+   * Keep a copy of every sound that is on a pad, so the next launch has
+   * something to play before the browser has granted anything. Copies for
+   * pads that have gone are dropped.
+   */
+  async keepSounds() {
+    if (!this.board || this.keeping || this.outOfRoom) return;
+    this.keeping = true;
+    const id = this.board.id;
+    try {
+      // Ask the browser not to throw the show away when it wants space back.
+      if (!this.askedToPersist && navigator.storage && navigator.storage.persist) {
+        this.askedToPersist = true;
+        navigator.storage.persist().catch(() => {});
+      }
+      const wanted = new Set(filled(this.board).map(({ pad }) => pad.file));
+      const have = new Map((await store.soundsFor(id)).map((rec) => [rec.path, rec]));
+
+      for (const path of have.keys()) {
+        if (!wanted.has(path)) await store.deleteSound(id, path);
+      }
+
+      for (const path of wanted) {
+        if (!this.library.has(path) || this.library.isCached(path)) continue;
+        const file = await this.library.file(path);
+        const rec = have.get(path);
+        if (rec && rec.size === file.size && rec.lastModified === (file.lastModified || 0)) continue;
+        await store.putSound(id, path, file);
+      }
+    } catch (err) {
+      if (err && err.name === 'QuotaExceededError') {
+        this.outOfRoom = true;
+        toast('This browser is out of room, so the board will ask for the sounds again next launch.');
+      }
+    } finally {
+      this.keeping = false;
     }
   }
 
@@ -435,6 +506,7 @@ class App {
       this.engine.prime(i, pad);
       if (!pad.duration) this.measure();
     }
+    this.keepSounds();
   }
 
   /** Tap a sound in the folder panel: it lands on the first pad with nothing on it. */

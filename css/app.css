@@ -103,6 +103,9 @@ button, input, select { font: inherit; color: inherit; }
 }
 #folderName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rail__count { color: var(--ink-faint); font: 400 13px/1 var(--mono); flex: none; }
+.btn--small { padding: 3px 9px; font-size: 13px; border-color: var(--warn); color: var(--warn); flex: none; }
+.btn--small:hover { background: color-mix(in oklab, var(--warn) 18%, transparent); color: var(--ink); }
+.btn--small[hidden] { display: none; }
 
 .rail__actions { margin-left: auto; display: flex; gap: 8px; flex: none; }
 
