@@ -147,7 +147,7 @@ export class Library {
     if (dir) {
       const src = this._source({ kind: 'dir', name: dir.name });
       const found = new Map();
-      await walkEntry(dir, '', found);
+      await walkEntry(dir, dir.name, found);
       return this._merge([...found.values()], src);
     }
     return dataTransfer.files.length ? this.addFiles(dataTransfer.files) : [];
@@ -164,7 +164,8 @@ export class Library {
     if (handle.kind === 'directory') {
       const src = this._source({ kind: 'dir', name: handle.name, handle });
       const found = new Map();
-      await walkHandle(handle, '', found);
+      // The folder is part of the path, so it is a folder in the tree too.
+      await walkHandle(handle, handle.name, found);
       return this._merge([...found.values()], src);
     }
 
@@ -208,12 +209,11 @@ export class Library {
     let root = '';
     const found = [];
     for (const file of files) {
-      const rel = file.webkitRelativePath || file.name;
-      const parts = rel.split('/');
+      const path = file.webkitRelativePath || file.name;   // the folder included
+      const parts = path.split('/');
       if (parts.some((p) => SKIP.test(p))) continue;
       if (parts.length > 1 && !root) root = parts[0];
-      const path = parts.length > 1 ? parts.slice(1).join('/') : rel;
-      found.push({ path, name: file.name, dir: path.split('/').slice(0, -1).join('/'), file });
+      found.push({ path, name: file.name, dir: parts.slice(0, -1).join('/'), file });
     }
 
     const src = this._source({

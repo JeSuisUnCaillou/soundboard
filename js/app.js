@@ -746,7 +746,7 @@ class App {
    */
   placeEmptyButton() {
     if (NARROW.matches) refs.browse.prepend(refs.btnEmpty);
-    else refs.btnSetup.before(refs.btnEmpty);
+    else refs.btnEdit.before(refs.btnEmpty);
   }
 
   /** Take every sound off the board, keeping the sounds themselves. Twice, to mean it. */

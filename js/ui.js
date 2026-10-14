@@ -290,6 +290,7 @@ export function setPanel(editing) {
   prefs.set('editing', editing);
   refs.book.hidden = !editing;
   refs.btnEmpty.hidden = !editing;
+  refs.btnAdd.hidden = !editing;        // sounds are added while building, not mid-show
   refs.browse.hidden = !editing;
   refs.btnEdit.setAttribute('aria-pressed', String(editing));
   refs.btnEdit.textContent = editing ? 'Done editing' : 'Edit board';
