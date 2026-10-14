@@ -97,8 +97,3 @@ handles live in IndexedDB.
 
 No streaming services: this plays files you have. No recording, no editing, no
 multi-output routing — everything goes to the system's default output.
-
-## Credit
-
-The shape of the thing is borrowed from [SQ Theatre Sound Cues](https://apps.apple.com/us/app/sq-theatre-sound-cues/id6654896521),
-which does the same job as a native iOS app.
