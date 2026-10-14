@@ -18,7 +18,7 @@ export const GELS = [
 const BY_ID = new Map(GELS.map((g) => [g.id, g]));
 
 // Every pad starts the same colour. A gel means something when it is chosen.
-export const DEFAULT_GEL = GELS[0].id;
+export const DEFAULT_GEL = 'daylight';
 
 export function gel(id) {
   return BY_ID.get(id) || BY_ID.get(DEFAULT_GEL);

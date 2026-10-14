@@ -5,7 +5,11 @@
 
 import { DEFAULT_GEL } from './gels.js';
 
-export const BOARD_VERSION = 1;
+// Pads used to be handed Bastard Amber by default. Boards from before that
+// moved to Daylight Blue follow it rather than keeping a colour nobody picked.
+const OLD_DEFAULT_GEL = 'bastard-amber';
+
+export const BOARD_VERSION = 2;
 export const MAX_COLS = 12;
 const MIN_ROWS = 2;
 
@@ -143,18 +147,20 @@ export function migrate(raw, { id } = {}) {
     fadeIn: clampNum(raw.defaults && raw.defaults.fadeIn, 0, 120, 1),
     fadeOut: clampNum(raw.defaults && raw.defaults.fadeOut, 0, 120, 1.5),
   };
+  const version = Number(raw.version) || 1;
   raw.pads.forEach((pad, i) => {
-    board.pads[i] = pad ? migratePad(board, i, pad) : null;
+    board.pads[i] = pad ? migratePad(board, i, pad, version) : null;
   });
   fitPads(board);
   return board;
 }
 
-function migratePad(board, i, raw) {
+function migratePad(board, i, raw, version) {
   const pad = newPad(board, i, String(raw.file || ''));
   pad.name = String(raw.name ?? pad.name).slice(0, 40);
   pad.note = String(raw.note ?? '').slice(0, 120);
-  pad.gel = typeof raw.gel === 'string' ? raw.gel : pad.gel;
+  const inherited = version < 2 && raw.gel === OLD_DEFAULT_GEL ? DEFAULT_GEL : raw.gel;
+  pad.gel = typeof inherited === 'string' ? inherited : pad.gel;
   pad.gain = clampNum(raw.gain, 0, 1, 1);
   pad.fadeIn = clampNum(raw.fadeIn, 0, 120, board.defaults.fadeIn);
   pad.fadeOut = clampNum(raw.fadeOut, 0, 120, board.defaults.fadeOut);

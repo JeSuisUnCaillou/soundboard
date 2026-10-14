@@ -97,6 +97,7 @@ class App {
     refs.grid.addEventListener('click', (e) => {
       const el = e.target.closest('.pad');
       if (!el) return;
+      if (this.dragged) return;           // that click is the tail of a drag
       const i = Number(el.dataset.i);
       const pad = this.board.pads[i];
       // While editing: the pencil sets the pad up, the pad itself is heard.
@@ -198,12 +199,18 @@ class App {
   }
 
   /**
-   * Dragging a pad to another place on the board. Pointer events rather than
-   * HTML5 drag and drop, because the latter does not exist under a finger, and
-   * only the grip takes the pointer so the board still scrolls.
+   * Dragging a pad somewhere else. Pointer events rather than HTML5 drag and
+   * drop, which does not exist under a finger.
+   *
+   * With a mouse the whole pad is a handle: press anywhere below the corner
+   * where the pencil sits and move, and the pad comes with you; press and
+   * release without moving and it simply plays. A finger keeps to the grip,
+   * because a touch that starts on a pad has to stay free to scroll the board.
    */
   wirePadDragging() {
     let drag = null;
+    let armed = null;        // pressed, not yet moved far enough to be a drag
+    const SLOP = 6;
 
     const at = (e) => {
       const el = document.elementFromPoint(e.clientX, e.clientY);
@@ -222,39 +229,62 @@ class App {
       drag.ghost.classList.toggle('pad--ghost-off', el === refs.book);
     };
 
-    refs.grid.addEventListener('pointerdown', (e) => {
-      const grip = e.target.closest('.pad__grip');
-      if (!grip || !this.editing || e.button > 0) return;
-      const el = grip.closest('.pad');
-      const from = Number(el.dataset.i);
-      if (!this.board.pads[from]) return;
-      e.preventDefault();
-
+    const begin = (el, from, e, handle) => {
       const box = el.getBoundingClientRect();
       const ghost = el.cloneNode(true);
       ghost.classList.add('pad--ghost');
       ghost.style.width = `${box.width}px`;
       ghost.style.height = `${box.height}px`;
+      ghost.style.transform = `translate(${box.left}px, ${box.top}px)`;
       document.body.append(ghost);
 
       drag = { from, el, ghost, dx: e.clientX - box.left, dy: e.clientY - box.top, target: null };
       el.classList.add('pad--dragging');
       try {
-        grip.setPointerCapture(e.pointerId);
+        handle.setPointerCapture(e.pointerId);
       } catch {
         /* without capture the grid's own listeners still see the move */
       }
-      ghost.style.transform = `translate(${box.left}px, ${box.top}px)`;
+    };
+
+    refs.grid.addEventListener('pointerdown', (e) => {
+      armed = null;
+      const el = e.target.closest('.pad');
+      if (!el || !this.editing || e.button > 0) return;
+      if (e.target.closest('.pad__pencil')) return;      // the corner is for settings
+      const from = Number(el.dataset.i);
+      if (!this.board.pads[from] || !this.board.pads[from].file) return;
+
+      if (e.target.closest('.pad__grip')) {
+        e.preventDefault();
+        begin(el, from, e, e.target.closest('.pad__grip'));
+        return;
+      }
+      if (e.pointerType === 'touch') return;             // a finger is probably scrolling
+      armed = { el, from, x: e.clientX, y: e.clientY, id: e.pointerId };
     });
 
     refs.grid.addEventListener('pointermove', (e) => {
-      if (!drag) return;
+      if (!drag) {
+        if (!armed || e.pointerId !== armed.id) return;
+        if (Math.hypot(e.clientX - armed.x, e.clientY - armed.y) < SLOP) return;
+        const { el, from } = armed;
+        armed = null;
+        begin(el, from, e, el);
+        this.dragged = true;                             // the click that follows is not a tap
+      }
       drag.ghost.style.transform = `translate(${e.clientX - drag.dx}px, ${e.clientY - drag.dy}px)`;
       over(at(e));
     });
 
     const end = (e, drop) => {
+      armed = null;
       if (!drag) return;
+      // A click may follow this pointerup; it belongs to the drag, not the pad.
+      // Anything after that is a tap again.
+      setTimeout(() => {
+        this.dragged = false;
+      }, 0);
       const { from, target } = drag;
       drag.ghost.remove();
       drag.el.classList.remove('pad--dragging');
