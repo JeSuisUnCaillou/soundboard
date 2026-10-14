@@ -10,7 +10,7 @@ export const refs = {};
 export function bindRefs() {
   const ids = [
     'grid', 'stageEmpty', 'btnAddEmpty', 'book', 'lib', 'libEmpty', 'libFilter',
-    'folderName', 'folderCount', 'btnReconnect', 'btnAdd', 'btnEdit', 'btnSetup',
+    'folderName', 'folderCount', 'btnReconnect', 'btnAdd', 'btnEdit', 'btnEmpty', 'btnSetup',
     'picker', 'pickerTitle', 'pickerBlurb', 'pickerNote', 'pickerKeys', 'pickerClose',
     'btnAddFolder', 'btnAddFiles', 'btnReopen',
     'btnStop', 'playing', 'master', 'masterValue', 'btnBook',
@@ -118,7 +118,7 @@ export function paintPads(board, engine) {
   }
 }
 
-// ── folder library ────────────────────────────────────────────────────────
+// ── the folder's sounds, as a tree ────────────────────────────────────────
 
 export function drawLibrary(board, library, filter = '') {
   // Which sounds are already on the board, and where: a folder read twice is
@@ -129,23 +129,77 @@ export function drawLibrary(board, library, filter = '') {
       used.set(pad.file, pad.cue ? `cue ${pad.cue}` : `pad ${i + 1}`);
     }
   });
+
   const needle = filter.trim().toLowerCase();
   const items = library.list.filter((e) => !needle || e.path.toLowerCase().includes(needle));
 
   refs.lib.replaceChildren();
   refs.libEmpty.textContent = library.isOpen
     ? (items.length ? 'Tap a sound to put it on the next free pad, or drag it onto one.' : 'No sound here matches that.')
-    : 'Open a folder to see what is in it.';
+    : 'Add files to see what you have.';
 
-  for (const entry of items) {
-    const li = document.createElement('li');
-    li.className = `lib__item${used.has(entry.path) ? ' lib__item--used' : ''}`;
-    li.draggable = true;
-    li.dataset.path = entry.path;
-    li.title = entry.path;
-    li.append(span('lib__name', entry.name), span('lib__dir', used.get(entry.path) || entry.dir));
-    refs.lib.append(li);
+  // Searching flattens the tree: the point of a search is to stop navigating.
+  if (needle) {
+    for (const entry of items) refs.lib.append(soundRow(entry, used, true));
+    return;
   }
+  for (const node of treeOf(items)) refs.lib.append(branch(node, used));
+}
+
+/** Folders and files, nested the way they are on disk. */
+function treeOf(entries) {
+  const root = { dirs: new Map(), files: [] };
+  for (const entry of entries) {
+    let here = root;
+    for (const part of entry.dir ? entry.dir.split('/') : []) {
+      if (!here.dirs.has(part)) here.dirs.set(part, { name: part, dirs: new Map(), files: [] });
+      here = here.dirs.get(part);
+    }
+    here.files.push(entry);
+  }
+  return [...root.dirs.values(), { files: root.files, dirs: new Map() }];
+}
+
+function countOf(node) {
+  let n = node.files.length;
+  for (const dir of node.dirs.values()) n += countOf(dir);
+  return n;
+}
+
+function branch(node, used) {
+  if (!node.name) {
+    const frag = document.createDocumentFragment();
+    for (const entry of node.files) frag.append(soundRow(entry, used, false));
+    return frag;
+  }
+
+  const box = document.createElement('details');
+  box.className = 'tree__dir';
+  box.open = true;
+  const head = document.createElement('summary');
+  head.className = 'tree__name';
+  head.append(span('tree__label', node.name), span('tree__count', String(countOf(node))));
+  box.append(head);
+
+  const body = document.createElement('div');
+  body.className = 'tree__body';
+  for (const dir of node.dirs.values()) body.append(branch(dir, used));
+  for (const entry of node.files) body.append(soundRow(entry, used, false));
+  box.append(body);
+  return box;
+}
+
+function soundRow(entry, used, showPath) {
+  const li = document.createElement('div');
+  li.className = `lib__item${used.has(entry.path) ? ' lib__item--used' : ''}`;
+  li.draggable = true;
+  li.dataset.path = entry.path;
+  li.title = entry.path;
+  li.append(
+    span('lib__name', showPath ? entry.path : entry.name),
+    span('lib__dir', used.get(entry.path) || ''),
+  );
+  return li;
 }
 
 // ── transport ─────────────────────────────────────────────────────────────
@@ -225,6 +279,7 @@ export function setPanel(editing) {
   document.body.dataset.editing = editing ? 'on' : '';
   refs.book.hidden = !editing;
   refs.btnBook.hidden = !editing;
+  refs.btnEmpty.hidden = !editing;
   refs.btnEdit.setAttribute('aria-pressed', String(editing));
   refs.btnEdit.textContent = editing ? 'Done editing' : 'Edit board';
 }

@@ -15,6 +15,10 @@ import {
 
 const PATH_TYPE = 'application/x-soundboard-path';
 
+// How many of a folder's sounds land on the board by themselves. The rest are
+// in the panel, to be put where the operator wants them.
+const AUTO_PLACE = 10;
+
 // Below this width the sounds list slides over the pads instead of sitting beside them.
 const NARROW = window.matchMedia('(max-width: 900px)');
 
@@ -68,6 +72,7 @@ class App {
     refs.btnReconnect.addEventListener('click', () => this.reconnect(this.pendingHandles || []));
     refs.pickerClose.addEventListener('click', () => refs.picker.close());
     refs.btnEdit.addEventListener('click', () => this.setEditing(!this.editing));
+    refs.btnEmpty.addEventListener('click', () => this.emptyBoard());
     refs.btnSetup.addEventListener('click', () => this.board && this.setup.open(this.board));
 
     refs.btnBook.addEventListener('click', () => setBook(!bookOpen()));
@@ -327,7 +332,9 @@ class App {
       await store.setMeta('last', this.board.id);
     }
 
+    this.waiting = 0;
     const placed = this.place(added);
+    const waiting = this.waiting;
     this.pendingHandles = null;
     if (refs.picker.open) refs.picker.close();
 
@@ -344,18 +351,31 @@ class App {
     this.keepSounds();
 
     const missing = filled(this.board).filter(({ pad }) => !this.library.has(pad.file)).length;
-    if (placed) toast(`${placed} sound${placed === 1 ? '' : 's'} added to the board.`);
-    else if (announce) toast('Those sounds are already on the board.');
+    if (placed && waiting) {
+      toast(`${placed} sound${placed === 1 ? '' : 's'} on the board. The other ${waiting} are under Sounds, `
+        + 'in edit mode, ready to put where you want them.');
+    } else if (placed) {
+      toast(`${placed} sound${placed === 1 ? '' : 's'} added to the board.`);
+    } else if (waiting) {
+      toast(`${waiting} sound${waiting === 1 ? '' : 's'} added, under Sounds in edit mode.`);
+    } else if (announce) toast('Those sounds are already on the board.');
     else if (missing) toast(`${missing} pad${missing === 1 ? '' : 's'} point at sounds that are not open.`);
     say(`${this.library.entries.size} sounds open`);
   }
 
-  /** New sounds go on the first free pads, in the order they were found. */
+  /**
+   * The first few new sounds go on the first free pads, in the order they were
+   * found. A folder of two hundred effects is a library, not a board.
+   */
   place(paths) {
     const onBoard = new Set(filled(this.board).map(({ pad }) => pad.file));
     let placed = 0;
     for (const path of paths) {
       if (onBoard.has(path)) continue;
+      if (placed >= AUTO_PLACE) {
+        this.waiting = (this.waiting || 0) + 1;
+        continue;
+      }
       let i = this.board.pads.findIndex((pad) => !pad || !pad.file);
       if (i === -1) {
         i = this.board.pads.length;
@@ -604,12 +624,42 @@ class App {
     say(live.length === 1 ? `Stopping ${live[0].pad.name || live[0].pad.file}` : `Stopping ${live.length} sounds`);
   }
 
+  /** Take every sound off the board, keeping the sounds themselves. Twice, to mean it. */
+  emptyBoard() {
+    if (!this.board) return;
+    if (!this.armed) {
+      this.armed = true;
+      refs.btnEmpty.textContent = 'Really empty it?';
+      refs.btnEmpty.classList.add('btn--danger');
+      clearTimeout(this.armTimer);
+      this.armTimer = setTimeout(() => this.disarm(), 4000);
+      return;
+    }
+    this.disarm();
+    this.engine.stopAll({ fade: 0 });
+    this.engine.reset();
+    this.board.pads = [];
+    fitPads(this.board);
+    this.redraw();
+    this.saveNow();
+    this.keepSounds();
+    toast('The board is empty. The sounds are still under Sounds.');
+  }
+
+  disarm() {
+    clearTimeout(this.armTimer);
+    this.armed = false;
+    refs.btnEmpty.textContent = 'Empty the board';
+    refs.btnEmpty.classList.remove('btn--danger');
+  }
+
   setEditing(on) {
     if (!this.board) {
       toast('Open a folder first — there is nothing to put on the pads yet.');
       return;
     }
     this.editing = on;
+    this.disarm();
     setPanel(on);
     if (on) drawLibrary(this.board, this.library, refs.libFilter.value);
     // The board stays in view: the sounds list is opened from the button when

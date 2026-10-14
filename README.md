@@ -12,6 +12,8 @@ straight off the disk by the browser and never leave it.
 
 <img src="docs/phone.png" alt="The same board on a phone: two columns of pads, Stop and the master fader underneath" width="300">
 
+![Edit mode: the board on the left with a drag grip on each pad, the folder's tree of sounds on the right showing which cue each one is on](docs/edit.png)
+
 ## Running it
 
 It is live at **https://jesuisuncaillou.github.io/soundboard/** — or serve the
@@ -66,10 +68,16 @@ and on Safari also AIFF.
 
 ## Using it
 
-**Setting up.** **Add files** takes a whole folder or a few sounds at a time, and
-whatever arrives joins what is already open and lands on the first free pads —
-so a board can be built from several places and added to mid-rehearsal. A sound
-already on the board is recognised and left where it is.
+**Setting up.** **Add files** takes a whole folder or a few sounds at a time,
+subfolders and all, and whatever arrives joins what is already open — so a board
+can be built from several places and added to mid-rehearsal. A sound already on
+the board is recognised and left where it is.
+
+The first ten land on the board as a sample to start from; everything else waits
+in **Sounds**, the folder's own tree, which opens beside the board in edit mode.
+Tap a sound there to put it on the next free pad, or drag it onto the pad you
+want — there is no limit on how many a board holds. **Empty the board** clears
+the pads without touching the sounds, and asks twice before it does.
 **Edit board** keeps the board in front of you and opens the folder's contents
 beside it: tap a sound to put it on the next free pad, or drag one onto a
 particular pad. Each pad grows a grip in its corner — drag that to move the pad,

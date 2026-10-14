@@ -361,6 +361,33 @@ body[data-editing="on"] .pad__lamp { display: none; }
   border-bottom: 1px solid var(--line-soft);
   cursor: grab;
 }
+
+/* The folder, as it is on disk. Open by default: a cue sheet you have to
+   unfold is a cue sheet you cannot read at a glance. */
+.tree__dir { border-bottom: 1px solid var(--line-soft); }
+.tree__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 7px 7px 4px;
+  font: 600 14px/1.3 var(--cond);
+  cursor: pointer;
+  list-style: none;
+}
+.tree__name::-webkit-details-marker { display: none; }
+.tree__name::before {
+  content: "";
+  width: 0; height: 0;
+  border: 5px solid transparent;
+  border-left-color: var(--ink-faint);
+  transform: translateX(1px);
+}
+.tree__dir[open] > .tree__name::before { transform: rotate(90deg) translateY(1px); }
+.tree__name:hover { background: var(--pad); }
+.tree__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree__count { margin-left: auto; color: var(--ink-faint); font: 400 12px/1 var(--mono); }
+.tree__body { padding-left: 13px; border-left: 1px solid var(--line-soft); margin-left: 9px; }
+.tree__body > .tree__dir:last-child, .tree__body > .lib__item:last-child { border-bottom: 0; }
 .lib__item:hover { background: var(--pad); }
 .lib__item--used { color: var(--ink-faint); }
 .lib__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
