@@ -133,8 +133,14 @@ than rearranging itself under the operator. While editing, Stop and the volume
 give their place to **Browse files**, which opens the folder over the whole
 screen — the pads and the files are never half each — and **Back to the pads**
 closes it. A pad is picked up by resting a finger on it, and dropped on the bar
-at the bottom to take it off the board. The
-screen is kept awake while a board is open.
+at the bottom to take it off the board.
+
+The screen is held awake for as long as a board is open — a show has long
+minutes in it where nothing is pressed, and a phone that locks in one of them
+has to be unlocked before the next cue. The lock is taken again whenever the
+system drops it, which switching apps does. Where a browser will not do it
+(iOS before 16.4, or a phone in low power mode) the board says so, and the
+phone's own auto-lock setting is the thing to change.
 
 **Carrying a board around.** Board setup saves the whole board as a JSON file and
 loads one back. Pads refer to files by their path inside the folder, so a board

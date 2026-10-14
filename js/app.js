@@ -70,6 +70,8 @@ class App {
     this.redraw();
     await this.restore();
 
+    this.keepAwake();
+
     // A reload should land where they left off, not at the beginning.
     if (this.board && was.editing) {
       this.setEditing(true);
@@ -155,6 +157,10 @@ class App {
       if (!document.hidden) this.keepAwake();
     });
     this.placeEmptyButton();
+    // Taken again on every press, and checked between them: a release can come
+    // from the system without a word.
+    document.addEventListener('pointerdown', () => this.keepAwake());
+    setInterval(() => this.keepAwake(), 30000);
     NARROW.addEventListener('change', (e) => {
       this.placeEmptyButton();
       if (!e.matches) setBook(false);
@@ -506,18 +512,24 @@ class App {
       return;
     }
 
+    // The board comes back whatever its sounds can be read from: the copies it
+    // keeps, the ones that ship with the app, or — in a moment — the folder.
     const saved = await store.loadBoard(lastId);
     const board = saved && migrate(saved, { id: lastId });
-    const kept = board ? await store.soundsFor(lastId) : [];
-    if (board && kept.length) {
+    if (board) {
       this.useBoard(board);
-      this.library.addCached(kept, board.name);
+      const kept = await store.soundsFor(lastId);
+      if (kept.length) this.library.addCached(kept, board.name);
       await this.absorb([]);
     }
 
+    const silent = !board || !filled(board).some(({ pad }) => this.library.has(pad.file));
     const handles = await store.loadHandles(lastId);
+
     if (!handles.length) {
-      if (!this.board) {
+      // Nothing here can be played: ask for the sounds rather than leave a
+      // board of pads that do nothing.
+      if (silent) {
         this.openPicker();
         if (board) {
           refs.pickerBlurb.textContent = `“${board.name}” is here, with its pads. Point it at the sounds again to play them.`;
@@ -532,11 +544,11 @@ class App {
       return;
     }
 
-    // The board plays from its own copies meanwhile; reconnecting is an offer,
+    // Whatever can be played is playing meanwhile; reconnecting is an offer,
     // not a toll gate.
     this.pendingHandles = handles;
-    refs.btnReconnect.hidden = !this.board;
-    if (this.board) {
+    refs.btnReconnect.hidden = silent;
+    if (!silent) {
       refs.btnReconnect.textContent = handles.length === 1
         ? `Reconnect “${handles[0].name}”`
         : `Reconnect ${handles.length} places`;
@@ -549,6 +561,14 @@ class App {
     this.openPicker();
     refs.pickerBlurb.textContent = 'The board is here. Browsers ask again for permission to read your '
       + 'sounds each time the page loads — once you have granted it, everything is where you left it.';
+  }
+
+  /** A board to edit when there is none: empty, and saved from the start. */
+  blankBoard() {
+    const name = this.library.rootName || 'Board';
+    this.useBoard(newBoard({ id: slug(name), name }));
+    store.setMeta('last', this.board.id).catch(() => {});
+    this.saveNow();
   }
 
   /**
@@ -568,6 +588,7 @@ class App {
     this.saveNow();
     this.primeAll();
     this.measure();
+    this.keepAwake();
     toast('A board to start with. Add files when you have your own.');
   }
 
@@ -811,10 +832,9 @@ class App {
   }
 
   setEditing(on) {
-    if (!this.board) {
-      toast('Open a folder first — there is nothing to put on the pads yet.');
-      return;
-    }
+    // A board with nothing on it is still a board to arrange: editing does not
+    // wait for sounds to arrive.
+    if (on && !this.board) this.blankBoard();
     this.editing = on;
     this.disarm();
     setPanel(on);
@@ -887,18 +907,35 @@ class App {
     }
   }
 
-  /** A show lasts longer than a tablet's screen timeout. */
+  /**
+   * A show has long minutes in it where nothing is pressed, and a phone that
+   * locks in one of them is a phone that has to be unlocked before the next
+   * cue. The lock is asked for as soon as there is a board, taken again
+   * whenever the system drops it — switching apps releases it — and checked on
+   * a timer, because nothing announces a release that came from elsewhere.
+   */
   async keepAwake() {
-    if (!('wakeLock' in navigator) || !this.board || document.hidden) return;
-    if (this.wakeLock && !this.wakeLock.released) return;
+    if (!this.board || document.hidden) return;
+    if (!('wakeLock' in navigator)) {
+      this.sayUnlocked();
+      return;
+    }
+    if (this.wakeLock) return;
     try {
       this.wakeLock = await navigator.wakeLock.request('screen');
       this.wakeLock.addEventListener('release', () => {
         this.wakeLock = null;
       });
     } catch {
-      /* the browser said no; the board works all the same */
+      // Refused: the tab is not visible, or the phone is in low power mode.
+      this.sayUnlocked();
     }
+  }
+
+  sayUnlocked() {
+    if (this.warnedAwake) return;
+    this.warnedAwake = true;
+    toast('This browser will not hold the screen awake. Set the phone not to lock before the show.');
   }
 
   queueSave() {
