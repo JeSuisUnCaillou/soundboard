@@ -1,0 +1,47 @@
+# Publishes the board to GitHub Pages. The site is static, so there is nothing
+# to build: the repository is the artifact.
+#
+# This replaces the Pages builder GitHub generates on its own, which pinned its
+# own action versions — and so warned about them — where this one is ours to
+# keep current. The runner is pinned for the same reason: `ubuntu-latest` moves
+# under the workflow, and a deploy that worked on Friday should work on Monday.
+
+name: Deploy to Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time, and the one under way is allowed to finish: two runs
+# racing is what cancelled builds and made a push take minutes to land.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Set up Pages
+        uses: actions/configure-pages@v6
+
+      - name: Package the site
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: .
+
+      - name: Deploy
+        id: deploy
+        uses: actions/deploy-pages@v5
