@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Soundboard — theatre sound cues</title>
+<meta name="description" content="Fire sound cues from a folder on your own machine. A grid of pads, a cue sheet, fades and loops. Nothing is uploaded.">
+<meta name="theme-color" content="#1a1512">
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="rail">
+  <h1 class="wordmark">Soundboard</h1>
+  <p class="rail__folder"><span id="folderName">No folder open</span><span class="rail__count" id="folderCount"></span></p>
+  <div class="rail__actions">
+    <button type="button" id="btnOpen" class="btn">Open folder</button>
+    <button type="button" id="btnEdit" class="btn" aria-pressed="false">Edit board</button>
+    <button type="button" id="btnSetup" class="btn">Board setup</button>
+  </div>
+</header>
+
+<main class="desk">
+  <section class="stage" aria-label="Sound pads">
+    <div id="grid" class="grid"></div>
+  </section>
+
+  <aside class="book" aria-label="Prompt book">
+    <div class="book__panel" id="panelCues">
+      <h2 class="book__title">Cue sheet</h2>
+      <ol class="cues" id="cues"></ol>
+      <p class="book__empty" id="cuesEmpty">Pads you fill in appear here, in playing order.</p>
+    </div>
+
+    <div class="book__panel" id="panelLibrary" hidden>
+      <h2 class="book__title">Sounds in folder</h2>
+      <input type="search" id="libFilter" class="field field--search" placeholder="Filter by name" aria-label="Filter sounds by name">
+      <ul class="lib" id="lib"></ul>
+      <p class="book__empty" id="libEmpty">Drag a sound onto a pad, or click a pad to set it up.</p>
+    </div>
+  </aside>
+</main>
+
+<footer class="transport">
+  <div class="go">
+    <button type="button" id="btnGo" class="go__btn" disabled>Go</button>
+    <p class="go__next"><span class="lamp lamp--standby" id="goLamp" aria-hidden="true"></span><span id="goLabel">Nothing standing by</span></p>
+  </div>
+
+  <div class="playing" id="playing" aria-label="Now playing"></div>
+
+  <div class="master">
+    <label class="master__label" for="master">Master</label>
+    <input type="range" id="master" min="0" max="100" value="80" class="slider">
+    <output class="master__value" id="masterValue" aria-hidden="true">80</output>
+    <button type="button" id="btnFadeAll" class="btn btn--quiet">Fade all</button>
+    <button type="button" id="btnStopAll" class="btn btn--quiet">Stop all</button>
+  </div>
+</footer>
+
+<section class="welcome" id="welcome">
+  <div class="welcome__card">
+    <h2 class="welcome__title">Point it at a folder of sounds</h2>
+    <p>Pick the folder that holds this show's audio. The files are read straight off your disk and stay
+       there — nothing is uploaded, and the board works with the network off.</p>
+    <button type="button" id="btnOpenBig" class="btn btn--go">Open folder</button>
+    <p class="welcome__note" id="welcomeNote"></p>
+    <dl class="keys">
+      <dt><kbd>Space</kbd></dt><dd>fire the standing-by cue</dd>
+      <dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>move the standby through the cue sheet</dd>
+      <dt><kbd>Esc</kbd></dt><dd>fade everything out</dd>
+      <dt><kbd>Shift</kbd> <kbd>Esc</kbd></dt><dd>cut everything dead</dd>
+    </dl>
+  </div>
+</section>
+
+<dialog id="padEditor" class="sheet">
+  <form method="dialog" id="padForm" class="sheet__form">
+    <header class="sheet__head">
+      <h2 class="sheet__title">Pad <span id="padWhere"></span></h2>
+      <button type="button" class="sheet__close" id="padClose" aria-label="Close">&times;</button>
+    </header>
+
+    <div class="sheet__body">
+      <label class="row"><span class="row__label">Sound</span>
+        <span class="row__field">
+          <input type="search" id="padFileFilter" class="field field--search" placeholder="Filter files" aria-label="Filter files">
+          <select id="padFile" class="field" size="6"></select>
+        </span>
+      </label>
+
+      <div class="row row--split">
+        <label class="row"><span class="row__label">Cue</span>
+          <input type="text" id="padCue" class="field field--tiny" maxlength="6" placeholder="12">
+        </label>
+        <label class="row"><span class="row__label">Name on pad</span>
+          <input type="text" id="padName" class="field" maxlength="40" placeholder="Thunder">
+        </label>
+        <label class="row"><span class="row__label">Key</span>
+          <input type="text" id="padKey" class="field field--tiny" maxlength="1" placeholder="q">
+        </label>
+      </div>
+
+      <label class="row"><span class="row__label">Note in the book</span>
+        <input type="text" id="padNote" class="field" maxlength="120" placeholder="On JOHN's exit, before the blackout">
+      </label>
+
+      <fieldset class="row row--gels">
+        <legend class="row__label">Gel</legend>
+        <div class="gels" id="padGels"></div>
+      </fieldset>
+
+      <div class="row row--split">
+        <label class="row"><span class="row__label">Level</span>
+          <span class="row__field row__field--slider">
+            <input type="range" id="padGain" min="0" max="100" value="100" class="slider">
+            <output id="padGainOut" class="num">100</output>
+          </span>
+        </label>
+        <label class="row"><span class="row__label">Fade in</span>
+          <span class="row__field row__field--unit"><input type="number" id="padFadeIn" class="field field--num" min="0" max="120" step="0.1" value="0"><span class="unit">s</span></span>
+        </label>
+        <label class="row"><span class="row__label">Fade out</span>
+          <span class="row__field row__field--unit"><input type="number" id="padFadeOut" class="field field--num" min="0" max="120" step="0.1" value="1.5"><span class="unit">s</span></span>
+        </label>
+      </div>
+
+      <div class="row row--split">
+        <label class="row"><span class="row__label">Start at</span>
+          <span class="row__field row__field--unit"><input type="number" id="padStart" class="field field--num" min="0" step="0.01" value="0"><span class="unit">s</span></span>
+        </label>
+        <label class="row"><span class="row__label">Stop at</span>
+          <span class="row__field row__field--unit"><input type="number" id="padEnd" class="field field--num" min="0" step="0.01" placeholder="end"><span class="unit">s</span></span>
+        </label>
+        <label class="row row--check"><input type="checkbox" id="padLoop"><span>Loop until stopped</span></label>
+      </div>
+
+      <label class="row"><span class="row__label">Tapping it again</span>
+        <select id="padTap" class="field">
+          <option value="fadeout">fades it out</option>
+          <option value="restart">starts it over</option>
+          <option value="pause">pauses, then resumes</option>
+          <option value="overlay">layers another copy on top</option>
+          <option value="ignore">does nothing</option>
+        </select>
+      </label>
+
+      <label class="row row--check"><input type="checkbox" id="padSolo"><span>Fade out everything else when this starts</span></label>
+    </div>
+
+    <footer class="sheet__foot">
+      <button type="button" id="padClear" class="btn btn--danger">Empty this pad</button>
+      <span class="sheet__spacer"></span>
+      <button type="button" id="padCancel" class="btn btn--quiet">Cancel</button>
+      <button type="button" id="padSave" class="btn btn--go">Save pad</button>
+    </footer>
+  </form>
+</dialog>
+
+<dialog id="setup" class="sheet sheet--narrow">
+  <form method="dialog" class="sheet__form">
+    <header class="sheet__head">
+      <h2 class="sheet__title">Board setup</h2>
+      <button type="button" class="sheet__close" id="setupClose" aria-label="Close">&times;</button>
+    </header>
+
+    <div class="sheet__body">
+      <label class="row"><span class="row__label">Board name</span>
+        <input type="text" id="setBoardName" class="field" maxlength="48" placeholder="Act One">
+      </label>
+
+      <div class="row row--split">
+        <label class="row"><span class="row__label">Rows</span>
+          <input type="number" id="setRows" class="field field--num" min="1" max="10" step="1" value="4">
+        </label>
+        <label class="row"><span class="row__label">Columns</span>
+          <input type="number" id="setCols" class="field field--num" min="1" max="12" step="1" value="5">
+        </label>
+      </div>
+      <p class="hint" id="setupShrinkWarning" hidden></p>
+
+      <div class="row row--split">
+        <label class="row"><span class="row__label">Default fade in</span>
+          <span class="row__field row__field--unit"><input type="number" id="setFadeIn" class="field field--num" min="0" max="120" step="0.1" value="0"><span class="unit">s</span></span>
+        </label>
+        <label class="row"><span class="row__label">Default fade out</span>
+          <span class="row__field row__field--unit"><input type="number" id="setFadeOut" class="field field--num" min="0" max="120" step="0.1" value="1.5"><span class="unit">s</span></span>
+        </label>
+      </div>
+      <p class="hint">New pads start with these fades. Pads you have already set up keep their own.</p>
+
+      <h3 class="sheet__sub">This board's file</h3>
+      <p class="hint">The board lives in this browser, tied to the folder it was built from. Save a copy to carry it
+         to another machine or to keep a version for the run.</p>
+      <div class="row row--buttons">
+        <button type="button" id="btnExport" class="btn">Save board file</button>
+        <button type="button" id="btnImport" class="btn">Load board file</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+      </div>
+    </div>
+
+    <footer class="sheet__foot">
+      <span class="sheet__spacer"></span>
+      <button type="button" id="setupDone" class="btn btn--go">Done</button>
+    </footer>
+  </form>
+</dialog>
+
+<p id="live" class="sr-only" aria-live="polite"></p>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
