@@ -34,6 +34,7 @@ class App {
     this.saveTimer = null;
     this.pendingHandles = null;
     this.wakeLock = null;
+    this.padWanting = -1;      // the empty pad that asked for a sound
 
     this.engine.onchange = () => {
       drawStop(this.engine);
@@ -119,10 +120,11 @@ class App {
       const i = Number(el.dataset.i);
       const pad = this.board.pads[i];
       // An empty pad has nothing to set up: it wants a sound, which is in the
-      // folder.
+      // folder. It holds the place until one is picked.
       if (this.editing && (!pad || !pad.file)) {
-        if (NARROW.matches) setBook(true);
-        else toast('Drag a sound from the folders, or click its + icon.');
+        this.wantSound(i === this.padWanting ? -1 : i);
+        if (NARROW.matches && this.padWanting === i) setBook(true);
+        else if (this.padWanting === i) toast('Now pick a sound — its + puts it here.');
         return;
       }
       // While editing: the pencil sets the pad up, the pad itself is heard.
@@ -141,8 +143,9 @@ class App {
       const item = e.target.closest('.lib__item');
       if (!item) return;
       // Dragging a sound onto a pad has no equivalent under a finger, so the
-      // plus puts it on the first free pad; the row itself is just heard.
-      if (e.target.closest('.lib__add')) this.assignToFreePad(item.dataset.path);
+      // plus puts it on the pad that asked for one, or on the first free pad;
+      // the row itself is just heard.
+      if (e.target.closest('.lib__add')) this.assignToPad(item.dataset.path);
       else this.preview(item.dataset.path);
     });
 
@@ -668,6 +671,7 @@ class App {
   }
 
   setPad(i, pad) {
+    if (i === this.padWanting && pad) this.padWanting = -1;
     this.board.pads[i] = pad;
     fitPads(this.board);
     this.engine.stop(i, { fade: 0 });
@@ -680,14 +684,28 @@ class App {
     this.keepSounds();
   }
 
-  /** Tap a sound in the folder panel: it lands on the first pad with nothing on it. */
-  assignToFreePad(path) {
+  /**
+   * An empty pad that has been clicked is waiting for a sound; clicking it
+   * again, or filling it, lets it go. Nothing else on the board moves.
+   */
+  wantSound(i) {
+    const was = this.padWanting;
+    this.padWanting = i >= 0 ? i : -1;
+    if (was !== this.padWanting) this.redraw();
+  }
+
+  assignToPad(path) {
     if (!this.board || !this.library.has(path)) return;
-    const free = this.board.pads.findIndex((pad) => !pad || !pad.file);
+    // The pad that asked for a sound gets it; otherwise the first free one.
+    const asked = this.padWanting;
+    const free = asked >= 0 && !(this.board.pads[asked] || {}).file
+      ? asked
+      : this.board.pads.findIndex((pad) => !pad || !pad.file);
     if (free === -1) {
       toast('Every pad is taken. Add rows in Board settings, or tap a pad to replace what is on it.');
       return;
     }
+    this.wantSound(-1);
     this.setPad(free, newPad(this.board, free, path));
     const { row, col } = rowCol(this.board, free);
     // Show the pad it landed on rather than the list it came from.
@@ -843,6 +861,7 @@ class App {
     // wait for sounds to arrive.
     if (on && !this.board) this.blankBoard();
     this.editing = on;
+    this.padWanting = -1;
     this.disarm();
     setPanel(on);
     if (on) drawLibrary(this.board, this.library, refs.libFilter.value);
@@ -862,7 +881,11 @@ class App {
     refs.stageEmpty.hidden = !!this.board;
     refs.grid.hidden = !this.board;
     if (!this.board) return;
-    drawGrid(this.board, { editing: this.editing, missing: (path) => !this.library.has(path) });
+    drawGrid(this.board, {
+      editing: this.editing,
+      missing: (path) => !this.library.has(path),
+      waiting: this.padWanting,
+    });
     drawStop(this.engine);
     if (this.editing) drawLibrary(this.board, this.library, refs.libFilter.value);
     this.paint();
@@ -972,4 +995,3 @@ app.boot().catch((err) => {
   console.error(err);
   toast(`The board could not start: ${err.message}`);
 });
-

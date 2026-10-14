@@ -30,7 +30,7 @@ const openDirs = new Set(prefs.get('openDirs', []));
 
 // ── grid ──────────────────────────────────────────────────────────────────
 
-export function drawGrid(board, { editing, missing = () => false }) {
+export function drawGrid(board, { editing, missing = () => false, waiting = -1 }) {
   const grid = refs.grid;
   grid.style.setProperty('--cols', board.cols);
   grid.replaceChildren();
@@ -62,8 +62,12 @@ export function drawGrid(board, { editing, missing = () => false }) {
       if (!el.title) el.title = padTitle(pad);   // the whole name, when it is clipped
     } else {
       el.classList.add('pad--empty');
-      el.append(span('pad__add', editing ? 'Add sound' : ''));
-      el.setAttribute('aria-label', `Empty pad, row ${row + 1} column ${col + 1}`);
+      // The pad that was asked for a sound says so, and says it in the place
+      // the sound's name will be.
+      const wanted = editing && i === waiting;
+      if (wanted) el.classList.add('pad--waiting');
+      el.append(span('pad__add', editing ? (wanted ? 'Pick a sound' : 'Add sound') : ''));
+      el.setAttribute('aria-label', `Empty pad, row ${row + 1} column ${col + 1}${wanted ? ', waiting for a sound' : ''}`);
       el.disabled = !editing;
     }
 

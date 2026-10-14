@@ -67,14 +67,14 @@ export class Library {
     if (this.sources.some((s) => s.kind === 'bundled')) return [];
     const src = this._source({ kind: 'bundled', name: BUNDLED_DIR });
     const added = [];
-    for (const sound of BUNDLED) {
-      const path = `${BUNDLED_DIR}/${sound.file}`;
+    for (const file of BUNDLED) {
+      const path = `${BUNDLED_DIR}/${file}`;
       if (this.entries.has(path)) continue;
       this.entries.set(path, {
         path,
-        name: sound.file,
+        name: file,
         dir: BUNDLED_DIR,
-        url: `sounds/${encodeURIComponent(sound.file)}`,
+        url: `sounds/${encodeURIComponent(file)}`,
         bundled: true,
         src: src.key,
       });

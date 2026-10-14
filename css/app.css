@@ -202,6 +202,17 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
 .pad--empty { color: var(--ink-faint); border-style: dashed; background: none; }
 .pad--empty:hover { color: var(--ink-dim); background: var(--console); }
 
+/* The pad that has been asked for a sound. It stays lit while the folder is
+   open over it, so there is no doubt about where the next one lands. */
+.pad--waiting,
+.pad--waiting:hover {
+  color: var(--ink);
+  border-color: var(--warn);
+  border-style: solid;
+  background: color-mix(in oklab, var(--warn) 12%, transparent);
+  box-shadow: inset 0 0 0 1px var(--warn);
+}
+
 .pad__name {
   grid-area: name;
   align-self: center;

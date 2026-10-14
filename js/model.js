@@ -5,7 +5,6 @@
 // loses one.
 
 import { DEFAULT_GEL } from './gels.js';
-import { bundledPad } from './bundled.js';
 
 // Pads used to be handed Bastard Amber by default. Boards from before that
 // moved to Daylight Blue follow it rather than keeping a colour nobody picked.
@@ -63,9 +62,10 @@ export function applyLengthDefaults(board, pad) {
   }
 }
 
+// A new pad takes the board's defaults; what the sound is — a hit or a cue —
+// is not known until it has been measured, and applyLengthDefaults says so then.
 export function newPad(board, i, file) {
   const name = file ? prettyName(file) : '';
-  // A sound that ships with the board can ask for settings of its own.
   return {
     file: file || '',
     name,
@@ -80,7 +80,6 @@ export function newPad(board, i, file) {
     solo: false,
     key: defaultKey(board, i),
     duration: 0,
-    ...(file ? bundledPad(file) || {} : {}),
   };
 }
 
@@ -204,9 +203,6 @@ function migratePad(board, i, raw, version) {
   pad.solo = !!raw.solo;
   pad.key = typeof raw.key === 'string' ? raw.key.slice(0, 1) : '';
   pad.duration = clampNum(raw.duration, 0, 1e5, 0);
-  // Pads made from the sounds that ship with the app take their settings again
-  // when those settings change, once.
-  if (version < 3) Object.assign(pad, bundledPad(pad.file) || {});
   return pad;
 }
 

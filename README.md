@@ -8,11 +8,11 @@ click or by key.
 No build step, no server, no account, and nothing is uploaded: the files are read
 straight off the disk by the browser and never leave it.
 
-![The board on a laptop: a grid of coloured pads, Stop and what is playing along the bottom](docs/board.png)
+![The board on a laptop: eight pads, two of them green and running with the time left counting down, Stop and the volume along the bottom](docs/board.png)
 
-<img src="docs/phone.png" alt="The same board on a phone: the pads filling the screen, Stop and the volume underneath" width="300">
+<img src="docs/phone.png" alt="The same sounds on a phone, two pads across, Stop and the volume underneath" width="300">
 
-![Edit mode: the board on the left with a pencil in each pad's corner, the folder's tree of sounds on the right](docs/edit.png)
+![Edit mode: the board on the left with a pencil in each pad's corner, the tree of folders on the right](docs/edit.png)
 
 ## Running it
 
@@ -90,8 +90,10 @@ you have set.
 
 While editing, a tap is a listen: a sound in the tree plays where it is, and so
 does a pad, so a cue can be checked before and after it goes on the board. The
-**+** beside a sound puts it on the next free pad; the pencil in a pad's corner
-opens its settings, where **Hear it** plays it again. With a mouse the whole pad
+**+** beside a sound puts it on the next free pad — or on a particular one:
+click an empty pad and it lights up and waits, and the next **+** lands there.
+Clicking it again lets it go. The pencil in a pad's corner opens its settings,
+where **Hear it** plays it again. With a mouse the whole pad
 is a handle: press anywhere but the pencil and move, and the pad comes with you;
 press and release without moving and it just plays. Under a finger, rest on a pad
 for a moment and it comes away with you — a touch that moves straight away is
@@ -116,9 +118,12 @@ for a hard scene change.
 
 **Running the show.** Tap a pad to fire it. A pad that is playing lights up in
 its own colour, the way a lamp does, with a green light, a countdown and a travel
-bar along its bottom edge — the board itself says what is running. Pads all
-start the same colour, so one of the eleven lighting gels means something once
-it is chosen — a group, a scene, an act. The red **Stop** button takes everything
+bar along its bottom edge — the board itself says what is running. A sound's
+own length picks where it starts from: under five seconds it is a hit — a shot,
+a door, a slap — so it comes up blue, starts at full level with no fade in, and
+a second tap layers another copy on top; anything longer is a cue that runs, and
+comes up green. Change any of it and the change stands. The eleven lighting gels
+are there to mean something once one is chosen — a group, a scene, an act. The red **Stop** button takes everything
 playing out, each sound on its own fade; `Esc` cuts the lot dead the moment you
 hit it.
 
