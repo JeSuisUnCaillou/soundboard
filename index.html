@@ -107,25 +107,15 @@
 <dialog id="padEditor" class="sheet">
   <form method="dialog" id="padForm" class="sheet__form">
     <header class="sheet__head">
-      <h2 class="sheet__title">Pad <span id="padWhere"></span></h2>
-      <div class="sheet__preview" id="padPreview" aria-hidden="true"></div>
+      <h2 class="sheet__title sheet__title--file" id="padFileName"></h2>
+      <button type="button" id="padHear" class="btn btn--quiet">Hear it</button>
       <button type="button" class="sheet__close" id="padClose" aria-label="Close">&times;</button>
     </header>
 
     <div class="sheet__body">
-      <label class="row"><span class="row__label">Sound</span>
-        <span class="row__field">
-          <span class="row__field--unit">
-            <input type="search" id="padFileFilter" class="field field--search" placeholder="Filter files" aria-label="Filter files">
-            <button type="button" id="padHear" class="btn btn--quiet">Hear it</button>
-          </span>
-          <select id="padFile" class="field" size="6"></select>
-        </span>
-      </label>
-
       <div class="row row--split">
         <label class="row"><span class="row__label">Name on pad</span>
-          <input type="text" id="padName" class="field" maxlength="40" placeholder="Thunder">
+          <input type="text" id="padName" class="field" maxlength="40" placeholder="The file's name">
         </label>
       </div>
 
@@ -141,10 +131,6 @@
         </label>
         <span class="row row--grow"><span class="hint">Change the row or column to move the pad.</span></span>
       </div>
-
-      <label class="row"><span class="row__label">Note on the pad</span>
-        <input type="text" id="padNote" class="field" maxlength="120" placeholder="On JOHN's exit, before the blackout">
-      </label>
 
       <fieldset class="row row--gels">
         <legend class="row__label">Gel</legend>

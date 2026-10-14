@@ -5,7 +5,7 @@ import { Library, CAN_PERSIST } from './library.js';
 import { Engine, probeDuration } from './engine.js';
 import { store, prefs } from './store.js';
 import {
-  newBoard, newPad, migrate, setCols, fitPads, filled, slug, move, padByKey, rowCol,
+  newBoard, newPad, migrate, setCols, fitPads, filled, slug, move, padByKey, rowCol, padTitle,
 } from './model.js';
 import { bundledPaths } from './bundled.js';
 import { PadEditor, SetupSheet } from './editor.js';
@@ -308,7 +308,7 @@ class App {
       if (target === refs.book) {
         const pad = this.board.pads[from];
         this.setPad(from, null);
-        toast(`${pad.name || pad.file} is off the board. The sound is still under Sounds.`);
+        toast(`${padTitle(pad)} is off the board. The sound is still under Sounds.`);
         say('Taken off the board');
         return;
       }
@@ -640,7 +640,7 @@ class App {
     const { row, col } = rowCol(this.board, free);
     // Show the pad it landed on rather than the list it came from.
     if (NARROW.matches) setBook(false);
-    toast(`${this.board.pads[free].name} is on row ${row + 1}, column ${col + 1}.`);
+    toast(`${padTitle(this.board.pads[free])} is on row ${row + 1}, column ${col + 1}.`);
   }
 
   applySetup({ name, cols, fadeIn, fadeOut }) {
@@ -723,9 +723,9 @@ class App {
     }
     try {
       await this.engine.fire(i, pad);
-      say(pad.name || pad.file);
+      say(padTitle(pad));
     } catch (err) {
-      toast(`“${pad.name || pad.file}” would not play: ${err.message}`);
+      toast(`“${padTitle(pad)}” would not play: ${err.message}`);
     }
   }
 
@@ -736,7 +736,7 @@ class App {
     for (const { i, pad } of live) {
       this.engine.stop(i, { fade: pad.fadeOut ?? this.fadeTime() });
     }
-    say(live.length === 1 ? `Stopping ${live[0].pad.name || live[0].pad.file}` : `Stopping ${live.length} sounds`);
+    say(live.length === 1 ? `Stopping ${padTitle(live[0].pad)}` : `Stopping ${live.length} sounds`);
   }
 
   /**

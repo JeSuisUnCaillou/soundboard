@@ -2,7 +2,7 @@
 // calls in to redraw. Pad text is set as text, never markup, because the words
 // come from filenames on someone else's disk.
 
-import { fmtTime, filled, rowCol } from './model.js';
+import { fmtTime, filled, rowCol, padTitle } from './model.js';
 import { GELS, gelHex } from './gels.js';
 import { prefs } from './store.js';
 
@@ -53,15 +53,14 @@ export function drawGrid(board, { editing, missing = () => false }) {
       el.style.setProperty('--gel', gelHex(pad.gel));
       el.append(
         lamp('pad__lamp'),
-        span('pad__name', pad.name || pad.file),
-        span('pad__note', pad.note || ''),
+        span('pad__name', padTitle(pad)),
         span('pad__time', pad.duration ? fmtTime(pad.duration) : ''),
         span('pad__key', pad.key || ''),
         span('pad__travel', ''),
         pencil(),
       );
       el.setAttribute('aria-label', `${padLabel(pad, row, col)}${missing(pad.file) ? ', file missing' : ''}`);
-      if (!el.title) el.title = pad.name || pad.file;   // the whole name, when it is clipped
+      if (!el.title) el.title = padTitle(pad);   // the whole name, when it is clipped
     } else {
       el.classList.add('pad--empty');
       el.append(span('pad__add', editing ? 'Add sound' : ''));
@@ -75,9 +74,8 @@ export function drawGrid(board, { editing, missing = () => false }) {
 }
 
 function padLabel(pad, row, col) {
-  const bits = [pad.name || pad.file];
+  const bits = [padTitle(pad)];
   if (pad.duration) bits.push(fmtTime(pad.duration));
-  if (pad.note) bits.push(pad.note);
   if (pad.key) bits.push(`key ${pad.key}`);
   bits.push(`row ${row + 1} column ${col + 1}`);
   return bits.join(', ');
@@ -227,7 +225,7 @@ export function drawPlaying(board, engine) {
     bar.className = 'voice__bar';
     bar.append(document.createElement('i'));
     const time = span('voice__time', '');
-    row.append(span('voice__name', pad.name || pad.file), bar, time);
+    row.append(span('voice__name', padTitle(pad)), bar, time);
     voiceEls.set(i, { row, bar, time, pad });
     refs.playing.append(row);
   }
@@ -351,21 +349,6 @@ function pencil() {
   el.setAttribute('aria-hidden', 'true');
   el.title = 'Set this pad up';
   return el;
-}
-
-/** The pad as it will look on the board, drawn inside the settings sheet. */
-export function drawPadPreview(host, pad) {
-  host.replaceChildren();
-  const el = document.createElement('div');
-  el.className = 'pad pad--filled pad--preview';
-  el.style.setProperty('--gel', gelHex(pad.gel));
-  el.append(
-    span('pad__name', pad.name || pad.file || 'No sound yet'),
-    span('pad__note', pad.note || ''),
-    span('pad__time', pad.duration ? fmtTime(pad.duration) : ''),
-    span('pad__key', pad.key || ''),
-  );
-  host.append(el);
 }
 
 function lamp(cls) {

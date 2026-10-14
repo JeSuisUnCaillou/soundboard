@@ -43,7 +43,6 @@ export function newPad(board, i, file) {
   return {
     file: file || '',
     name,
-    note: '',
     gel: DEFAULT_GEL,
     gain: 1,
     fadeIn: board.defaults.fadeIn,
@@ -114,6 +113,12 @@ export function move(board, from, to) {
   [pads[from], pads[to]] = [pads[to], pads[from]];
 }
 
+/** What a pad is called: the name given to it, or the file's own. */
+export function padTitle(pad) {
+  if (!pad) return '';
+  return pad.name || prettyName(pad.file || '');
+}
+
 export function prettyName(path) {
   const base = path.split('/').pop().replace(/\.[^.]+$/, '');
   return base
@@ -161,7 +166,6 @@ export function migrate(raw, { id } = {}) {
 function migratePad(board, i, raw, version) {
   const pad = newPad(board, i, String(raw.file || ''));
   pad.name = String(raw.name ?? pad.name).slice(0, 40);
-  pad.note = String(raw.note ?? '').slice(0, 120);
   const inherited = version < 2 && raw.gel === OLD_DEFAULT_GEL ? DEFAULT_GEL : raw.gel;
   pad.gel = typeof inherited === 'string' ? inherited : pad.gel;
   pad.gain = clampNum(raw.gain, 0, 1, 1);

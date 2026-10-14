@@ -12,7 +12,7 @@ straight off the disk by the browser and never leave it.
 
 <img src="docs/phone.png" alt="The same board on a phone: the pads filling the screen, Stop and the volume underneath" width="300">
 
-![Edit mode: the board on the left with a drag grip on each pad, the folder's tree of sounds on the right showing which cue each one is on](docs/edit.png)
+![Edit mode: the board on the left with a pencil in each pad's corner, the folder's tree of sounds on the right](docs/edit.png)
 
 ## Running it
 
@@ -75,42 +75,41 @@ in the tree and stay there whatever else you open: they are served with the
 board, so they need no folder, no permission and no copy. Press them, move them,
 or empty the board and build your own.
 
-**Setting up.** **Add files** takes a whole folder or a few sounds at a time,
-subfolders and all, and whatever arrives joins what is already open — so a board
-can be built from several places and added to mid-rehearsal. A sound already on
-the board is recognised and left where it is.
+**Setting up.** **Edit board** is where a board is built. **Add files** takes a
+whole folder or a few sounds at a time, subfolders and all, and whatever arrives
+joins what is already open — so a board can be built from several places and
+added to mid-rehearsal. A folder goes into the tree under its own name, and a
+sound already on the board is recognised and left where it is.
 
-On an empty board the first ten lay themselves out, so there is something to look
-at; after that the board is yours and anything added waits in **Sounds**, the
-folder's own tree, which opens beside the board in edit mode. Adding a folder
-never moves a pad you have set.
+On an empty board the first ten sounds lay themselves out, so there is something
+to look at; after that the board is yours and anything added waits in **Sounds**,
+the folder's own tree, which sits beside the board on a wide screen and opens
+over it from **Browse files** on a narrow one. Adding a folder never moves a pad
+you have set.
 
 While editing, a tap is a listen: a sound in the tree plays where it is, and so
 does a pad, so a cue can be checked before and after it goes on the board. The
-**+** beside a sound puts it on the next free pad and the pencil on a pad opens
-its settings — where **Hear it** auditions a file before the pad is committed to
-it. With a mouse the whole pad is a handle: press anywhere but the pencil and move,
-and the pad comes with you; press and release without moving and it just plays.
-A touch that lands on a pad is left free to scroll the board, so under a finger a
-pad is moved by typing its row and column in its settings. Dragging a pad onto
-the sounds panel takes it off the board, leaving the sound where it is. There is no limit on how many sounds a board holds. **Empty the
-board** clears the pads without touching the sounds, and asks twice.
-**Edit board** keeps the board in front of you and opens the folder's contents
-beside it: tap a sound to put it on the next free pad, or drag one onto a
-particular pad. Each pad grows a grip in its corner — drag that to move the pad,
-with a mouse or a finger. Clicking a pad opens its settings, which show the pad
-as it will look while you type. **Board setup** sets how many columns the board
-has; the pads wrap into as many rows as they need and the board scrolls, so
-nothing is ever pushed off it. It also holds the fades new pads start with — a
-second in, a second and a half out, so nothing begins or ends on a hard edge
-unless a pad is told to.
+**+** beside a sound puts it on the next free pad; the pencil in a pad's corner
+opens its settings, where **Hear it** plays it again. With a mouse the whole pad
+is a handle: press anywhere but the pencil and move, and the pad comes with you;
+press and release without moving and it just plays. A touch that lands on a pad
+is left free to scroll the board, so under a finger a pad is moved by typing its
+row and column in its settings. Dragging a pad onto the sounds panel takes it off
+the board, leaving the sound where it is. There is no limit on how many sounds a
+board holds. **Empty the board** clears the pads without touching the sounds, and
+asks twice.
 
-**Each pad holds**: the file, the name shown on the pad, a note under it, a
-colour, its level, fade in and fade
-out times, a loop switch, start and stop points to the hundredth of a second, a
-keyboard key, and what a second tap does — fade it out, start it over, pause it,
-layer another copy on top, or nothing at all. A pad can also be set to fade
-everything else out when it starts, for a hard scene change.
+**Board setup** sets how many columns the board has; the pads wrap into as many
+rows as they need and the board scrolls, so nothing is ever pushed off it. It
+also holds the fades new pads start with — a second in, a second and a half out,
+so nothing begins or ends on a hard edge unless a pad is told to.
+
+**Each pad holds**: the file it plays, a name of its own if the file's will not
+do, a colour, its level, fade in and fade out times, a loop switch, start and
+stop points to the hundredth of a second, a keyboard key, and what a second tap
+does — fade it out, start it over, pause it, layer another copy on top, or
+nothing at all. A pad can also be set to fade everything else out when it starts,
+for a hard scene change.
 
 **Running the show.** Tap a pad to fire it. A pad that is playing lights up in
 its own colour, the way a lamp does, with a green light, a countdown and a travel
@@ -131,8 +130,8 @@ you gave it: a six-column board is six columns wide everywhere, scrolling rather
 than rearranging itself under the operator. While editing, Stop and the volume
 give their place to **Browse files**, which opens the folder over the whole
 screen — the pads and the files are never half each — and **Back to the pads**
-closes it. Pads are moved by their grip, which works the same under a finger as
-under a mouse; a pad's row and column can also be typed into its settings. The
+closes it. A pad is moved under a finger by typing its row and column into its
+settings; dragging one is a mouse gesture. The
 screen is kept awake while a board is open.
 
 **Carrying a board around.** Board setup saves the whole board as a JSON file and

@@ -198,7 +198,6 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   display: grid;
   grid-template:
     "name name" 1fr
-    "note note" auto
     "time key " auto / 1fr auto;
   gap: 2px;
   min-width: 0;
@@ -248,32 +247,17 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   max-height: 100%;
 }
 
-/* A short pad has room for fewer lines of name, and none for a note. These
-   heights are the pad's content box, which is what a container query measures:
-   about twenty pixels less than the pad itself. */
+/* A short pad has room for fewer lines of name. These heights are the pad's
+   content box, which is what a container query measures: about twenty pixels
+   less than the pad itself. */
 @container pad (max-height: 98px) {
   .pad__name { -webkit-line-clamp: 2; line-clamp: 2; }
-  .pad__note { display: none; }
 }
 /* Only when two lines genuinely cannot fit: one line of a long filename says
    little, and three pads reading "mixkit…" say nothing at all. */
 @container pad (max-height: 46px) {
   .pad__name { -webkit-line-clamp: 1; line-clamp: 1; }
 }
-.pad__note {
-  grid-area: note;
-  margin-bottom: 4px;
-  text-align: center;
-  font: 400 12.5px/1.3 var(--sans);
-  color: rgba(255, 255, 255, 0.82);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-}
-.pad__note:empty { display: none; }
 
 .pad__time {
   grid-area: time;
@@ -397,9 +381,6 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
   color: var(--alert);
   font-weight: 400;
 }
-
-.sheet__preview { width: 136px; height: 74px; flex: none; margin-left: auto; }
-.pad--preview { width: 100%; height: 100%; cursor: default; padding: 7px 8px 9px; }
 
 /* cue lights, the one piece of language borrowed wholesale from the booth.
    The lamp is a box the size of the pencil with the dot drawn inside it, so the
@@ -630,7 +611,15 @@ kbd {
 .sheet__form { display: flex; flex-direction: column; max-height: calc(100vh - 42px); }
 .sheet__head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
 .sheet__title { margin: 0; font: 700 18px/1 var(--cond); }
-.sheet__title span { color: var(--ink-faint); font-weight: 400; }
+/* A pad is known by the sound on it: the sheet is headed with the file. */
+.sheet__title--file {
+  min-width: 0;
+  flex: 1;
+  font: 400 14px/1.4 var(--mono);
+  color: var(--ink-dim);
+  overflow-wrap: anywhere;
+}
+.sheet__title--missing { color: var(--alert); }
 .sheet__close { margin-left: auto; width: 30px; height: 30px; border: 0; border-radius: 4px; background: none; color: var(--ink-dim); font-size: 22px; line-height: 1; cursor: pointer; }
 .sheet__close:hover { background: var(--pad); color: var(--ink); }
 .sheet__body { padding: 14px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 13px; }

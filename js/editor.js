@@ -1,7 +1,7 @@
 // The two sheets: setting up one pad, and setting up the board.
 
-import { drawGels, drawPadPreview, toast } from './ui.js';
-import { newPad, rowCol, rowCount, prettyName, MAX_COLS } from './model.js';
+import { drawGels, toast } from './ui.js';
+import { newPad, rowCol, rowCount, MAX_COLS } from './model.js';
 
 const el = (id) => document.getElementById(id);
 
@@ -29,27 +29,14 @@ export class PadEditor {
       // Hear the level while setting it, if the pad happens to be playing.
       if (this.state) this.onLevel(this.state.i, Number(e.target.value) / 100);
     });
-    el('padFileFilter').addEventListener('input', () => this.fillFiles(el('padFile').value));
-    el('padFile').addEventListener('change', () => {
-      this.suggestName();
-      this.preview();
-    });
-    // What the pad will look like, drawn as it is typed.
-    for (const id of ['padName', 'padNote', 'padKey']) {
-      el(id).addEventListener('input', () => this.preview());
-    }
-    el('padFile').addEventListener('dblclick', () => this.save());
-    // Hear the file before committing a pad to it.
     el('padHear').addEventListener('click', () => {
-      const path = el('padFile').value;
-      if (path) this.onHear(path);
+      if (this.state && this.state.pad.file) this.onHear(this.state.pad.file);
     });
     el('padKey').addEventListener('input', (e) => {
       e.target.value = e.target.value.trim().slice(0, 1).toLowerCase();
-      this.preview();
     });
     this.dlg.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && e.target.tagName !== 'SELECT' && e.target.type !== 'number') {
+      if (e.key === 'Enter' && e.target.type !== 'number') {
         e.preventDefault();
         this.save();
       }
@@ -61,17 +48,18 @@ export class PadEditor {
     const pad = board.pads[i] ? { ...board.pads[i] } : newPad(board, i, '');
     this.state = { board, i, pad };
 
-    el('padWhere').textContent = `· row ${row + 1}, column ${col + 1}`;
     el('padRow').value = row + 1;
     el('padRow').max = rowCount(board);
     el('padCol').value = col + 1;
     el('padCol').max = board.cols;
-    el('padFileFilter').value = '';
-    this.fillFiles(pad.file);
+    const missing = !!pad.file && !this.library.has(pad.file);
+    el('padFileName').textContent = pad.file ? pad.file.split('/').pop() : 'No sound on this pad yet';
+    el('padFileName').title = pad.file || '';
+    el('padFileName').classList.toggle('sheet__title--missing', missing);
+    el('padHear').disabled = !pad.file || missing;
     el('padName').value = pad.name;
     el('padName').dataset.auto = pad.name ? '' : '1';
     el('padKey').value = pad.key || '';
-    el('padNote').value = pad.note;
     el('padGain').value = Math.round((pad.gain ?? 1) * 100);
     el('padGainOut').textContent = String(Math.round((pad.gain ?? 1) * 100));
     el('padFadeIn').value = pad.fadeIn;
@@ -84,67 +72,17 @@ export class PadEditor {
     el('padClear').hidden = !board.pads[i];
     drawGels(el('padGels'), pad.gel, (id) => {
       this.state.pad.gel = id;
-      this.preview();
     });
-    this.preview();
 
     this.dlg.showModal();
-    (pad.file ? el('padName') : el('padFileFilter')).focus();
-  }
-
-  preview() {
-    const { pad } = this.state;
-    drawPadPreview(el('padPreview'), {
-      ...pad,
-      file: el('padFile').value || pad.file,
-      name: el('padName').value.trim() || prettyName(el('padFile').value || pad.file || ''),
-      note: el('padNote').value.trim(),
-      key: el('padKey').value.trim(),
-    });
-  }
-
-  fillFiles(selected) {
-    const needle = el('padFileFilter').value.trim().toLowerCase();
-    const select = el('padFile');
-    select.replaceChildren();
-    const groups = new Map();
-    for (const entry of this.library.list) {
-      if (needle && !entry.path.toLowerCase().includes(needle)) continue;
-      const key = entry.dir || '';
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(entry);
-    }
-    // A file set on the pad but missing from the folder still has to be visible.
-    if (selected && !this.library.has(selected)) {
-      const opt = new Option(`${selected} — missing from this folder`, selected, false, true);
-      select.append(opt);
-    }
-    for (const [dir, entries] of groups) {
-      const host = dir ? document.createElement('optgroup') : select;
-      if (dir) host.label = dir;
-      for (const entry of entries) {
-        host.append(new Option(entry.name, entry.path, false, entry.path === selected));
-      }
-      if (dir) select.append(host);
-    }
-    if (!select.value && selected) select.value = selected;
-  }
-
-  suggestName() {
-    const path = el('padFile').value;
-    const name = el('padName');
-    if (path && (!name.value.trim() || name.dataset.auto === '1')) {
-      name.value = prettyName(path);
-      name.dataset.auto = '1';
-    }
+    el('padName').focus();
   }
 
   save() {
     const { board, i, pad } = this.state;
-    const file = el('padFile').value;
+    const file = pad.file;
     if (!file) {
-      toast('Pick a sound for this pad first.');
-      el('padFileFilter').focus();
+      toast('This pad has no sound yet. Put one on it from the folder.');
       return;
     }
 
@@ -154,8 +92,7 @@ export class PadEditor {
     const next = {
       ...pad,
       file,
-      name: el('padName').value.trim() || prettyName(file),
-      note: el('padNote').value.trim(),
+      name: el('padName').value.trim(),
       gain: clamp(num(el('padGain').value, 100) / 100, 0, 1),
       fadeIn: clamp(num(el('padFadeIn').value, 0), 0, 120),
       fadeOut: clamp(num(el('padFadeOut').value, 0), 0, 120),
@@ -177,8 +114,6 @@ export class PadEditor {
       }
     }
 
-    if (next.file !== pad.file) next.duration = 0;
-    el('padName').dataset.auto = '';
 
     // Moving a pad by typing its row and column: the drag that does the same
     // thing with a mouse has no equivalent under a finger.
