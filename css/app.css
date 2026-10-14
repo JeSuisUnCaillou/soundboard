@@ -186,7 +186,7 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   position: relative;
   display: grid;
   grid-template:
-    "name lamp" 1fr
+    "name name" 1fr
     "note note" auto
     "time key " auto / 1fr auto;
   gap: 2px;
@@ -217,7 +217,10 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
 .pad__name {
   grid-area: name;
   align-self: center;
-  padding-top: 2px;
+  justify-self: center;
+  max-width: 100%;
+  padding: 2px 6px 0;
+  text-align: center;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
   /* Pad labels grow with the pad: a board of six is read across a dark booth,
@@ -249,6 +252,7 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
 .pad__note {
   grid-area: note;
   margin-bottom: 4px;
+  text-align: center;
   font: 400 12.5px/1.3 var(--sans);
   color: rgba(255, 255, 255, 0.82);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
@@ -277,8 +281,11 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   color: rgba(255, 255, 255, 0.72);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
-.pad__lamp { grid-area: lamp; justify-self: end; }
-.pad__add { grid-area: name; align-self: center; font: 600 15px/1 var(--cond); }
+.pad__lamp {
+  position: absolute;
+  top: 9px; right: 10px;
+}
+.pad__add { grid-area: name; align-self: center; justify-self: center; font: 600 15px/1 var(--cond); }
 
 .pad__travel {
   position: absolute;
@@ -334,9 +341,8 @@ body[data-editing="on"] .pad__lamp { display: none; }
 
 .pad__pencil { display: none; }
 body[data-editing="on"] .pad--filled .pad__pencil {
-  grid-area: lamp;
-  justify-self: end;
-  position: relative;
+  position: absolute;
+  top: 9px; right: 10px;
   display: grid;
   place-items: center;
   width: 16px; height: 16px;
