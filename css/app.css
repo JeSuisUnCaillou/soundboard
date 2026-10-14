@@ -136,9 +136,9 @@ button, input, select { font: inherit; color: inherit; }
 .btn--danger { background: none; border-color: color-mix(in oklab, var(--alert) 50%, var(--line)); color: color-mix(in oklab, var(--alert) 70%, var(--ink)); }
 .btn--danger:hover { background: color-mix(in oklab, var(--alert) 22%, transparent); }
 .btn:disabled { opacity: 0.4; cursor: default; }
-/* The rail must be the same height whether the board is being played or
-   edited: a second line of buttons would shorten every pad on the board. */
-.btn__short { display: none; }
+/* Empty the board keeps a quieter face than the rest: it is the one button
+   here that undoes work. */
+.btn--danger-quiet { color: color-mix(in oklab, var(--alert) 45%, var(--ink)); }
 
 /* ───────────────────────── desk ───────────────────────── */
 
@@ -561,8 +561,10 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
 /* Both of these belong to the narrow layout, where the folder covers the board
    instead of sharing it. A wide screen shows the two side by side and needs
    neither. */
-.browse { display: none; grid-area: go / go / master / master; }
-.browse .btn { flex: 1; padding: 14px; font-size: 16px; }
+.browse { display: none; grid-area: go / go / master / master; gap: 10px; }
+.browse .btn { padding: 14px 12px; font-size: 16px; white-space: nowrap; }
+.browse #btnEmpty { flex: 0 0 auto; }
+.browse #btnBrowse { flex: 1; }
 .book__done { display: none; }
 .master__value, .num { font: 400 12px/1 var(--mono); color: var(--ink-dim); min-width: 2.4em; text-align: right; font-variant-numeric: tabular-nums; }
 
@@ -763,8 +765,6 @@ select.field option:checked { background: var(--warn); color: #241a07; }
   .master { gap: 8px; }
   .master__value { min-width: 2.2em; }
   .rail__actions .btn { padding-left: 10px; padding-right: 10px; }
-  .btn__long { display: none; }
-  .btn__short { display: inline; }
 
 
   /* A sheet on a phone is the whole phone. */

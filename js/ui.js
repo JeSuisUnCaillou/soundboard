@@ -285,12 +285,6 @@ export function drawGels(host, selected, onPick) {
 }
 
 /** The folder's sounds are only wanted while the board is being built. */
-/** A button carries both its full name and its short one. */
-export function label(el, long, short) {
-  el.querySelector('.btn__long').textContent = long;
-  el.querySelector('.btn__short').textContent = short;
-}
-
 export function setPanel(editing) {
   document.body.dataset.editing = editing ? 'on' : '';
   prefs.set('editing', editing);
@@ -298,7 +292,7 @@ export function setPanel(editing) {
   refs.btnEmpty.hidden = !editing;
   refs.browse.hidden = !editing;
   refs.btnEdit.setAttribute('aria-pressed', String(editing));
-  label(refs.btnEdit, editing ? 'Done editing' : 'Edit board', editing ? 'Done' : 'Edit');
+  refs.btnEdit.textContent = editing ? 'Done editing' : 'Edit board';
 }
 
 /** On a narrow screen the folder opens over the board, never beside it. */

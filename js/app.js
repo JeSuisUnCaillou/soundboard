@@ -10,7 +10,7 @@ import {
 import { PadEditor, SetupSheet } from './editor.js';
 import {
   refs, bindRefs, drawGrid, paintPads, drawLibrary, drawPlaying,
-  paintPlaying, drawStop, drawFolder, setPanel, setBook, markPreview, label, say, toast,
+  paintPlaying, drawStop, drawFolder, setPanel, setBook, markPreview, say, toast,
 } from './ui.js';
 
 const PATH_TYPE = 'application/x-soundboard-path';
@@ -150,7 +150,9 @@ class App {
       this.run();
       if (!document.hidden) this.keepAwake();
     });
+    this.placeEmptyButton();
     NARROW.addEventListener('change', (e) => {
+      this.placeEmptyButton();
       if (!e.matches) setBook(false);
     });
   }
@@ -713,12 +715,22 @@ class App {
     say(live.length === 1 ? `Stopping ${live[0].pad.name || live[0].pad.file}` : `Stopping ${live.length} sounds`);
   }
 
+  /**
+   * Empty the board sits with the other board buttons where there is room for
+   * it, and with the editing controls where there is not: a fourth button in
+   * the rail wraps it onto a second line, which shortens every pad underneath.
+   */
+  placeEmptyButton() {
+    if (NARROW.matches) refs.browse.prepend(refs.btnEmpty);
+    else refs.btnSetup.before(refs.btnEmpty);
+  }
+
   /** Take every sound off the board, keeping the sounds themselves. Twice, to mean it. */
   emptyBoard() {
     if (!this.board) return;
     if (!this.armed) {
       this.armed = true;
-      label(refs.btnEmpty, 'Really empty it?', 'Sure?');
+      refs.btnEmpty.textContent = 'Really empty it?';
       refs.btnEmpty.classList.add('btn--danger');
       clearTimeout(this.armTimer);
       this.armTimer = setTimeout(() => this.disarm(), 4000);
@@ -738,7 +750,7 @@ class App {
   disarm() {
     clearTimeout(this.armTimer);
     this.armed = false;
-    label(refs.btnEmpty, 'Empty the board', 'Empty');
+    refs.btnEmpty.textContent = 'Empty the board';
     refs.btnEmpty.classList.remove('btn--danger');
   }
 
