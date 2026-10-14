@@ -81,7 +81,8 @@ does a pad, so a cue can be checked before and after it goes on the board. The
 **+** beside a sound puts it on the next free pad and the pencil on a pad opens
 its settings — where **Hear it** auditions a file before the pad is committed to
 it. The dots in the pad's corner drag it somewhere else, under a finger as well
-as a mouse. There is no limit on how many sounds a board holds. **Empty the
+as a mouse — and dragging a pad onto the sounds panel takes it off the board,
+leaving the sound where it is. There is no limit on how many sounds a board holds. **Empty the
 board** clears the pads without touching the sounds, and asks twice.
 **Edit board** keeps the board in front of you and opens the folder's contents
 beside it: tap a sound to put it on the next free pad, or drag one onto a
@@ -93,16 +94,16 @@ nothing is ever pushed off it. It also holds the fades new pads start with — a
 second in, a second and a half out, so nothing begins or ends on a hard edge
 unless a pad is told to.
 
-**Each pad holds**: the file, a cue number, the name shown on the pad, a note
-under it, a colour, its level, fade in and fade
+**Each pad holds**: the file, the name shown on the pad, a note under it, a
+colour, its level, fade in and fade
 out times, a loop switch, start and stop points to the hundredth of a second, a
 keyboard key, and what a second tap does — fade it out, start it over, pause it,
 layer another copy on top, or nothing at all. A pad can also be set to fade
 everything else out when it starts, for a hard scene change.
 
 **Running the show.** Tap a pad to fire it. A pad that is playing lights up in
-its own colour, the way a lamp does, with a countdown and a travel bar along its
-bottom edge; the transport lists what is running against the clock. Pads all
+its own colour, the way a lamp does, with a green light, a countdown and a travel
+bar along its bottom edge; the transport lists what is running against the clock. Pads all
 start the same colour, so one of the eleven lighting gels means something once
 it is chosen — a group, a scene, an act. The red **Stop** button takes everything
 playing out, each sound on its own fade; `Esc` cuts the lot dead the moment you

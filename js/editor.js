@@ -35,7 +35,7 @@ export class PadEditor {
       this.preview();
     });
     // What the pad will look like, drawn as it is typed.
-    for (const id of ['padCue', 'padName', 'padNote', 'padKey']) {
+    for (const id of ['padName', 'padNote', 'padKey']) {
       el(id).addEventListener('input', () => this.preview());
     }
     el('padFile').addEventListener('dblclick', () => this.save());
@@ -68,7 +68,6 @@ export class PadEditor {
     el('padCol').max = board.cols;
     el('padFileFilter').value = '';
     this.fillFiles(pad.file);
-    el('padCue').value = pad.cue;
     el('padName').value = pad.name;
     el('padName').dataset.auto = pad.name ? '' : '1';
     el('padKey').value = pad.key || '';
@@ -90,7 +89,7 @@ export class PadEditor {
     this.preview();
 
     this.dlg.showModal();
-    (pad.file ? el('padCue') : el('padFileFilter')).focus();
+    (pad.file ? el('padName') : el('padFileFilter')).focus();
   }
 
   preview() {
@@ -98,7 +97,6 @@ export class PadEditor {
     drawPadPreview(el('padPreview'), {
       ...pad,
       file: el('padFile').value || pad.file,
-      cue: el('padCue').value.trim(),
       name: el('padName').value.trim() || prettyName(el('padFile').value || pad.file || ''),
       note: el('padNote').value.trim(),
       key: el('padKey').value.trim(),
@@ -157,7 +155,6 @@ export class PadEditor {
       ...pad,
       file,
       name: el('padName').value.trim() || prettyName(file),
-      cue: el('padCue').value.trim(),
       note: el('padNote').value.trim(),
       gain: clamp(num(el('padGain').value, 100) / 100, 0, 1),
       fadeIn: clamp(num(el('padFadeIn').value, 0), 0, 120),

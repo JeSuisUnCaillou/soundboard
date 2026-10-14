@@ -37,7 +37,6 @@ export function newPad(board, i, file) {
   return {
     file: file || '',
     name,
-    cue: nextCue(board),
     note: '',
     gel: DEFAULT_GEL,
     gain: 1,
@@ -103,17 +102,6 @@ export function padByKey(board, key) {
   return i === -1 ? null : { i, pad: board.pads[i] };
 }
 
-/** Next unused cue number, counting on from the highest plain number in use. */
-export function nextCue(board) {
-  let top = 0;
-  for (const pad of board.pads) {
-    if (!pad || !pad.cue) continue;
-    const n = parseInt(pad.cue, 10);
-    if (Number.isFinite(n)) top = Math.max(top, n);
-  }
-  return String(top + 1);
-}
-
 export function move(board, from, to) {
   const pads = board.pads;
   [pads[from], pads[to]] = [pads[to], pads[from]];
@@ -165,7 +153,6 @@ export function migrate(raw, { id } = {}) {
 function migratePad(board, i, raw) {
   const pad = newPad(board, i, String(raw.file || ''));
   pad.name = String(raw.name ?? pad.name).slice(0, 40);
-  pad.cue = String(raw.cue ?? '').slice(0, 6);
   pad.note = String(raw.note ?? '').slice(0, 120);
   pad.gel = typeof raw.gel === 'string' ? raw.gel : pad.gel;
   pad.gain = clampNum(raw.gain, 0, 1, 1);

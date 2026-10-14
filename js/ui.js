@@ -49,7 +49,6 @@ export function drawGrid(board, { editing, missing = () => false }) {
       }
       el.style.setProperty('--gel', gelHex(pad.gel));
       el.append(
-        span('pad__cue', pad.cue ? `Cue ${pad.cue}` : ''),
         lamp('pad__lamp'),
         span('pad__name', pad.name || pad.file),
         span('pad__note', pad.note || ''),
@@ -73,9 +72,7 @@ export function drawGrid(board, { editing, missing = () => false }) {
 }
 
 function padLabel(pad, row, col) {
-  const bits = [];
-  if (pad.cue) bits.push(`Cue ${pad.cue}`);
-  bits.push(pad.name || pad.file);
+  const bits = [pad.name || pad.file];
   if (pad.duration) bits.push(fmtTime(pad.duration));
   if (pad.note) bits.push(pad.note);
   if (pad.key) bits.push(`key ${pad.key}`);
@@ -125,13 +122,11 @@ export function paintPads(board, engine) {
 // ── the folder's sounds, as a tree ────────────────────────────────────────
 
 export function drawLibrary(board, library, filter = '') {
-  // Which sounds are already on the board, and where: a folder read twice is
-  // how a cue ends up on two pads by accident.
-  const used = new Map();
-  board.pads.forEach((pad, i) => {
-    if (pad && pad.file && !used.has(pad.file)) {
-      used.set(pad.file, pad.cue ? `cue ${pad.cue}` : `pad ${i + 1}`);
-    }
+  // Which sounds are already on the board: a folder read twice is how the same
+  // sound ends up on two pads by accident.
+  const used = new Set();
+  board.pads.forEach((pad) => {
+    if (pad && pad.file) used.add(pad.file);
   });
 
   const needle = filter.trim().toLowerCase();
@@ -207,7 +202,7 @@ function soundRow(entry, used, showPath) {
   li.title = entry.path;
   li.append(
     span('lib__name', showPath ? entry.path : entry.name),
-    span('lib__dir', used.get(entry.path) || ''),
+    span('lib__dir', used.has(entry.path) ? 'on the board' : ''),
     add('Put it on the next free pad'),
   );
   return li;
@@ -372,7 +367,6 @@ export function drawPadPreview(host, pad) {
   el.className = 'pad pad--filled pad--preview';
   el.style.setProperty('--gel', gelHex(pad.gel));
   el.append(
-    span('pad__cue', pad.cue ? `Cue ${pad.cue}` : ''),
     span('pad__name', pad.name || pad.file || 'No sound yet'),
     span('pad__note', pad.note || ''),
     span('pad__time', pad.duration ? fmtTime(pad.duration) : ''),

@@ -5,7 +5,7 @@ import { Library, CAN_PERSIST } from './library.js';
 import { Engine, probeDuration } from './engine.js';
 import { store } from './store.js';
 import {
-  newBoard, newPad, migrate, setCols, fitPads, filled, slug, move, padByKey, nextCue, rowCol,
+  newBoard, newPad, migrate, setCols, fitPads, filled, slug, move, padByKey, rowCol,
 } from './model.js';
 import { PadEditor, SetupSheet } from './editor.js';
 import {
@@ -207,14 +207,19 @@ class App {
 
     const at = (e) => {
       const el = document.elementFromPoint(e.clientX, e.clientY);
-      return el && el.closest('.pad');
+      if (!el) return null;
+      // Dropped on the folder's sounds: the pad comes off the board.
+      if (el.closest('#book')) return refs.book;
+      const pad = el.closest('.pad');
+      return pad && pad !== drag.el ? pad : null;
     };
 
     const over = (el) => {
       if (drag.target === el) return;
-      drag.target?.classList.remove('pad--drop');
-      drag.target = el && el !== drag.el ? el : null;
-      drag.target?.classList.add('pad--drop');
+      drag.target?.classList.remove('pad--drop', 'book--drop');
+      drag.target = el;
+      drag.target?.classList.add(el === refs.book ? 'book--drop' : 'pad--drop');
+      drag.ghost.classList.toggle('pad--ghost-off', el === refs.book);
     };
 
     refs.grid.addEventListener('pointerdown', (e) => {
@@ -253,9 +258,17 @@ class App {
       const { from, target } = drag;
       drag.ghost.remove();
       drag.el.classList.remove('pad--dragging');
-      target?.classList.remove('pad--drop');
+      target?.classList.remove('pad--drop', 'book--drop');
       drag = null;
       if (!drop || !target) return;
+
+      if (target === refs.book) {
+        const pad = this.board.pads[from];
+        this.setPad(from, null);
+        toast(`${pad.name || pad.file} is off the board. The sound is still under Sounds.`);
+        say('Taken off the board');
+        return;
+      }
 
       const to = Number(target.dataset.i);
       move(this.board, from, to);
@@ -524,7 +537,6 @@ class App {
   setPad(i, pad, moveTo = null) {
     this.board.pads[i] = pad;
     fitPads(this.board);
-    if (pad && !pad.cue) pad.cue = nextCue(this.board);
     this.engine.stop(i, { fade: 0 });
     if (moveTo != null && moveTo !== i && moveTo >= 0 && moveTo < this.board.pads.length) {
       move(this.board, i, moveTo);
@@ -637,7 +649,7 @@ class App {
     }
     try {
       await this.engine.fire(i, pad);
-      say(`${pad.cue ? `Cue ${pad.cue}, ` : ''}${pad.name || pad.file}`);
+      say(pad.name || pad.file);
     } catch (err) {
       toast(`“${pad.name || pad.file}” would not play: ${err.message}`);
     }
@@ -736,7 +748,7 @@ class App {
     filled(this.board).slice(0, 48).forEach(({ i, pad }) => this.engine.prime(i, pad));
   }
 
-  /** Read the length of each sound once, for the cue sheet, three at a time. */
+  /** Read the length of each sound once, for the pads, three at a time. */
   async measure() {
     if (this.measuring) return;
     this.measuring = true;

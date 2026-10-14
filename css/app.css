@@ -182,8 +182,7 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   position: relative;
   display: grid;
   grid-template:
-    "cue  lamp" auto
-    "name name" 1fr
+    "name lamp" 1fr
     "note note" auto
     "time key " auto / 1fr auto;
   gap: 2px;
@@ -206,19 +205,17 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
 /* Hover must not undo a lit pad: the ink on one is dark, and a hover that
    takes the light away leaves dark on dark. */
 .pad--filled:not(.pad--playing):not(.pad--paused):hover { background: color-mix(in oklab, var(--gel) 18%, var(--pad)); }
-.pad--playing:hover { background: color-mix(in oklab, white 12%, var(--gel)); }
-.pad--paused:hover { background: color-mix(in oklab, var(--gel) 56%, var(--pad)); }
+.pad--playing:hover { background: color-mix(in oklab, var(--gel) 56%, #241a13); }
+.pad--paused:hover { background: color-mix(in oklab, var(--gel) 36%, var(--pad)); }
 .pad--empty { color: var(--ink-faint); border-style: dashed; background: none; }
 .pad--empty:hover { color: var(--ink-dim); background: var(--console); }
 
-.pad__cue {
-  grid-area: cue;
-  font: 500 12px/1 var(--mono);
-  color: color-mix(in oklab, var(--gel) 55%, var(--ink-dim));
-}
 .pad__name {
   grid-area: name;
   align-self: center;
+  padding-top: 2px;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
   /* Pad labels grow with the pad: a board of six is read across a dark booth,
      a board of sixty is read at arm's length. */
   font: 600 clamp(15px, min(16cqh, 15cqw), 34px)/1.12 var(--cond);
@@ -233,7 +230,8 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   grid-area: note;
   margin-bottom: 4px;
   font: 400 12.5px/1.3 var(--sans);
-  color: var(--ink-dim);
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -245,17 +243,19 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
 .pad__time {
   grid-area: time;
   font: 400 12px/1 var(--mono);
-  color: var(--ink-faint);
+  color: rgba(255, 255, 255, 0.72);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   font-variant-numeric: tabular-nums;
 }
 .pad__key {
   grid-area: key;
   justify-self: end;
   padding: 1px 5px;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 3px;
   font: 400 11px/1.4 var(--mono);
-  color: var(--ink-faint);
+  color: rgba(255, 255, 255, 0.72);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 .pad__lamp { grid-area: lamp; justify-self: end; }
 .pad__add { grid-area: name; align-self: center; font: 600 15px/1 var(--cond); }
@@ -272,21 +272,19 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
 /* A pad that is playing lights up in its own gel, the way a lamp does: from
    across a dark booth it has to be obvious which ones are running. */
 .pad--playing {
-  background: var(--gel);
+  /* Lit, but only as far as white ink can still be read on it: at full gel a
+     straw or an amber leaves white at 1.4:1. */
+  background: color-mix(in oklab, var(--gel) 45%, #241a13);
   border-color: var(--gel);
-  box-shadow: 0 0 22px color-mix(in oklab, var(--gel) 38%, transparent);
+  box-shadow:
+    0 0 24px color-mix(in oklab, var(--gel) 32%, transparent),
+    inset 0 0 0 1px color-mix(in oklab, var(--gel) 45%, transparent);
 }
-.pad--playing .pad__name { color: #140f0b; }
-.pad--playing .pad__cue,
-.pad--playing .pad__time,
-.pad--playing .pad__note { color: color-mix(in oklab, #140f0b 72%, var(--gel)); }
-.pad--playing .pad__key { border-color: rgba(0, 0, 0, 0.28); color: rgba(0, 0, 0, 0.5); }
-.pad--playing .pad__travel { background: rgba(0, 0, 0, 0.42); height: 4px; }
-.pad--playing .pad__lamp { display: none; }
-.pad--playing .pad__grip, .pad--playing .pad__pencil { color: rgba(0, 0, 0, 0.45); }
+.pad--playing .pad__travel { background: var(--gel); height: 4px; }
+.pad--playing .pad__grip, .pad--playing .pad__pencil { color: rgba(255, 255, 255, 0.75); }
 
 .pad--paused {
-  background: color-mix(in oklab, var(--gel) 48%, var(--pad));
+  background: color-mix(in oklab, var(--gel) 28%, var(--pad));
   border-color: color-mix(in oklab, var(--gel) 60%, var(--line));
 }
 .pad--paused .pad__travel { opacity: 0.6; }
@@ -294,8 +292,8 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
 
 /* A pad whose file is not in the open folder: shown, but plainly not ready. */
 .pad--missing { border-style: dashed; border-top-style: dashed; background: none; }
-.pad--missing .pad__name { color: var(--ink-faint); text-decoration: line-through; }
-.pad--missing .pad__cue::after { content: " · file missing"; color: var(--alert); }
+.pad--missing .pad__name { color: rgba(255, 255, 255, 0.45); text-decoration: line-through; }
+.pad--missing .pad__time::after { content: " · missing"; color: var(--alert); }
 
 .pad--drop { border-color: var(--go); background: color-mix(in oklab, var(--go) 18%, var(--pad)); }
 .pad--dragging { opacity: 0.4; }
@@ -361,6 +359,19 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
 }
 .pad--ghost .pad__grip { cursor: grabbing; }
+/* Over the sounds panel, the pad is on its way off the board. */
+.pad--ghost-off { opacity: 0.55; filter: grayscale(0.6); }
+
+.book--drop {
+  outline: 2px dashed var(--alert);
+  outline-offset: -6px;
+  background: color-mix(in oklab, var(--alert) 12%, var(--console));
+}
+.book--drop .book__title::after {
+  content: " — drop to take it off the board";
+  color: var(--alert);
+  font-weight: 400;
+}
 
 .sheet__preview { width: 136px; height: 74px; flex: none; margin-left: auto; }
 .pad--preview { width: 100%; height: 100%; cursor: default; padding: 7px 8px 9px; }
@@ -657,7 +668,7 @@ select.field option:checked { background: var(--warn); color: #241a07; }
   }
   body:not([data-book="open"]) .book { display: none; }
 
-  /* Columns follow the screen; the pads keep their order and their cue numbers. */
+  /* Columns follow the screen; the pads keep their order. */
   /* The board keeps the shape it was given. Pads have a floor on their size,
      so a board too wide for the screen scrolls rather than quietly rearranging
      itself under the operator. */
@@ -743,5 +754,5 @@ select.field option:checked { background: var(--warn); color: #241a07; }
   .field, select.field[size] { font-size: 16px; }
   /* A finger has no hover; the pad under it should look like itself. */
   .pad--filled:not(.pad--playing):not(.pad--paused):hover { background: color-mix(in oklab, var(--gel) 14%, var(--pad)); }
-  .pad--playing:hover { background: var(--gel); }
+  .pad--playing:hover { background: color-mix(in oklab, var(--gel) 45%, #241a13); }
 }
