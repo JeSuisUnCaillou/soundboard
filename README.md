@@ -82,8 +82,8 @@ joins what is already open — so a board can be built from several places and
 added to mid-rehearsal. A folder goes into the tree under its own name, and a
 sound already on the board is recognised and left where it is.
 
-On an empty board the first ten sounds lay themselves out, so there is something
-to look at; after that the board is yours and anything added waits in **Sounds**,
+On an empty board the first sounds lay themselves out, as many as it has pads
+and no more than ten, so there is something to look at; after that the board is yours and anything added waits in **Sounds**,
 the folder's own tree, which sits beside the board on a wide screen and opens
 over it from **Browse files** on a narrow one. Adding a folder never moves a pad
 you have set.
@@ -102,8 +102,9 @@ board holds. **Empty the board** clears the pads without touching the sounds, an
 asks twice.
 
 **Board settings** sets how many rows and columns the board has — three by three
-to begin with. More sounds than that and the board grows past it, scrolling
-rather than pushing a pad off. It also holds the fades new pads start with — a second in, a second and a half out,
+to begin with. That is the whole board: nine pads hold nine sounds, and the rest
+wait in the folder until there is room. A smaller board says what it could not
+keep. It also holds the fades new pads start with — a second in, a second and a half out,
 so nothing begins or ends on a hard edge unless a pad is told to.
 
 **Each pad holds**: the file it plays, a name of its own if the file's will not

@@ -495,10 +495,10 @@ class App {
         this.waiting = (this.waiting || 0) + 1;
         continue;
       }
-      let i = this.board.pads.findIndex((pad) => !pad || !pad.file);
-      if (i === -1) {
-        i = this.board.pads.length;
-        for (let c = 0; c < this.board.cols; c += 1) this.board.pads.push(null);
+      const i = this.board.pads.findIndex((pad) => !pad || !pad.file);
+      if (i === -1) {                       // the board is full; the rest wait
+        this.waiting = (this.waiting || 0) + 1;
+        continue;
       }
       this.board.pads[i] = newPad(this.board, i, path);
       onBoard.add(path);
@@ -698,15 +698,21 @@ class App {
   applySetup({ cols, rows, fadeIn, fadeOut }) {
     if (!this.board) return;
     this.board.defaults = { fadeIn, fadeOut };
-    // The pads keep their order and re-wrap, so nothing comes off the board
-    // and nothing needs reloading.
+    // The pads keep their order and re-wrap. A smaller board has fewer places
+    // to wrap them into, and says what it could not keep.
+    let lost = 0;
     if (cols !== this.board.cols) {
-      setCols(this.board, cols);
+      lost += setCols(this.board, cols);
       store.setMeta('cols', this.board.cols).catch(() => {});
     }
     if (rows !== this.board.rows) {
-      setRows(this.board, rows);
+      lost += setRows(this.board, rows);
       store.setMeta('rows', this.board.rows).catch(() => {});
+    }
+    if (lost) {
+      this.engine.reset();
+      this.primeAll();
+      toast(`${lost} sound${lost === 1 ? '' : 's'} came off the board. They are still under Sounds.`);
     }
     this.redraw();
     this.queueSave();

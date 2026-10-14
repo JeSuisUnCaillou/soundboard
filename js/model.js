@@ -60,23 +60,20 @@ export function newPad(board, i, file) {
 }
 
 /**
- * The board is the size it was set to, and bigger when it has to be: a spare
- * row after the last sound, and as many rows as the sounds need. Asking for
- * fewer rows than there are sounds shrinks the board as far as the sounds
- * allow and no further — none of them is pushed off.
+ * The board is exactly the size it was set to. Nothing grows it: a board of
+ * nine pads holds nine sounds, and the tenth waits in the folder until there
+ * is room for it. Returns how many sounds fell off the end, which only a
+ * smaller board can do.
  */
 export function fitPads(board) {
-  let last = -1;
-  board.pads.forEach((pad, i) => {
-    if (pad && pad.file) last = i;
-  });
-  const want = Math.max(board.cols * board.rows, (Math.floor(last / board.cols) + 2) * board.cols);
+  const want = board.cols * board.rows;
+  const lost = board.pads.slice(want).filter((pad) => pad && pad.file).length;
   board.pads.length = Math.min(board.pads.length, want);
   while (board.pads.length < want) board.pads.push(null);
-  return board;
+  return lost;
 }
 
-/** Re-wrap the same pads into a different number of columns. */
+/** Re-wrap the same pads into a different shape. Returns how many fell off. */
 export function setCols(board, cols) {
   board.cols = clampInt(cols, 1, MAX_COLS);
   return fitPads(board);
