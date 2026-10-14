@@ -22,6 +22,9 @@ export function bindRefs() {
 
 const padEls = new Map();
 const voiceEls = new Map();
+// Which folders the operator has opened. The panel is redrawn on every edit,
+// and a tree that folds itself back up under your hand is unusable.
+const openDirs = new Set();
 
 // ── grid ──────────────────────────────────────────────────────────────────
 
@@ -143,7 +146,7 @@ export function drawLibrary(board, library, filter = '') {
     for (const entry of items) refs.lib.append(soundRow(entry, used, true));
     return;
   }
-  for (const node of treeOf(items)) refs.lib.append(branch(node, used));
+  for (const node of treeOf(items)) refs.lib.append(branch(node, used, ''));
 }
 
 /** Folders and files, nested the way they are on disk. */
@@ -166,16 +169,22 @@ function countOf(node) {
   return n;
 }
 
-function branch(node, used) {
+function branch(node, used, parent) {
   if (!node.name) {
     const frag = document.createDocumentFragment();
     for (const entry of node.files) frag.append(soundRow(entry, used, false));
     return frag;
   }
 
+  const path = parent ? `${parent}/${node.name}` : node.name;
   const box = document.createElement('details');
   box.className = 'tree__dir';
-  box.open = true;
+  box.open = openDirs.has(path);
+  box.addEventListener('toggle', () => {
+    if (box.open) openDirs.add(path);
+    else openDirs.delete(path);
+  });
+
   const head = document.createElement('summary');
   head.className = 'tree__name';
   head.append(span('tree__label', node.name), span('tree__count', String(countOf(node))));
@@ -183,7 +192,7 @@ function branch(node, used) {
 
   const body = document.createElement('div');
   body.className = 'tree__body';
-  for (const dir of node.dirs.values()) body.append(branch(dir, used));
+  for (const dir of node.dirs.values()) body.append(branch(dir, used, path));
   for (const entry of node.files) body.append(soundRow(entry, used, false));
   box.append(body);
   return box;
