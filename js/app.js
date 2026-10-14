@@ -227,24 +227,28 @@ class App {
    */
   wirePadDragging() {
     let drag = null;
-    let armed = null;        // pressed, not yet moved far enough to be a drag
-    const SLOP = 6;
+    let armed = null;        // pressed, not yet a drag
+    const SLOP = 6;          // how far a mouse moves before it means to drag
+    const HOLD = 400;        // how long a finger rests before it picks a pad up
 
+    /** Where the pad would land: another pad, or somewhere that takes it off. */
     const at = (e) => {
       const el = document.elementFromPoint(e.clientX, e.clientY);
       if (!el) return null;
-      // Dropped on the folder's sounds: the pad comes off the board.
       if (el.closest('#book')) return refs.book;
+      if (el.closest('#browse')) return refs.browse;
       const pad = el.closest('.pad');
       return pad && pad !== drag.el ? pad : null;
     };
 
+    const removes = (el) => el === refs.book || el === refs.browse;
+
     const over = (el) => {
       if (drag.target === el) return;
-      drag.target?.classList.remove('pad--drop', 'book--drop');
+      drag.target?.classList.remove('pad--drop', 'drop--off');
       drag.target = el;
-      drag.target?.classList.add(el === refs.book ? 'book--drop' : 'pad--drop');
-      drag.ghost.classList.toggle('pad--ghost-off', el === refs.book);
+      drag.target?.classList.add(removes(el) ? 'drop--off' : 'pad--drop');
+      drag.ghost.classList.toggle('pad--ghost-off', removes(el));
     };
 
     const begin = (el, from, e, handle) => {
@@ -258,6 +262,7 @@ class App {
 
       drag = { from, el, ghost, dx: e.clientX - box.left, dy: e.clientY - box.top, target: null };
       el.classList.add('pad--dragging');
+      this.dragged = true;                  // the click that follows is not a tap
       try {
         handle.setPointerCapture(e.pointerId);
       } catch {
@@ -265,47 +270,74 @@ class App {
       }
     };
 
-    refs.grid.addEventListener('pointerdown', (e) => {
+    const disarm = () => {
+      if (armed) clearTimeout(armed.timer);
       armed = null;
+    };
+
+    refs.grid.addEventListener('pointerdown', (e) => {
+      disarm();
       const el = e.target.closest('.pad');
       if (!el || !this.editing || e.button > 0) return;
       if (e.target.closest('.pad__pencil')) return;      // the corner is for settings
       const from = Number(el.dataset.i);
       if (!this.board.pads[from] || !this.board.pads[from].file) return;
 
-      if (e.pointerType === 'touch') return;             // a finger is probably scrolling
-      armed = { el, from, x: e.clientX, y: e.clientY, id: e.pointerId };
+      armed = { el, from, x: e.clientX, y: e.clientY, id: e.pointerId, touch: e.pointerType === 'touch', timer: null };
+      if (!armed.touch) return;
+
+      // A finger has to be able to scroll the board, so it picks a pad up by
+      // resting on it rather than by moving: hold, and the pad comes away.
+      const point = { clientX: e.clientX, clientY: e.clientY, pointerId: e.pointerId };
+      armed.timer = setTimeout(() => {
+        const { el: held, from: which } = armed;
+        armed = null;
+        begin(held, which, point, held);
+        if (navigator.vibrate) navigator.vibrate(12);
+        over(at(point));
+      }, HOLD);
     });
 
     refs.grid.addEventListener('pointermove', (e) => {
       if (!drag) {
         if (!armed || e.pointerId !== armed.id) return;
-        if (Math.hypot(e.clientX - armed.x, e.clientY - armed.y) < SLOP) return;
+        const moved = Math.hypot(e.clientX - armed.x, e.clientY - armed.y);
+        // A finger that moves before the hold is up is scrolling, not dragging.
+        if (armed.touch) {
+          if (moved > 12) disarm();
+          return;
+        }
+        if (moved < SLOP) return;
         const { el, from } = armed;
         armed = null;
         begin(el, from, e, el);
-        this.dragged = true;                             // the click that follows is not a tap
       }
       drag.ghost.style.transform = `translate(${e.clientX - drag.dx}px, ${e.clientY - drag.dy}px)`;
       over(at(e));
     });
 
+    // Once a pad is in hand the board must hold still under it. The pad's own
+    // touch-action cannot say so — it is fixed when the finger lands, long
+    // before the hold is up — so the scroll is refused here instead.
+    refs.grid.addEventListener('touchmove', (e) => {
+      if (drag) e.preventDefault();
+    }, { passive: false });
+
     const end = (e, drop) => {
-      armed = null;
+      disarm();
       if (!drag) return;
       // A click may follow this pointerup; it belongs to the drag, not the pad.
-      // Anything after that is a tap again.
       setTimeout(() => {
         this.dragged = false;
       }, 0);
       const { from, target } = drag;
       drag.ghost.remove();
       drag.el.classList.remove('pad--dragging');
-      target?.classList.remove('pad--drop', 'book--drop');
+      target?.classList.remove('pad--drop', 'drop--off');
       drag = null;
       if (!drop || !target) return;
 
-      if (target === refs.book) {
+      if (removes(target)) {
         const pad = this.board.pads[from];
         this.setPad(from, null);
         toast(`${padTitle(pad)} is off the board. The sound is still under Sounds.`);

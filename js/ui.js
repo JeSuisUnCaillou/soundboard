@@ -90,8 +90,11 @@ export function paintPads(board, engine) {
     // gives it a lamp and a clock is already on its way.
     if (!el.classList.contains('pad--filled')) continue;
     const st = engine.state(i);
-    const playing = !!st && st.state === 'playing';
-    const paused = !!st && st.state === 'paused';
+    // A pad that has been told to stop looks stopped at once, even though the
+    // sound takes its fade to go: the operator has already moved on.
+    const live = st && !st.fading ? st : null;
+    const playing = !!live && live.state === 'playing';
+    const paused = !!live && live.state === 'paused';
 
     el.classList.toggle('pad--playing', playing);
     el.classList.toggle('pad--paused', paused);
@@ -99,16 +102,16 @@ export function paintPads(board, engine) {
     const lampEl = el.querySelector('.pad__lamp');
     lampEl.className = `lamp pad__lamp ${playing ? 'lamp--go' : 'lamp--off'}`;
 
-    const len = (pad.trimEnd || (st && st.duration) || pad.duration) - (pad.trimStart || 0);
-    const done = st ? Math.max(0, st.position - (pad.trimStart || 0)) : 0;
-    el.style.setProperty('--travel', st && len > 0 ? Math.min(1, done / len) : 0);
+    const len = (pad.trimEnd || (live && live.duration) || pad.duration) - (pad.trimStart || 0);
+    const done = live ? Math.max(0, live.position - (pad.trimStart || 0)) : 0;
+    el.style.setProperty('--travel', live && len > 0 ? Math.min(1, done / len) : 0);
 
     const time = el.querySelector('.pad__time');
-    if (st && len > 0) time.textContent = `-${fmtTime(Math.max(0, len - done))}`;
+    if (live && len > 0) time.textContent = `-${fmtTime(Math.max(0, len - done))}`;
     else time.textContent = pad.duration ? fmtTime(pad.duration) : '';
 
     let stack = el.querySelector('.pad__stack');
-    if (st && st.stack > 1) {
+    if (live && live.stack > 1) {
       if (!stack) {
         stack = span('pad__stack', '');
         el.append(stack);

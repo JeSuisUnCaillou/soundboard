@@ -371,15 +371,28 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
 /* Over the sounds panel, the pad is on its way off the board. */
 .pad--ghost-off { opacity: 0.55; filter: grayscale(0.6); }
 
-.book--drop {
+/* Somewhere a pad can be dropped to come off the board: the folder beside it
+   on a wide screen, the bar beneath it on a narrow one. */
+.drop--off {
   outline: 2px dashed var(--alert);
   outline-offset: -6px;
   background: color-mix(in oklab, var(--alert) 12%, var(--console));
 }
-.book--drop .book__title::after {
+.drop--off .book__title::after {
   content: " — drop to take it off the board";
   color: var(--alert);
   font-weight: 400;
+}
+.browse.drop--off::before {
+  content: "Drop to take it off the board";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  background: color-mix(in oklab, var(--alert) 16%, var(--console));
+  color: var(--alert);
+  font: 600 16px/1 var(--cond);
 }
 
 /* cue lights, the one piece of language borrowed wholesale from the booth.
@@ -559,7 +572,7 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
 /* Both of these belong to the narrow layout, where the folder covers the board
    instead of sharing it. A wide screen shows the two side by side and needs
    neither. */
-.browse { display: none; grid-area: go / go / master / master; gap: 10px; }
+.browse { display: none; position: relative; grid-area: go / go / master / master; gap: 10px; }
 .browse .btn { padding: 14px 12px; font-size: 16px; white-space: nowrap; }
 .browse #btnEmpty { flex: 0 0 auto; }
 .browse #btnBrowse { flex: 1; }

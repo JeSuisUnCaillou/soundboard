@@ -92,10 +92,11 @@ does a pad, so a cue can be checked before and after it goes on the board. The
 **+** beside a sound puts it on the next free pad; the pencil in a pad's corner
 opens its settings, where **Hear it** plays it again. With a mouse the whole pad
 is a handle: press anywhere but the pencil and move, and the pad comes with you;
-press and release without moving and it just plays. A touch that lands on a pad
-is left free to scroll the board, so under a finger a pad is moved by typing its
-row and column in its settings. Dragging a pad onto the sounds panel takes it off
-the board, leaving the sound where it is. There is no limit on how many sounds a
+press and release without moving and it just plays. Under a finger, rest on a pad
+for a moment and it comes away with you — a touch that moves straight away is
+scrolling the board, not dragging. Dropping a pad on the folder beside the board,
+or on the bar beneath it, takes it off the board and leaves the sound where it
+is. A pad's row and column can also be typed into its settings. There is no limit on how many sounds a
 board holds. **Empty the board** clears the pads without touching the sounds, and
 asks twice.
 
@@ -130,8 +131,8 @@ you gave it: a six-column board is six columns wide everywhere, scrolling rather
 than rearranging itself under the operator. While editing, Stop and the volume
 give their place to **Browse files**, which opens the folder over the whole
 screen — the pads and the files are never half each — and **Back to the pads**
-closes it. A pad is moved under a finger by typing its row and column into its
-settings; dragging one is a mouse gesture. The
+closes it. A pad is picked up by resting a finger on it, and dropped on the bar
+at the bottom to take it off the board. The
 screen is kept awake while a board is open.
 
 **Carrying a board around.** Board setup saves the whole board as a JSON file and
