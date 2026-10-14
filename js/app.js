@@ -10,8 +10,8 @@ import {
 import { bundledPaths } from './bundled.js';
 import { PadEditor, SetupSheet } from './editor.js';
 import {
-  refs, bindRefs, drawGrid, paintPads, drawLibrary, drawPlaying,
-  paintPlaying, drawStop, drawFolder, setPanel, setBook, markPreview, say, toast,
+  refs, bindRefs, drawGrid, paintPads, drawLibrary,
+  drawStop, drawFolder, setPanel, setBook, markPreview, say, toast,
 } from './ui.js';
 
 const PATH_TYPE = 'application/x-soundboard-path';
@@ -35,7 +35,6 @@ class App {
     this.wakeLock = null;
 
     this.engine.onchange = () => {
-      drawPlaying(this.board, this.engine);
       drawStop(this.engine);
       markPreview(this.engine.previewPath);
       this.paint();
@@ -864,7 +863,6 @@ class App {
     refs.grid.hidden = !this.board;
     if (!this.board) return;
     drawGrid(this.board, { editing: this.editing, missing: (path) => !this.library.has(path) });
-    drawPlaying(this.board, this.engine);
     drawStop(this.engine);
     if (this.editing) drawLibrary(this.board, this.library, refs.libFilter.value);
     this.paint();
@@ -874,7 +872,6 @@ class App {
   paint() {
     if (!this.board) return;
     paintPads(this.board, this.engine);
-    paintPlaying(this.board, this.engine);
   }
 
   run() {

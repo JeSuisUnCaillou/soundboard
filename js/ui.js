@@ -15,7 +15,7 @@ export function bindRefs() {
     'browse', 'btnBrowse', 'btnBrowseDone',
     'picker', 'pickerTitle', 'pickerBlurb', 'pickerNote', 'pickerKeys', 'pickerClose',
     'btnAddFolder', 'btnAddFiles', 'btnReopen',
-    'btnStop', 'playing', 'master', 'masterValue',
+    'btnStop', 'master', 'masterValue',
     'live', 'toast',
   ];
   for (const id of ids) refs[id] = document.getElementById(id);
@@ -23,7 +23,6 @@ export function bindRefs() {
 }
 
 const padEls = new Map();
-const voiceEls = new Map();
 // Which folders the operator has opened. The panel is redrawn on every edit,
 // and a tree that folds itself back up under your hand is unusable — so is one
 // that forgets where you were when the page reloads.
@@ -214,38 +213,6 @@ function soundRow(entry, used, showPath) {
 }
 
 // ── transport ─────────────────────────────────────────────────────────────
-
-export function drawPlaying(board, engine) {
-  const active = engine.active().sort((a, b) => a.i - b.i);
-  refs.playing.replaceChildren();
-  voiceEls.clear();
-
-  for (const { i, pad } of active) {
-    const row = document.createElement('div');
-    row.className = `voice${pad.preview ? ' voice--preview' : ''}`;
-    row.style.setProperty('--gel', gelHex(pad.gel));
-    const bar = document.createElement('div');
-    bar.className = 'voice__bar';
-    bar.append(document.createElement('i'));
-    const time = span('voice__time', '');
-    row.append(span('voice__name', padTitle(pad)), bar, time);
-    voiceEls.set(i, { row, bar, time, pad });
-    refs.playing.append(row);
-  }
-}
-
-export function paintPlaying(board, engine) {
-  for (const [i, els] of voiceEls) {
-    const pad = board.pads[i] || els.pad;
-    const st = engine.state(i);
-    if (!pad || !st) continue;
-    const len = (pad.trimEnd || st.duration || pad.duration) - (pad.trimStart || 0);
-    const done = Math.max(0, st.position - (pad.trimStart || 0));
-    els.bar.style.setProperty('--travel', len > 0 ? Math.min(1, done / len) : 0);
-    els.time.textContent = `${fmtTime(done)} / ${fmtTime(Math.max(0, len))}`;
-    els.row.classList.toggle('voice--paused', st.state === 'paused');
-  }
-}
 
 /** Stop is only a button when there is something to stop. */
 export function drawStop(engine) {

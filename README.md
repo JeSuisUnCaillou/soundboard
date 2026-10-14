@@ -116,7 +116,7 @@ for a hard scene change.
 
 **Running the show.** Tap a pad to fire it. A pad that is playing lights up in
 its own colour, the way a lamp does, with a green light, a countdown and a travel
-bar along its bottom edge; the transport lists what is running against the clock. Pads all
+bar along its bottom edge — the board itself says what is running. Pads all
 start the same colour, so one of the eleven lighting gels means something once
 it is chosen — a group, a scene, an act. The red **Stop** button takes everything
 playing out, each sound on its own fade; `Esc` cuts the lot dead the moment you
