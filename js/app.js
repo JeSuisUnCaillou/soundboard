@@ -6,7 +6,6 @@ import { Engine, probeDuration } from './engine.js';
 import { store } from './store.js';
 import {
   newBoard, newPad, migrate, setCols, fitPads, filled, slug, move, padByKey, nextCue, rowCol,
-  MAX_COLS,
 } from './model.js';
 import { PadEditor, SetupSheet } from './editor.js';
 import {
@@ -349,7 +348,9 @@ class App {
     this.engine.reset();
     const id = slug(this.library.name);
     const saved = await store.loadBoard(id);
-    this.board = (saved && migrate(saved, { id })) || newBoard({ id, name: this.library.name });
+    // A board built today starts as wide as the last one the operator set.
+    this.board = (saved && migrate(saved, { id }))
+      || newBoard({ id, name: this.library.name, cols: await store.getMeta('cols') });
     fitPads(this.board);
 
     if (!filled(this.board).length) this.autoFill();
@@ -376,13 +377,11 @@ class App {
     say(`${this.library.name} open, ${this.library.entries.size} sounds`);
   }
 
-  /** First time with a folder: lay the sounds out in order so there is a board. */
+  /**
+   * First time with a folder: lay the sounds out in order so there is a board.
+   * The column count is the operator's, not the folder's, so it is left alone.
+   */
   autoFill() {
-    const n = this.library.entries.size;
-    // Wide enough that the pads are not lost in a board of empties, narrow
-    // enough that each one stays big; the rows follow from there.
-    if (n) setCols(this.board, Math.min(MAX_COLS, Math.max(3, Math.ceil(Math.sqrt(n * 1.6)))));
-
     const files = this.library.list;
     files.forEach((entry, i) => {
       this.board.pads[i] = newPad(this.board, i, entry.path);
@@ -435,7 +434,10 @@ class App {
     this.board.defaults = { fadeIn, fadeOut };
     // Only the column count is set: the pads keep their order and re-wrap, so
     // nothing comes off the board and nothing needs reloading.
-    if (cols !== this.board.cols) setCols(this.board, cols);
+    if (cols !== this.board.cols) {
+      setCols(this.board, cols);
+      store.setMeta('cols', this.board.cols).catch(() => {});
+    }
     this.redraw();
     this.queueSave();
   }
