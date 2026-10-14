@@ -62,7 +62,9 @@ particular pad. Each pad grows a grip in its corner — drag that to move the pa
 with a mouse or a finger. Clicking a pad opens its settings, which show the pad
 as it will look while you type. **Board setup** sets how many columns the board
 has; the pads wrap into as many rows as they need and the board scrolls, so
-nothing is ever pushed off it.
+nothing is ever pushed off it. It also holds the fades new pads start with — a
+second in, a second and a half out, so nothing begins or ends on a hard edge
+unless a pad is told to.
 
 **Each pad holds**: the file, a cue number, the name shown on the pad, a note
 under it, one of eleven lighting-gel colours, its level, fade in and fade

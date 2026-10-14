@@ -24,7 +24,8 @@ export function newBoard({ id, name, cols = 4 }) {
     name: name || id,
     cols: clampInt(cols, 1, MAX_COLS),
     master: 0.8,
-    defaults: { fadeIn: 0, fadeOut: 1.5 },
+    // Nothing starts or stops on a hard edge unless a pad asks for it.
+    defaults: { fadeIn: 1, fadeOut: 1.5 },
     pads: [],
   };
   fitPads(board);
@@ -151,7 +152,7 @@ export function migrate(raw, { id } = {}) {
   });
   board.master = clampNum(raw.master, 0, 1, 0.8);
   board.defaults = {
-    fadeIn: clampNum(raw.defaults && raw.defaults.fadeIn, 0, 120, 0),
+    fadeIn: clampNum(raw.defaults && raw.defaults.fadeIn, 0, 120, 1),
     fadeOut: clampNum(raw.defaults && raw.defaults.fadeOut, 0, 120, 1.5),
   };
   raw.pads.forEach((pad, i) => {
