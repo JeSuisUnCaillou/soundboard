@@ -122,7 +122,7 @@ class App {
       // folder.
       if (this.editing && (!pad || !pad.file)) {
         if (NARROW.matches) setBook(true);
-        else toast('Tap a sound in the folder, or its +, to put it on a pad.');
+        else toast('Drag a sound from the folders, or click its + icon.');
         return;
       }
       // While editing: the pencil sets the pad up, the pad itself is heard.
