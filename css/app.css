@@ -25,6 +25,7 @@
 
   --gel: #c9bdb0;
 
+  --speaker: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 6h2.6L8.6 3v10L5.1 10H2.5z' fill='%23000'/%3E%3Cpath d='M10.8 6.1c1 1 1 2.8 0 3.8M13 4c1.8 1.8 1.8 6.2 0 8' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
   --pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M11.6 1.1l3.3 3.3-8.3 8.3-4.3.9.9-4.3zM10.2 2.5l3.3 3.3' fill='none' stroke='%23000' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");
 
   --sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
@@ -329,6 +330,8 @@ body[data-editing="on"] .pad--filled .pad__grip::before {
   background-position: center;
 }
 body[data-editing="on"] .pad__lamp { display: none; }
+/* The pencil and the dots keep the top of the pad to themselves. */
+body[data-editing="on"] .pad--filled { padding-top: 36px; }
 
 /* The pencil sits beside the grip while editing; the pad itself plays. */
 .pad__pencil { display: none; }
@@ -478,7 +481,8 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
 
 .transport {
   display: grid;
-  grid-template-columns: var(--stop-col) 1fr auto;
+  grid-template-columns: var(--stop-col) minmax(0, 1fr) auto auto;
+  grid-template-areas: "go playing master book";
   align-items: center;
   gap: 16px;
   min-height: var(--transport);
@@ -487,7 +491,7 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
   border-top: 1px solid var(--line);
 }
 
-.go { display: flex; align-items: center; gap: 12px; }
+.go { grid-area: go; display: flex; align-items: center; gap: 12px; }
 .stop__btn {
   padding: 14px 30px;
   border: 1px solid color-mix(in oklab, var(--alert) 60%, black);
@@ -505,7 +509,7 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
   color: var(--ink-faint); cursor: default;
 }
 
-.playing { display: flex; flex-direction: column; gap: 5px; min-width: 0; max-width: 520px; overflow: hidden; }
+.playing { grid-area: playing; display: flex; flex-direction: column; gap: 5px; min-width: 0; max-width: 520px; overflow: hidden; }
 .playing:empty::after {
   content: "Silence.";
   color: var(--ink-faint);
@@ -528,8 +532,15 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
 .voice--paused .voice__name::after { content: " · held"; color: var(--ink-faint); font-weight: 400; }
 .voice__time { font: 400 12px/1 var(--mono); color: var(--ink-dim); font-variant-numeric: tabular-nums; }
 
-.master { display: flex; align-items: center; gap: 10px; }
-.master__label { font: 600 13px/1 var(--cond); color: var(--ink-dim); }
+.master { grid-area: master; display: flex; align-items: center; gap: 10px; }
+.master__icon {
+  width: 18px; height: 18px;
+  flex: none;
+  background: var(--ink-dim);
+  -webkit-mask: var(--speaker) center / contain no-repeat;
+  mask: var(--speaker) center / contain no-repeat;
+}
+#btnBook { grid-area: book; }
 .master__value, .num { font: 400 12px/1 var(--mono); color: var(--ink-dim); min-width: 2.4em; text-align: right; font-variant-numeric: tabular-nums; }
 
 .slider { accent-color: var(--warn); width: 130px; }
@@ -658,15 +669,22 @@ select.field option:checked { background: var(--warn); color: #241a07; }
 
   /* The rail wraps to two lines here, so it sizes itself. */
   body { grid-template-rows: auto 1fr auto; }
+  /* No room for a column beside the board, so while editing the folder takes
+     the bottom of the screen and the pads keep the top. The Sounds button
+     trades one for the other when a long tree needs the room. */
   .desk, body[data-editing="on"] .desk { grid-template-columns: 1fr; position: relative; }
+  body[data-editing="on"] .desk { grid-template-rows: minmax(0, 1.4fr) minmax(150px, 1fr); }
+  body[data-editing="on"][data-book="open"] .desk { grid-template-rows: 0 minmax(0, 1fr); }
+  body[data-editing="on"][data-book="open"] .stage { padding: 0; }
   .book {
-    position: absolute;
-    inset: 0;
-    z-index: 4;
     border-left: 0;
+    border-top: 1px solid var(--line);
     background: var(--console);
   }
-  body:not([data-book="open"]) .book { display: none; }
+  /* Short panel: every line it spends on itself is a line of folder lost. */
+  .book__panel { padding: 8px var(--gap); gap: 6px; }
+  .book__title { display: none; }
+  .hint--keys { font-size: 12px; }
 
   /* Columns follow the screen; the pads keep their order. */
   /* The board keeps the shape it was given. Pads have a floor on their size,
@@ -684,23 +702,25 @@ select.field option:checked { background: var(--warn); color: #241a07; }
     padding: calc(8px + env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) 8px max(12px, env(safe-area-inset-left, 0px));
   }
   .rail__folder { order: 2; flex: 1; }
-  .rail__actions { order: 3; width: 100%; margin-left: 0; justify-content: space-between; }
+  .rail__actions { order: 3; width: 100%; margin-left: 0; flex-wrap: wrap; justify-content: flex-end; }
 
-  #btnBook:not([hidden]) { display: inline-block; }
+  #btnBook:not([hidden]) { display: inline-block; justify-self: stretch; }
 
   /* The transport is taller here, and a toast pinned above it would guess at
      how much taller. Over the pads it never collides with anything. */
   .toast { top: 50%; bottom: auto; transform: translate(-50%, -50%); max-width: calc(100vw - 32px); }
   .transport {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "go      master"
+      "playing playing"
+      "book    book";
     gap: 8px 12px;
     padding: 10px max(14px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
   }
-  .go { grid-column: 1 / -1; }
-  .playing { grid-column: 1 / -1; max-width: none; }
+  .playing { max-width: none; }
   .playing:empty { display: none; }
-  .master { grid-column: 1 / -1; }
-  .slider { flex: 1; width: auto; }
+  .slider { flex: 1; width: auto; min-width: 0; }
 }
 
 @media (max-width: 560px) {
@@ -710,14 +730,9 @@ select.field option:checked { background: var(--warn); color: #241a07; }
   .stop__btn { flex: 1; }
   .voice { grid-template-columns: minmax(0, 1fr) 72px auto; }
 
-  /* Two lines: the master fader, then the three buttons under it. */
-  .master { flex-wrap: wrap; }
-  .master__label { order: 1; }
-  .master .slider { order: 2; flex: 1 1 50%; }
-  .master__value { order: 3; }
-  .master::after { content: ""; order: 4; flex-basis: 100%; height: 0; }
-  #btnBook { order: 5; flex: 1; }
-  .rail__actions .btn { flex: 1; padding-left: 8px; padding-right: 8px; }
+  .master { gap: 8px; }
+  .master__value { min-width: 2.2em; }
+  .rail__actions .btn { padding-left: 10px; padding-right: 10px; }
 
 
   /* A sheet on a phone is the whole phone. */

@@ -10,7 +10,7 @@ straight off the disk by the browser and never leave it.
 
 ![The board on a laptop: a grid of coloured pads, Stop and what is playing along the bottom](docs/board.png)
 
-<img src="docs/phone.png" alt="The same board on a phone: two columns of pads, Stop and the master fader underneath" width="300">
+<img src="docs/phone.png" alt="The same board on a phone: the pads filling the screen, Stop and the volume underneath" width="300">
 
 ![Edit mode: the board on the left with a drag grip on each pad, the folder's tree of sounds on the right showing which cue each one is on](docs/edit.png)
 
@@ -123,10 +123,11 @@ hit it.
 **On a tablet or a phone.** The board is the whole screen, and it keeps the shape
 you gave it: a six-column board is six columns wide everywhere, scrolling rather
 than rearranging itself under the operator. While editing, the folder's sounds
-slide over the pads from the **Sounds** button and get out of the way again as
-soon as one lands. Pads are moved by their grip, which works the same under a
-finger as under a mouse; a pad's row and column can also be typed into its
-settings. The screen is kept awake while a board is open.
+take the bottom of the screen and the pads keep the top, both in view at once;
+**All sounds** trades one for the other when a long tree needs the room. Pads are
+moved by their grip, which works the same under a finger as under a mouse; a
+pad's row and column can also be typed into its settings. The screen is kept
+awake while a board is open.
 
 **Carrying a board around.** Board setup saves the whole board as a JSON file and
 loads one back. Pads refer to files by their path inside the folder, so a board

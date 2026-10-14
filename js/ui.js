@@ -290,6 +290,7 @@ export function setPanel(editing) {
   refs.book.hidden = !editing;
   refs.btnBook.hidden = !editing;
   refs.btnEmpty.hidden = !editing;
+  refs.btnBook.textContent = bookOpen() ? 'Show the pads' : 'All sounds';
   refs.btnEdit.setAttribute('aria-pressed', String(editing));
   refs.btnEdit.textContent = editing ? 'Done editing' : 'Edit board';
 }
@@ -299,7 +300,7 @@ export function setBook(open) {
   document.body.dataset.book = open ? 'open' : 'closed';
   prefs.set('book', open);
   refs.btnBook.setAttribute('aria-expanded', String(open));
-  refs.btnBook.textContent = open ? 'Back to the pads' : 'Sounds';
+  refs.btnBook.textContent = open ? 'Show the pads' : 'All sounds';
 }
 
 export function bookOpen() {

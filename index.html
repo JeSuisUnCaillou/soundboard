@@ -47,8 +47,8 @@
     <div class="book__panel">
       <h2 class="book__title">Sounds in folder</h2>
       <input type="search" id="libFilter" class="field field--search" placeholder="Filter by name" aria-label="Filter sounds by name">
-      <p class="hint hint--keys">Tap a sound or a pad to hear it. <b>+</b> puts a sound on the next free pad,
-         the pencil sets a pad up, the dots move it.</p>
+      <p class="hint hint--keys">Tap to hear it · <b>+</b> puts it on a pad · the pencil sets a pad up ·
+         the dots move it</p>
       <ul class="lib" id="lib"></ul>
       <p class="book__empty" id="libEmpty"></p>
     </div>
@@ -63,11 +63,12 @@
   <div class="playing" id="playing" aria-label="Now playing"></div>
 
   <div class="master">
-    <button type="button" id="btnBook" class="btn" aria-expanded="false" aria-controls="book" hidden>Sounds</button>
-    <label class="master__label" for="master">Master</label>
-    <input type="range" id="master" min="0" max="100" value="80" class="slider">
+    <span class="master__icon" aria-hidden="true"></span>
+    <input type="range" id="master" min="0" max="100" value="80" class="slider" aria-label="Master volume">
     <output class="master__value" id="masterValue" aria-hidden="true">80</output>
   </div>
+
+  <button type="button" id="btnBook" class="btn" aria-expanded="false" aria-controls="book" hidden>All sounds</button>
 </footer>
 
 <dialog id="picker" class="sheet sheet--narrow picker">
