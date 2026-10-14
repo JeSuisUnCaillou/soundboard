@@ -12,7 +12,7 @@ const OLD_DEFAULT_GEL = 'bastard-amber';
 
 export const BOARD_VERSION = 2;
 export const MAX_COLS = 12;
-const MIN_ROWS = 2;
+const MIN_ROWS = 3;
 
 // Keys sit under the fingers in the same shape as the pads above them.
 const KEY_ROWS = [
@@ -59,7 +59,7 @@ export function newPad(board, i, file) {
 }
 
 /**
- * Keep a whole spare row at the end of the board, and never fewer than two
+ * Keep a whole spare row at the end of the board, and never fewer than three
  * rows: there is always somewhere to put the next sound.
  */
 export function fitPads(board) {
