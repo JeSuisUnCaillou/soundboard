@@ -25,6 +25,7 @@
 
   --gel: #c9bdb0;
 
+  --gear: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23000' fill-rule='evenodd' d='M9.4 1.1l.3 1.7c.4.1.8.3 1.1.5l1.4-1 2 2-1 1.4c.2.3.4.7.5 1.1l1.7.3v2.8l-1.7.3c-.1.4-.3.8-.5 1.1l1 1.4-2 2-1.4-1c-.3.2-.7.4-1.1.5l-.3 1.7H6.6l-.3-1.7c-.4-.1-.8-.3-1.1-.5l-1.4 1-2-2 1-1.4c-.2-.3-.4-.7-.5-1.1L.6 9.4V6.6l1.7-.3c.1-.4.3-.8.5-1.1l-1-1.4 2-2 1.4 1c.3-.2.7-.4 1.1-.5l.3-1.7h2.8zM8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z'/%3E%3C/svg%3E");
   --speaker: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 6h2.6L8.6 3v10L5.1 10H2.5z' fill='%23000'/%3E%3Cpath d='M10.8 6.1c1 1 1 2.8 0 3.8M13 4c1.8 1.8 1.8 6.2 0 8' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
   --pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M11.6 1.1l3.3 3.3-8.3 8.3-4.3.9.9-4.3zM10.2 2.5l3.3 3.3' fill='none' stroke='%23000' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");
 
@@ -136,6 +137,16 @@ button, input, select { font: inherit; color: inherit; }
 .btn--danger { background: none; border-color: color-mix(in oklab, var(--alert) 50%, var(--line)); color: color-mix(in oklab, var(--alert) 70%, var(--ink)); }
 .btn--danger:hover { background: color-mix(in oklab, var(--alert) 22%, transparent); }
 .btn:disabled { opacity: 0.4; cursor: default; }
+.btn--icon { display: grid; place-items: center; padding: 7px 11px; }
+
+/* Icons are masks, so they take the ink colour of whatever they sit in. */
+.icon {
+  width: 18px; height: 18px;
+  background: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+.icon--gear { --icon: var(--gear); }
 /* Empty the board keeps a quieter face than the rest: it is the one button
    here that undoes work. */
 .btn--danger-quiet { color: color-mix(in oklab, var(--alert) 45%, var(--ink)); }
