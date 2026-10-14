@@ -5,7 +5,7 @@ import { Library, CAN_PERSIST } from './library.js';
 import { Engine, probeDuration } from './engine.js';
 import { store, prefs } from './store.js';
 import {
-  newBoard, newPad, migrate, setCols, fitPads, filled, slug, move, padByKey, rowCol, padTitle,
+  newBoard, newPad, migrate, setCols, setRows, fitPads, filled, slug, move, padByKey, rowCol, padTitle,
 } from './model.js';
 import { bundledPaths } from './bundled.js';
 import { PadEditor, SetupSheet } from './editor.js';
@@ -441,7 +441,8 @@ class App {
       const id = slug(this.library.rootName);
       const saved = await store.loadBoard(id);
       // A board built today starts as wide as the last one the operator set.
-      this.useBoard((saved && migrate(saved, { id })) || newBoard({ id, cols: await store.getMeta('cols') }));
+      this.useBoard((saved && migrate(saved, { id }))
+        || newBoard({ id, cols: await store.getMeta('cols'), rows: await store.getMeta('rows') }));
       await store.setMeta('last', this.board.id);
     }
 
@@ -582,7 +583,11 @@ class App {
    * question.
    */
   async firstBoard() {
-    this.useBoard(newBoard({ id: 'default-board', cols: await store.getMeta('cols') }));
+    this.useBoard(newBoard({
+      id: 'default-board',
+      cols: await store.getMeta('cols'),
+      rows: await store.getMeta('rows'),
+    }));
     await store.setMeta('last', this.board.id);
     this.place(bundledPaths());
     this.redraw();
@@ -680,7 +685,7 @@ class App {
     if (!this.board || !this.library.has(path)) return;
     const free = this.board.pads.findIndex((pad) => !pad || !pad.file);
     if (free === -1) {
-      toast('Every pad is taken. Add rows in Board setup, or tap a pad to replace what is on it.');
+      toast('Every pad is taken. Add rows in Board settings, or tap a pad to replace what is on it.');
       return;
     }
     this.setPad(free, newPad(this.board, free, path));
@@ -690,14 +695,18 @@ class App {
     toast(`${padTitle(this.board.pads[free])} is on row ${row + 1}, column ${col + 1}.`);
   }
 
-  applySetup({ cols, fadeIn, fadeOut }) {
+  applySetup({ cols, rows, fadeIn, fadeOut }) {
     if (!this.board) return;
     this.board.defaults = { fadeIn, fadeOut };
-    // Only the column count is set: the pads keep their order and re-wrap, so
-    // nothing comes off the board and nothing needs reloading.
+    // The pads keep their order and re-wrap, so nothing comes off the board
+    // and nothing needs reloading.
     if (cols !== this.board.cols) {
       setCols(this.board, cols);
       store.setMeta('cols', this.board.cols).catch(() => {});
+    }
+    if (rows !== this.board.rows) {
+      setRows(this.board, rows);
+      store.setMeta('rows', this.board.rows).catch(() => {});
     }
     this.redraw();
     this.queueSave();
@@ -791,7 +800,7 @@ class App {
    */
   placeEmptyButton() {
     if (NARROW.matches) refs.browse.prepend(refs.btnEmpty);
-    else refs.btnEdit.before(refs.btnEmpty);
+    else refs.btnSetup.before(refs.btnEmpty);
   }
 
   /** Take every sound off the board, keeping the sounds themselves. Twice, to mean it. */

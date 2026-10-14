@@ -1,7 +1,7 @@
 // The two sheets: setting up one pad, and setting up the board.
 
 import { drawGels, toast } from './ui.js';
-import { newPad, MAX_COLS } from './model.js';
+import { newPad, MAX_COLS, MAX_ROWS } from './model.js';
 
 const el = (id) => document.getElementById(id);
 
@@ -144,6 +144,7 @@ export class SetupSheet {
   open(board) {
     this.board = board;
     el('setCols').value = board.cols;
+    el('setRows').value = board.rows;
     el('setFadeIn').value = board.defaults.fadeIn;
     el('setFadeOut').value = board.defaults.fadeOut;
     this.dlg.showModal();
@@ -153,6 +154,7 @@ export class SetupSheet {
     if (!this.board) return;
     this.onApply({
       cols: clamp(num(el('setCols').value, this.board.cols), 1, MAX_COLS),
+      rows: clamp(num(el('setRows').value, this.board.rows), 1, MAX_ROWS),
       fadeIn: clamp(num(el('setFadeIn').value, 0), 0, 120),
       fadeOut: clamp(num(el('setFadeOut').value, 0), 0, 120),
     });

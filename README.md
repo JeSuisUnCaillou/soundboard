@@ -101,9 +101,9 @@ is. There is no limit on how many sounds a
 board holds. **Empty the board** clears the pads without touching the sounds, and
 asks twice.
 
-**Board setup** sets how many columns the board has; the pads wrap into as many
-rows as they need and the board scrolls, so nothing is ever pushed off it. It
-also holds the fades new pads start with — a second in, a second and a half out,
+**Board settings** sets how many rows and columns the board has — three by three
+to begin with. More sounds than that and the board grows past it, scrolling
+rather than pushing a pad off. It also holds the fades new pads start with — a second in, a second and a half out,
 so nothing begins or ends on a hard edge unless a pad is told to.
 
 **Each pad holds**: the file it plays, a name of its own if the file's will not
@@ -142,7 +142,7 @@ system drops it, which switching apps does. Where a browser will not do it
 (iOS before 16.4, or a phone in low power mode) the board says so, and the
 phone's own auto-lock setting is the thing to change.
 
-**Carrying a board around.** Board setup saves the whole board as a JSON file and
+**Carrying a board around.** Board settings saves the whole board as a JSON file and
 loads one back. Pads refer to files by their path inside the folder, so a board
 travels with its folder to another machine or another browser. A pad whose file
 is missing is shown struck through rather than quietly dropped.

@@ -27,9 +27,9 @@
     <button type="button" id="btnReconnect" class="btn btn--quiet btn--small" hidden></button>
   </p>
   <div class="rail__actions">
-    <button type="button" id="btnEdit" class="btn" aria-pressed="false">Edit board</button>
     <button type="button" id="btnEmpty" class="btn btn--danger-quiet" hidden>Empty the board</button>
-    <button type="button" id="btnSetup" class="btn btn--icon" aria-label="Board setup" title="Board setup"><span class="icon icon--gear" aria-hidden="true"></span></button>
+    <button type="button" id="btnSetup" class="btn" hidden>Board settings</button>
+    <button type="button" id="btnEdit" class="btn" aria-pressed="false">Edit board</button>
   </div>
 </header>
 
@@ -178,15 +178,21 @@
 <dialog id="setup" class="sheet sheet--narrow">
   <form method="dialog" class="sheet__form">
     <header class="sheet__head">
-      <h2 class="sheet__title">Board setup</h2>
+      <h2 class="sheet__title">Board settings</h2>
       <button type="button" class="sheet__close" id="setupClose" aria-label="Close">&times;</button>
     </header>
 
     <div class="sheet__body">
-      <label class="row"><span class="row__label">Columns</span>
-        <input type="number" id="setCols" class="field field--num" min="1" max="12" step="1" value="4">
-      </label>
-      <p class="hint">The pads wrap into as many rows as they need, and the board scrolls.</p>
+      <div class="row row--split">
+        <label class="row"><span class="row__label">Columns</span>
+          <input type="number" id="setCols" class="field field--num" min="1" max="12" step="1" value="3">
+        </label>
+        <label class="row"><span class="row__label">Rows</span>
+          <input type="number" id="setRows" class="field field--num" min="1" max="12" step="1" value="3">
+        </label>
+      </div>
+      <p class="hint">More sounds than that and the board grows past it, scrolling rather than
+         pushing a pad off.</p>
 
       <div class="row row--split">
         <label class="row"><span class="row__label">Default fade in</span>

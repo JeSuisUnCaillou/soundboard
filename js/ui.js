@@ -294,6 +294,7 @@ export function setPanel(editing) {
   prefs.set('editing', editing);
   refs.book.hidden = !editing;
   refs.btnEmpty.hidden = !editing;
+  refs.btnSetup.hidden = !editing;      // the board's own settings belong to building it
   refs.browse.hidden = !editing;
   refs.btnEdit.setAttribute('aria-pressed', String(editing));
   refs.btnEdit.textContent = editing ? 'Done editing' : 'Edit board';
