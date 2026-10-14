@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Soundboard — sound cues for the stage</title>
-<meta name="description" content="Fire sound cues from a folder on your own machine. A grid of pads, a cue sheet, fades and loops. Nothing is uploaded.">
+<meta name="description" content="Fire sound cues from a folder on your own machine. A grid of pads with fades, loops and keys. Nothing is uploaded.">
 <meta name="theme-color" content="#1a1512">
 <link rel="icon" href="icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,14 +29,8 @@
     <div id="grid" class="grid"></div>
   </section>
 
-  <aside class="book" id="book" aria-label="Prompt book">
-    <div class="book__panel" id="panelCues">
-      <h2 class="book__title">Cue sheet</h2>
-      <ol class="cues" id="cues"></ol>
-      <p class="book__empty" id="cuesEmpty">Pads you fill in appear here, in playing order.</p>
-    </div>
-
-    <div class="book__panel" id="panelLibrary" hidden>
+  <aside class="book" id="book" aria-label="Sounds in folder" hidden>
+    <div class="book__panel">
       <h2 class="book__title">Sounds in folder</h2>
       <input type="search" id="libFilter" class="field field--search" placeholder="Filter by name" aria-label="Filter sounds by name">
       <ul class="lib" id="lib"></ul>
@@ -47,19 +41,16 @@
 
 <footer class="transport">
   <div class="go">
-    <button type="button" id="btnGo" class="go__btn" disabled>Go</button>
-    <p class="go__next"><span class="lamp lamp--standby" id="goLamp" aria-hidden="true"></span><span id="goLabel">Nothing standing by</span></p>
+    <button type="button" id="btnStop" class="stop__btn" disabled>Stop</button>
   </div>
 
   <div class="playing" id="playing" aria-label="Now playing"></div>
 
   <div class="master">
-    <button type="button" id="btnBook" class="btn" aria-expanded="false" aria-controls="book">Cue sheet</button>
+    <button type="button" id="btnBook" class="btn" aria-expanded="false" aria-controls="book" hidden>Sounds</button>
     <label class="master__label" for="master">Master</label>
     <input type="range" id="master" min="0" max="100" value="80" class="slider">
     <output class="master__value" id="masterValue" aria-hidden="true">80</output>
-    <button type="button" id="btnFadeAll" class="btn btn--quiet">Fade all</button>
-    <button type="button" id="btnStopAll" class="btn btn--quiet">Stop all</button>
   </div>
 </footer>
 
@@ -74,10 +65,9 @@
     </p>
     <p class="welcome__note" id="welcomeNote"></p>
     <dl class="keys">
-      <dt><kbd>Space</kbd></dt><dd>fire the standing-by cue</dd>
-      <dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>move the standby through the cue sheet</dd>
-      <dt><kbd>Esc</kbd></dt><dd>fade everything out</dd>
-      <dt><kbd>Shift</kbd> <kbd>Esc</kbd></dt><dd>cut everything dead</dd>
+      <dt><kbd>Space</kbd></dt><dd>stop what is playing, fading it out</dd>
+      <dt><kbd>Esc</kbd></dt><dd>cut everything dead</dd>
+      <dt>pad keys</dt><dd>fire that pad, from the key shown on it</dd>
     </dl>
   </div>
 </section>
@@ -86,6 +76,7 @@
   <form method="dialog" id="padForm" class="sheet__form">
     <header class="sheet__head">
       <h2 class="sheet__title">Pad <span id="padWhere"></span></h2>
+      <div class="sheet__preview" id="padPreview" aria-hidden="true"></div>
       <button type="button" class="sheet__close" id="padClose" aria-label="Close">&times;</button>
     </header>
 
@@ -119,7 +110,7 @@
         <span class="row row--grow"><span class="hint">Change the row or column to move the pad.</span></span>
       </div>
 
-      <label class="row"><span class="row__label">Note in the book</span>
+      <label class="row"><span class="row__label">Note on the pad</span>
         <input type="text" id="padNote" class="field" maxlength="120" placeholder="On JOHN's exit, before the blackout">
       </label>
 
@@ -187,15 +178,10 @@
         <input type="text" id="setBoardName" class="field" maxlength="48" placeholder="Act One">
       </label>
 
-      <div class="row row--split">
-        <label class="row"><span class="row__label">Rows</span>
-          <input type="number" id="setRows" class="field field--num" min="1" max="10" step="1" value="4">
-        </label>
-        <label class="row"><span class="row__label">Columns</span>
-          <input type="number" id="setCols" class="field field--num" min="1" max="12" step="1" value="5">
-        </label>
-      </div>
-      <p class="hint" id="setupShrinkWarning" hidden></p>
+      <label class="row"><span class="row__label">Columns</span>
+        <input type="number" id="setCols" class="field field--num" min="1" max="12" step="1" value="4">
+      </label>
+      <p class="hint">The pads wrap into as many rows as they need, and the board scrolls.</p>
 
       <div class="row row--split">
         <label class="row"><span class="row__label">Default fade in</span>

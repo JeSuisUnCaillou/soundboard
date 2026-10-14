@@ -5,19 +5,18 @@ import { Library, CAN_PERSIST } from './library.js';
 import { Engine, probeDuration } from './engine.js';
 import { store } from './store.js';
 import {
-  newBoard, newPad, migrate, resize, fitPads, filled, slug, move, padByKey, nextCue, rowCol,
-  MAX_ROWS, MAX_COLS,
+  newBoard, newPad, migrate, setCols, fitPads, filled, slug, move, padByKey, nextCue, rowCol,
+  MAX_COLS,
 } from './model.js';
 import { PadEditor, SetupSheet } from './editor.js';
 import {
-  refs, bindRefs, drawGrid, paintPads, drawCues, markCues, drawLibrary, drawPlaying,
-  paintPlaying, drawStandby, drawFolder, setPanel, setBook, bookOpen, say, toast,
+  refs, bindRefs, drawGrid, paintPads, drawLibrary, drawPlaying,
+  paintPlaying, drawStop, drawFolder, setPanel, setBook, bookOpen, say, toast,
 } from './ui.js';
 
 const PATH_TYPE = 'application/x-soundboard-path';
-const PAD_TYPE = 'application/x-soundboard-pad';
 
-// Below this width the prompt book covers the pads instead of sitting beside them.
+// Below this width the sounds list slides over the pads instead of sitting beside them.
 const NARROW = window.matchMedia('(max-width: 900px)');
 
 class App {
@@ -26,7 +25,6 @@ class App {
     this.engine = new Engine(this.library);
     this.board = null;
     this.editing = false;
-    this.standby = null;
     this.raf = null;
     this.saveTimer = null;
     this.pendingHandle = null;
@@ -34,6 +32,7 @@ class App {
 
     this.engine.onchange = () => {
       drawPlaying(this.board, this.engine);
+      drawStop(this.engine);
       this.paint();
       this.run();
     };
@@ -74,10 +73,8 @@ class App {
     refs.btnEdit.addEventListener('click', () => this.setEditing(!this.editing));
     refs.btnSetup.addEventListener('click', () => this.board && this.setup.open(this.board));
 
-    refs.btnBook.addEventListener('click', () => setBook(!bookOpen(), this.editing));
-    refs.btnGo.addEventListener('click', () => this.go());
-    refs.btnFadeAll.addEventListener('click', () => this.engine.stopAll({ fade: this.fadeTime() }));
-    refs.btnStopAll.addEventListener('click', () => this.engine.stopAll({ fade: 0 }));
+    refs.btnBook.addEventListener('click', () => setBook(!bookOpen()));
+    refs.btnStop.addEventListener('click', () => this.stop());
 
     refs.master.addEventListener('input', (e) => {
       const level = Number(e.target.value) / 100;
@@ -99,15 +96,6 @@ class App {
       const i = Number(el.dataset.i);
       if (this.editing) this.padEditor.open(this.board, i);
       else this.tap(i);
-    });
-
-    refs.cues.addEventListener('click', (e) => {
-      const el = e.target.closest('.cue');
-      if (!el) return;
-      const i = Number(el.dataset.i);
-      this.setStandby(i);
-      if (NARROW.matches) setBook(false, this.editing);
-      else refs.grid.querySelector(`.pad[data-i="${i}"]`)?.focus();
     });
 
     // Dragging a sound onto a pad has no equivalent under a finger, so a tap
@@ -135,7 +123,7 @@ class App {
       if (!document.hidden) this.keepAwake();
     });
     NARROW.addEventListener('change', (e) => {
-      if (!e.matches) setBook(false, this.editing);
+      if (!e.matches) setBook(false);
     });
   }
 
@@ -148,24 +136,11 @@ class App {
       e.dataTransfer.effectAllowed = 'copy';
     });
 
-    refs.grid.addEventListener('dragstart', (e) => {
-      const el = e.target.closest('.pad');
-      if (!el || !this.editing || !this.board.pads[Number(el.dataset.i)]) return;
-      e.dataTransfer.setData(PAD_TYPE, el.dataset.i);
-      e.dataTransfer.effectAllowed = 'move';
-      el.classList.add('pad--dragging');
-    });
-
-    refs.grid.addEventListener('dragend', (e) => {
-      e.target.closest('.pad')?.classList.remove('pad--dragging');
-    });
-
     refs.grid.addEventListener('dragover', (e) => {
       const el = e.target.closest('.pad');
-      const types = e.dataTransfer.types;
-      if (!el || !(types.includes(PATH_TYPE) || types.includes(PAD_TYPE))) return;
+      if (!el || !e.dataTransfer.types.includes(PATH_TYPE)) return;
       e.preventDefault();
-      e.dataTransfer.dropEffect = types.includes(PAD_TYPE) ? 'move' : 'copy';
+      e.dataTransfer.dropEffect = 'copy';
       el.classList.add('pad--drop');
     });
 
@@ -180,19 +155,12 @@ class App {
       el.classList.remove('pad--drop');
       const to = Number(el.dataset.i);
       const path = e.dataTransfer.getData(PATH_TYPE);
-      const from = e.dataTransfer.getData(PAD_TYPE);
-
-      if (path && this.library.has(path)) {
-        const existing = this.board.pads[to];
-        this.setPad(to, existing ? { ...existing, file: path, duration: 0 } : newPad(this.board, to, path));
-      } else if (from !== '') {
-        move(this.board, Number(from), to);
-        this.engine.reset();
-        this.redraw();
-        this.queueSave();
-        this.primeAll();
-      }
+      if (!path || !this.library.has(path)) return;
+      const existing = this.board.pads[to];
+      this.setPad(to, existing ? { ...existing, file: path, duration: 0 } : newPad(this.board, to, path));
     });
+
+    this.wirePadDragging();
 
     // A folder dropped anywhere on the window opens it.
     document.addEventListener('dragover', (e) => {
@@ -214,6 +182,81 @@ class App {
     });
   }
 
+  /**
+   * Dragging a pad to another place on the board. Pointer events rather than
+   * HTML5 drag and drop, because the latter does not exist under a finger, and
+   * only the grip takes the pointer so the board still scrolls.
+   */
+  wirePadDragging() {
+    let drag = null;
+
+    const at = (e) => {
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      return el && el.closest('.pad');
+    };
+
+    const over = (el) => {
+      if (drag.target === el) return;
+      drag.target?.classList.remove('pad--drop');
+      drag.target = el && el !== drag.el ? el : null;
+      drag.target?.classList.add('pad--drop');
+    };
+
+    refs.grid.addEventListener('pointerdown', (e) => {
+      const grip = e.target.closest('.pad__grip');
+      if (!grip || !this.editing || e.button > 0) return;
+      const el = grip.closest('.pad');
+      const from = Number(el.dataset.i);
+      if (!this.board.pads[from]) return;
+      e.preventDefault();
+
+      const box = el.getBoundingClientRect();
+      const ghost = el.cloneNode(true);
+      ghost.classList.add('pad--ghost');
+      ghost.style.width = `${box.width}px`;
+      ghost.style.height = `${box.height}px`;
+      document.body.append(ghost);
+
+      drag = { from, el, ghost, dx: e.clientX - box.left, dy: e.clientY - box.top, target: null };
+      el.classList.add('pad--dragging');
+      try {
+        grip.setPointerCapture(e.pointerId);
+      } catch {
+        /* without capture the grid's own listeners still see the move */
+      }
+      ghost.style.transform = `translate(${box.left}px, ${box.top}px)`;
+    });
+
+    refs.grid.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      drag.ghost.style.transform = `translate(${e.clientX - drag.dx}px, ${e.clientY - drag.dy}px)`;
+      over(at(e));
+    });
+
+    const end = (e, drop) => {
+      if (!drag) return;
+      const { from, target } = drag;
+      drag.ghost.remove();
+      drag.el.classList.remove('pad--dragging');
+      target?.classList.remove('pad--drop');
+      drag = null;
+      if (!drop || !target) return;
+
+      const to = Number(target.dataset.i);
+      move(this.board, from, to);
+      fitPads(this.board);
+      this.engine.reset();
+      this.redraw();
+      this.queueSave();
+      this.primeAll();
+      const { row, col } = rowCol(this.board, to);
+      say(`Moved to row ${row + 1}, column ${col + 1}`);
+    };
+
+    refs.grid.addEventListener('pointerup', (e) => end(e, true));
+    refs.grid.addEventListener('pointercancel', (e) => end(e, false));
+  }
+
   onKey(e) {
     if (document.querySelector('dialog[open]')) return;
     const t = e.target;
@@ -223,19 +266,13 @@ class App {
 
     if (e.key === ' ') {
       e.preventDefault();
-      this.go();
+      this.stop();
       return;
     }
     if (e.key === 'Escape') {
       e.preventDefault();
-      const fade = e.shiftKey ? 0 : this.fadeTime();
-      this.engine.stopAll({ fade });
-      say(e.shiftKey ? 'Everything cut' : 'Everything fading out');
-      return;
-    }
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      this.moveStandby(e.key === 'ArrowDown' ? 1 : -1);
+      this.engine.stopAll({ fade: 0 });
+      say('Everything cut');
       return;
     }
     if (e.key.length === 1) {
@@ -326,7 +363,6 @@ class App {
     }
     await store.setMeta('last', id);
 
-    this.standby = filled(this.board)[0]?.i ?? null;
     this.redraw();
     this.saveNow();
 
@@ -340,19 +376,17 @@ class App {
 
   /** First time with a folder: lay the sounds out in order so there is a board. */
   autoFill() {
-    // Shape the grid to the number of sounds, so pads start big rather than
-    // scattered across a board that is mostly empty.
-    const n = Math.min(this.library.entries.size, MAX_ROWS * MAX_COLS);
-    if (n) {
-      const cols = Math.min(MAX_COLS, Math.max(3, Math.ceil(Math.sqrt(n * 1.6))));
-      resize(this.board, Math.min(MAX_ROWS, Math.max(2, Math.ceil(n / cols))), cols);
-    }
+    const n = this.library.entries.size;
+    // Wide enough that the pads are not lost in a board of empties, narrow
+    // enough that each one stays big; the rows follow from there.
+    if (n) setCols(this.board, Math.min(MAX_COLS, Math.max(3, Math.ceil(Math.sqrt(n * 1.6)))));
 
-    const files = this.library.list.slice(0, this.board.pads.length);
+    const files = this.library.list;
     files.forEach((entry, i) => {
       this.board.pads[i] = newPad(this.board, i, entry.path);
       this.board.pads[i].cue = String(i + 1);
     });
+    fitPads(this.board);
     if (files.length) {
       toast(`${files.length} sound${files.length === 1 ? '' : 's'} laid out in order. Edit the board to rearrange.`);
     }
@@ -360,6 +394,7 @@ class App {
 
   setPad(i, pad, moveTo = null) {
     this.board.pads[i] = pad;
+    fitPads(this.board);
     if (pad && !pad.cue) pad.cue = nextCue(this.board);
     this.engine.stop(i, { fade: 0 });
     if (moveTo != null && moveTo !== i && moveTo >= 0 && moveTo < this.board.pads.length) {
@@ -375,7 +410,6 @@ class App {
       this.engine.prime(i, pad);
       if (!pad.duration) this.measure();
     }
-    if (this.standby == null) this.standby = filled(this.board)[0]?.i ?? null;
   }
 
   /** Tap a sound in the folder panel: it lands on the first pad with nothing on it. */
@@ -388,20 +422,18 @@ class App {
     }
     this.setPad(free, newPad(this.board, free, path));
     const { row, col } = rowCol(this.board, free);
+    // Show the pad it landed on rather than the list it came from.
+    if (NARROW.matches) setBook(false);
     toast(`${this.board.pads[free].name} is on row ${row + 1}, column ${col + 1}.`);
   }
 
-  applySetup({ name, rows, cols, fadeIn, fadeOut }) {
+  applySetup({ name, cols, fadeIn, fadeOut }) {
     if (!this.board) return;
     this.board.name = name;
     this.board.defaults = { fadeIn, fadeOut };
-    if (rows !== this.board.rows || cols !== this.board.cols) {
-      const dropped = resize(this.board, rows, cols);
-      this.engine.reset();
-      if (dropped) toast(`${dropped} pad${dropped === 1 ? '' : 's'} came off the board.`);
-      this.primeAll();
-    }
-    if (this.standby != null && !this.board.pads[this.standby]) this.standby = filled(this.board)[0]?.i ?? null;
+    // Only the column count is set: the pads keep their order and re-wrap, so
+    // nothing comes off the board and nothing needs reloading.
+    if (cols !== this.board.cols) setCols(this.board, cols);
     this.redraw();
     this.queueSave();
   }
@@ -425,7 +457,6 @@ class App {
       board.name = raw.name || this.board.name;
       this.board = board;
       this.engine.reset();
-      this.standby = filled(board)[0]?.i ?? null;
       refs.master.value = Math.round(board.master * 100);
       refs.masterValue.textContent = String(Math.round(board.master * 100));
       this.engine.setMaster(board.master);
@@ -463,31 +494,14 @@ class App {
     }
   }
 
-  async go() {
-    if (this.standby == null) return;
-    const i = this.standby;
-    await this.tap(i);
-    this.moveStandby(1);
-  }
-
-  setStandby(i) {
-    this.standby = i;
-    drawStandby(this.board, this.standby);
-    this.paint();
-  }
-
-  moveStandby(step) {
-    const list = filled(this.board);
-    if (!list.length) {
-      this.standby = null;
-      drawStandby(this.board, null);
-      return;
+  /** Stop what is playing, each pad taking its own fade out with it. */
+  stop() {
+    const live = this.engine.active();
+    if (!live.length) return;
+    for (const { i, pad } of live) {
+      this.engine.stop(i, { fade: pad.fadeOut ?? this.fadeTime() });
     }
-    const at = list.findIndex((entry) => entry.i === this.standby);
-    const next = at === -1 ? 0 : Math.min(list.length - 1, Math.max(0, at + step));
-    this.setStandby(list[next].i);
-    const pad = list[next].pad;
-    say(`Standing by ${pad.cue ? `cue ${pad.cue}, ` : ''}${pad.name || pad.file}`);
+    say(live.length === 1 ? `Stopping ${live[0].pad.name || live[0].pad.file}` : `Stopping ${live.length} sounds`);
   }
 
   setEditing(on) {
@@ -498,7 +512,9 @@ class App {
     this.editing = on;
     setPanel(on);
     if (on) drawLibrary(this.board, this.library, refs.libFilter.value);
-    if (NARROW.matches) setBook(on, on);
+    // The board stays in view: the sounds list is opened from the button when
+    // it is wanted, and never covers what is being rearranged.
+    if (!on) setBook(false);
     this.redraw();
   }
 
@@ -512,9 +528,8 @@ class App {
     if (!this.board) return;
     drawFolder(this.library);
     drawGrid(this.board, { editing: this.editing, missing: (path) => !this.library.has(path) });
-    drawCues(this.board, this.standby);
     drawPlaying(this.board, this.engine);
-    drawStandby(this.board, this.standby);
+    drawStop(this.engine);
     if (this.editing) drawLibrary(this.board, this.library, refs.libFilter.value);
     this.paint();
     this.run();
@@ -522,8 +537,7 @@ class App {
 
   paint() {
     if (!this.board) return;
-    paintPads(this.board, this.engine, this.standby);
-    markCues(this.board, this.engine, this.standby);
+    paintPads(this.board, this.engine);
     paintPlaying(this.board, this.engine);
   }
 
@@ -559,8 +573,7 @@ class App {
     await Promise.all([next(), next(), next()]);
     this.measuring = false;
     if (this.board) {
-      drawCues(this.board, this.standby);
-      this.paint();
+      this.redraw();
       this.queueSave();
     }
   }

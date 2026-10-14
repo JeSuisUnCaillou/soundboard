@@ -9,9 +9,9 @@ export const refs = {};
 
 export function bindRefs() {
   const ids = [
-    'grid', 'cues', 'cuesEmpty', 'lib', 'libEmpty', 'libFilter', 'panelCues', 'panelLibrary',
+    'grid', 'book', 'lib', 'libEmpty', 'libFilter',
     'folderName', 'folderCount', 'btnOpen', 'btnOpenBig', 'btnOpenFiles', 'btnEdit', 'btnSetup',
-    'btnGo', 'goLabel', 'goLamp', 'playing', 'master', 'masterValue', 'btnFadeAll', 'btnStopAll', 'btnBook',
+    'btnStop', 'playing', 'master', 'masterValue', 'btnBook',
     'welcome', 'welcomeNote', 'live', 'toast',
   ];
   for (const id of ids) refs[id] = document.getElementById(id);
@@ -25,7 +25,6 @@ const voiceEls = new Map();
 
 export function drawGrid(board, { editing, missing = () => false }) {
   const grid = refs.grid;
-  grid.style.setProperty('--rows', board.rows);
   grid.style.setProperty('--cols', board.cols);
   grid.replaceChildren();
   padEls.clear();
@@ -48,12 +47,13 @@ export function drawGrid(board, { editing, missing = () => false }) {
         span('pad__cue', pad.cue ? `Cue ${pad.cue}` : ''),
         lamp('pad__lamp'),
         span('pad__name', pad.name || pad.file),
+        span('pad__note', pad.note || ''),
         span('pad__time', pad.duration ? fmtTime(pad.duration) : ''),
-        pad.key ? span('pad__key', pad.key) : span('pad__key', ''),
+        span('pad__key', pad.key || ''),
         span('pad__travel', ''),
+        grip(),
       );
       el.setAttribute('aria-label', `${padLabel(pad, row, col)}${missing(pad.file) ? ', file missing' : ''}`);
-      el.draggable = editing;
     } else {
       el.classList.add('pad--empty');
       el.append(span('pad__add', editing ? 'Add sound' : ''));
@@ -71,13 +71,14 @@ function padLabel(pad, row, col) {
   if (pad.cue) bits.push(`Cue ${pad.cue}`);
   bits.push(pad.name || pad.file);
   if (pad.duration) bits.push(fmtTime(pad.duration));
+  if (pad.note) bits.push(pad.note);
   if (pad.key) bits.push(`key ${pad.key}`);
   bits.push(`row ${row + 1} column ${col + 1}`);
   return bits.join(', ');
 }
 
-/** Per-frame refresh: lamps, travel bars, countdowns, standby. */
-export function paintPads(board, engine, standby) {
+/** Per-frame refresh: lamps, travel bars, countdowns. */
+export function paintPads(board, engine) {
   for (const [i, el] of padEls) {
     const pad = board.pads[i];
     if (!pad || !pad.file) continue;
@@ -90,10 +91,9 @@ export function paintPads(board, engine, standby) {
 
     el.classList.toggle('pad--playing', playing);
     el.classList.toggle('pad--paused', paused);
-    el.classList.toggle('pad--standby', i === standby && !playing);
 
     const lampEl = el.querySelector('.pad__lamp');
-    lampEl.className = `lamp pad__lamp ${playing ? 'lamp--go' : i === standby ? 'lamp--standby' : 'lamp--off'}`;
+    lampEl.className = `lamp pad__lamp ${playing ? 'lamp--go' : 'lamp--off'}`;
 
     const len = (pad.trimEnd || (st && st.duration) || pad.duration) - (pad.trimStart || 0);
     const done = st ? Math.max(0, st.position - (pad.trimStart || 0)) : 0;
@@ -113,45 +113,6 @@ export function paintPads(board, engine, standby) {
     } else if (stack) {
       stack.remove();
     }
-  }
-}
-
-// ── cue sheet ─────────────────────────────────────────────────────────────
-
-export function drawCues(board, standby) {
-  const list = filled(board);
-  refs.cues.replaceChildren();
-  refs.cuesEmpty.hidden = list.length > 0;
-
-  for (const { i, pad } of list) {
-    const li = document.createElement('li');
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'cue';
-    btn.dataset.i = String(i);
-    btn.classList.toggle('cue--standby', i === standby);
-    btn.append(
-      lamp(`cue__lamp ${i === standby ? 'lamp--standby' : 'lamp--off'}`),
-      span('cue__num', pad.cue || '—'),
-      span('cue__name', pad.name || pad.file),
-      span('cue__len', pad.duration ? fmtTime(pad.duration) : ''),
-    );
-    if (pad.note) btn.append(span('cue__note', pad.note));
-    btn.style.setProperty('--gel', gelHex(pad.gel));
-    li.append(btn);
-    refs.cues.append(li);
-  }
-}
-
-export function markCues(board, engine, standby) {
-  for (const btn of refs.cues.querySelectorAll('.cue')) {
-    const i = Number(btn.dataset.i);
-    const st = engine.state(i);
-    const playing = !!st && st.state === 'playing';
-    btn.classList.toggle('cue--playing', playing);
-    btn.classList.toggle('cue--standby', i === standby && !playing);
-    const l = btn.querySelector('.cue__lamp');
-    l.className = `lamp cue__lamp ${playing ? 'lamp--go' : i === standby ? 'lamp--standby' : 'lamp--off'}`;
   }
 }
 
@@ -219,13 +180,14 @@ export function paintPlaying(board, engine) {
   }
 }
 
-export function drawStandby(board, standby) {
-  const pad = standby == null ? null : board.pads[standby];
-  refs.btnGo.disabled = !pad;
-  refs.goLamp.className = `lamp ${pad ? 'lamp--standby' : 'lamp--off'}`;
-  refs.goLabel.textContent = pad
-    ? `Standing by: ${pad.cue ? `cue ${pad.cue}, ` : ''}${pad.name || pad.file}`
-    : 'Nothing standing by';
+/** Stop is only a button when there is something to stop. */
+export function drawStop(engine) {
+  const live = engine.active().length;
+  refs.btnStop.disabled = live === 0;
+  refs.btnStop.setAttribute(
+    'aria-label',
+    live ? `Stop ${live === 1 ? 'the sound playing' : `the ${live} sounds playing`}` : 'Stop',
+  );
 }
 
 export function drawFolder(library) {
@@ -254,20 +216,20 @@ export function drawGels(host, selected, onPick) {
   }
 }
 
+/** The folder's sounds are only wanted while the board is being built. */
 export function setPanel(editing) {
   document.body.dataset.editing = editing ? 'on' : '';
-  refs.panelCues.hidden = editing;
-  refs.panelLibrary.hidden = !editing;
+  refs.book.hidden = !editing;
+  refs.btnBook.hidden = !editing;
   refs.btnEdit.setAttribute('aria-pressed', String(editing));
   refs.btnEdit.textContent = editing ? 'Done editing' : 'Edit board';
-  if (!bookOpen()) refs.btnBook.textContent = editing ? 'Sounds' : 'Cue sheet';
 }
 
-/** On a narrow screen the prompt book slides over the pads; this is its switch. */
-export function setBook(open, editing) {
+/** On a narrow screen the sounds list slides over the pads; this is its switch. */
+export function setBook(open) {
   document.body.dataset.book = open ? 'open' : 'closed';
   refs.btnBook.setAttribute('aria-expanded', String(open));
-  refs.btnBook.textContent = open ? 'Hide' : (editing ? 'Sounds' : 'Cue sheet');
+  refs.btnBook.textContent = open ? 'Back to the pads' : 'Sounds';
 }
 
 export function bookOpen() {
@@ -297,6 +259,31 @@ function span(cls, text) {
   el.className = cls;
   el.textContent = text;
   return el;
+}
+
+/** The handle a pad is dragged by, in edit mode. */
+function grip() {
+  const el = document.createElement('span');
+  el.className = 'pad__grip';
+  el.setAttribute('aria-hidden', 'true');
+  el.title = 'Drag to move this pad';
+  return el;
+}
+
+/** The pad as it will look on the board, drawn inside the settings sheet. */
+export function drawPadPreview(host, pad) {
+  host.replaceChildren();
+  const el = document.createElement('div');
+  el.className = 'pad pad--filled pad--preview';
+  el.style.setProperty('--gel', gelHex(pad.gel));
+  el.append(
+    span('pad__cue', pad.cue ? `Cue ${pad.cue}` : ''),
+    span('pad__name', pad.name || pad.file || 'No sound yet'),
+    span('pad__note', pad.note || ''),
+    span('pad__time', pad.duration ? fmtTime(pad.duration) : ''),
+    span('pad__key', pad.key || ''),
+  );
+  host.append(el);
 }
 
 function lamp(cls) {

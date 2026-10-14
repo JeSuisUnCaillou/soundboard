@@ -1,11 +1,13 @@
-// The board: a grid of pads, each pointing at a file inside the open folder.
-// Pads are held in one array, row by row, so index = row * cols + col.
+// The board: a run of pads, each pointing at a file inside the open folder.
+// Only the number of columns is set; the pads wrap into as many rows as they
+// need, and the board scrolls. Index = row * cols + col, so changing the column
+// count re-wraps the same pads in the same order and never loses one.
 
 import { DEFAULT_GEL, gelForIndex } from './gels.js';
 
 export const BOARD_VERSION = 1;
-export const MAX_ROWS = 10;
 export const MAX_COLS = 12;
+const MIN_ROWS = 2;
 
 // Keys sit under the fingers in the same shape as the pads above them.
 const KEY_ROWS = [
@@ -15,12 +17,11 @@ const KEY_ROWS = [
   ['z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', '`', '#'],
 ];
 
-export function newBoard({ id, name, rows = 4, cols = 5 }) {
+export function newBoard({ id, name, cols = 4 }) {
   const board = {
     version: BOARD_VERSION,
     id,
     name: name || id,
-    rows: clampInt(rows, 1, MAX_ROWS),
     cols: clampInt(cols, 1, MAX_COLS),
     master: 0.8,
     defaults: { fadeIn: 0, fadeOut: 1.5 },
@@ -51,42 +52,29 @@ export function newPad(board, i, file) {
   };
 }
 
+/**
+ * Keep a whole spare row at the end of the board, and never fewer than two
+ * rows: there is always somewhere to put the next sound.
+ */
 export function fitPads(board) {
-  const want = board.rows * board.cols;
+  let last = -1;
+  board.pads.forEach((pad, i) => {
+    if (pad && pad.file) last = i;
+  });
+  const want = Math.max(board.cols * MIN_ROWS, (Math.floor(last / board.cols) + 2) * board.cols);
+  board.pads.length = Math.min(board.pads.length, want);
   while (board.pads.length < want) board.pads.push(null);
-  board.pads.length = want;
   return board;
 }
 
-/** Resize keeping each pad at its row and column. Returns how many fell off. */
-export function resize(board, rows, cols) {
-  const r2 = clampInt(rows, 1, MAX_ROWS);
-  const c2 = clampInt(cols, 1, MAX_COLS);
-  const pads = new Array(r2 * c2).fill(null);
-  let dropped = 0;
-  for (let r = 0; r < board.rows; r += 1) {
-    for (let c = 0; c < board.cols; c += 1) {
-      const pad = board.pads[r * board.cols + c];
-      if (!pad) continue;
-      if (r < r2 && c < c2) pads[r * c2 + c] = pad;
-      else dropped += 1;
-    }
-  }
-  board.rows = r2;
-  board.cols = c2;
-  board.pads = pads;
-  return dropped;
+/** Re-wrap the same pads into a different number of columns. */
+export function setCols(board, cols) {
+  board.cols = clampInt(cols, 1, MAX_COLS);
+  return fitPads(board);
 }
 
-/** How many pads would be lost by resizing to this shape. */
-export function wouldDrop(board, rows, cols) {
-  let dropped = 0;
-  for (let r = 0; r < board.rows; r += 1) {
-    for (let c = 0; c < board.cols; c += 1) {
-      if (board.pads[r * board.cols + c] && (r >= rows || c >= cols)) dropped += 1;
-    }
-  }
-  return dropped;
+export function rowCount(board) {
+  return Math.max(1, Math.ceil(board.pads.length / board.cols));
 }
 
 export function filled(board) {
@@ -159,7 +147,6 @@ export function migrate(raw, { id } = {}) {
   const board = newBoard({
     id: id || raw.id || 'board',
     name: raw.name,
-    rows: raw.rows,
     cols: raw.cols,
   });
   board.master = clampNum(raw.master, 0, 1, 0.8);
@@ -167,9 +154,10 @@ export function migrate(raw, { id } = {}) {
     fadeIn: clampNum(raw.defaults && raw.defaults.fadeIn, 0, 120, 0),
     fadeOut: clampNum(raw.defaults && raw.defaults.fadeOut, 0, 120, 1.5),
   };
-  raw.pads.slice(0, board.pads.length).forEach((pad, i) => {
+  raw.pads.forEach((pad, i) => {
     board.pads[i] = pad ? migratePad(board, i, pad) : null;
   });
+  fitPads(board);
   return board;
 }
 

@@ -1,7 +1,7 @@
 // The two sheets: setting up one pad, and setting up the board.
 
-import { drawGels, toast } from './ui.js';
-import { newPad, rowCol, prettyName, wouldDrop, MAX_ROWS, MAX_COLS } from './model.js';
+import { drawGels, drawPadPreview, toast } from './ui.js';
+import { newPad, rowCol, rowCount, prettyName, MAX_COLS } from './model.js';
 
 const el = (id) => document.getElementById(id);
 
@@ -29,10 +29,18 @@ export class PadEditor {
       if (this.state) this.onLevel(this.state.i, Number(e.target.value) / 100);
     });
     el('padFileFilter').addEventListener('input', () => this.fillFiles(el('padFile').value));
-    el('padFile').addEventListener('change', () => this.suggestName());
+    el('padFile').addEventListener('change', () => {
+      this.suggestName();
+      this.preview();
+    });
+    // What the pad will look like, drawn as it is typed.
+    for (const id of ['padCue', 'padName', 'padNote', 'padKey']) {
+      el(id).addEventListener('input', () => this.preview());
+    }
     el('padFile').addEventListener('dblclick', () => this.save());
     el('padKey').addEventListener('input', (e) => {
       e.target.value = e.target.value.trim().slice(0, 1).toLowerCase();
+      this.preview();
     });
     this.dlg.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && e.target.tagName !== 'SELECT' && e.target.type !== 'number') {
@@ -49,7 +57,7 @@ export class PadEditor {
 
     el('padWhere').textContent = `· row ${row + 1}, column ${col + 1}`;
     el('padRow').value = row + 1;
-    el('padRow').max = board.rows;
+    el('padRow').max = rowCount(board);
     el('padCol').value = col + 1;
     el('padCol').max = board.cols;
     el('padFileFilter').value = '';
@@ -71,10 +79,24 @@ export class PadEditor {
     el('padClear').hidden = !board.pads[i];
     drawGels(el('padGels'), pad.gel, (id) => {
       this.state.pad.gel = id;
+      this.preview();
     });
+    this.preview();
 
     this.dlg.showModal();
     (pad.file ? el('padCue') : el('padFileFilter')).focus();
+  }
+
+  preview() {
+    const { pad } = this.state;
+    drawPadPreview(el('padPreview'), {
+      ...pad,
+      file: el('padFile').value || pad.file,
+      cue: el('padCue').value.trim(),
+      name: el('padName').value.trim() || prettyName(el('padFile').value || pad.file || ''),
+      note: el('padNote').value.trim(),
+      key: el('padKey').value.trim(),
+    });
   }
 
   fillFiles(selected) {
@@ -157,7 +179,7 @@ export class PadEditor {
 
     // Moving a pad by typing its row and column: the drag that does the same
     // thing with a mouse has no equivalent under a finger.
-    const row = clamp(num(el('padRow').value, 0), 1, board.rows) - 1;
+    const row = clamp(num(el('padRow').value, 0), 1, rowCount(board)) - 1;
     const col = clamp(num(el('padCol').value, 0), 1, board.cols) - 1;
     const moveTo = row * board.cols + col;
 
@@ -180,9 +202,6 @@ export class SetupSheet {
     el('setupDone').addEventListener('click', close);
     this.dlg.addEventListener('close', () => this.apply());
 
-    for (const id of ['setRows', 'setCols']) {
-      el(id).addEventListener('input', () => this.warn());
-    }
     el('btnExport').addEventListener('click', onExport);
     el('btnImport').addEventListener('click', () => el('importFile').click());
     el('importFile').addEventListener('change', async (e) => {
@@ -198,29 +217,16 @@ export class SetupSheet {
   open(board) {
     this.board = board;
     el('setBoardName').value = board.name;
-    el('setRows').value = board.rows;
     el('setCols').value = board.cols;
     el('setFadeIn').value = board.defaults.fadeIn;
     el('setFadeOut').value = board.defaults.fadeOut;
-    this.warn();
     this.dlg.showModal();
-  }
-
-  warn() {
-    const rows = clamp(num(el('setRows').value, this.board.rows), 1, MAX_ROWS);
-    const cols = clamp(num(el('setCols').value, this.board.cols), 1, MAX_COLS);
-    const lost = wouldDrop(this.board, rows, cols);
-    const node = el('setupShrinkWarning');
-    node.hidden = lost === 0;
-    node.className = 'hint hint--warn';
-    node.textContent = lost ? `${lost} filled pad${lost === 1 ? '' : 's'} would fall off the board.` : '';
   }
 
   apply() {
     if (!this.board) return;
     this.onApply({
       name: el('setBoardName').value.trim() || this.board.name,
-      rows: clamp(num(el('setRows').value, this.board.rows), 1, MAX_ROWS),
       cols: clamp(num(el('setCols').value, this.board.cols), 1, MAX_COLS),
       fadeIn: clamp(num(el('setFadeIn').value, 0), 0, 120),
       fadeOut: clamp(num(el('setFadeOut').value, 0), 0, 120),

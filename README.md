@@ -2,14 +2,14 @@
 
 A sound-cue board for theatre, run from a folder of audio on your own machine.
 Point it at the folder that holds the show's sound, lay the files out on a grid
-of pads, and fire them by click, by key, or by hitting **Go** down the cue sheet.
+of pads, and fire them by click or by key.
 
 No build step, no server, no account, and nothing is uploaded: the files are read
 straight off the disk by the browser and never leave it.
 
-![The board on a laptop: a grid of coloured pads on the left, the cue sheet on the right, the Go bar along the bottom](docs/board.png)
+![The board on a laptop: a grid of coloured pads, Stop and what is playing along the bottom](docs/board.png)
 
-<img src="docs/phone.png" alt="The same board on a phone: two columns of pads, the Go bar and the master fader underneath" width="300">
+<img src="docs/phone.png" alt="The same board on a phone: two columns of pads, Stop and the master fader underneath" width="300">
 
 ## Running it
 
@@ -47,39 +47,40 @@ and on Safari also AIFF.
 ## Using it
 
 **Setting up.** Open a folder and the sounds are laid out in order to start with.
-Switch on **Edit board** and the prompt book becomes the folder's contents: tap a
-sound to put it on the next free pad, drag one onto a particular pad, drag pads
-around to reorder, or click a pad to open its settings. **Board setup** sets the grid size, the board name, and the fades new
-pads start with.
+**Edit board** keeps the board in front of you and opens the folder's contents
+beside it: tap a sound to put it on the next free pad, or drag one onto a
+particular pad. Each pad grows a grip in its corner — drag that to move the pad,
+with a mouse or a finger. Clicking a pad opens its settings, which show the pad
+as it will look while you type. **Board setup** sets how many columns the board
+has; the pads wrap into as many rows as they need and the board scrolls, so
+nothing is ever pushed off it.
 
-**Each pad holds**: the file, a cue number, the name shown on the pad, a note for
-the prompt book, one of eleven lighting-gel colours, its level, fade in and fade
+**Each pad holds**: the file, a cue number, the name shown on the pad, a note
+under it, one of eleven lighting-gel colours, its level, fade in and fade
 out times, a loop switch, start and stop points to the hundredth of a second, a
 keyboard key, and what a second tap does — fade it out, start it over, pause it,
 layer another copy on top, or nothing at all. A pad can also be set to fade
 everything else out when it starts, for a hard scene change.
 
-**Running the show.** The cue sheet on the right lists the pads in playing order.
-One cue stands by with a red light; **Go** fires it and the standby moves on, the
-way a cue light works in the wings. Pads playing show a green light, a countdown,
-and a travel bar along the bottom edge.
+**Running the show.** Tap a pad to fire it. A pad that is playing shows a green
+light, a countdown, and a travel bar along its bottom edge, and the transport
+lists what is running against the clock. The red **Stop** button takes everything
+playing out, each sound on its own fade; `Esc` cuts the lot dead the moment you
+hit it.
 
 | Key | |
 | --- | --- |
-| `Space` | fire the standing-by cue |
-| `↑` `↓` | move the standby through the cue sheet |
-| pad keys | fire that pad (shown in the pad's bottom corner) |
-| `Esc` | fade everything out |
-| `Shift` `Esc` | cut everything dead |
+| pad keys | fire that pad, from the key shown in its corner |
+| `Space` | stop what is playing, fading it out |
+| `Esc` | cut everything dead |
 
-**On a tablet or a phone.** The board is the whole screen: the prompt book slides
-over the pads from the **Cue sheet** button rather than sitting beside them, and
-the grid folds onto fewer columns when the board's own columns would get too
-narrow to hit — a six-wide board stays six wide on a tablet and becomes two wide
-on a phone, in the same order either way. Dragging a sound onto a pad is a mouse
-gesture, so under a finger: tap a sound to put it on the next free pad, and set a
-pad's row and column in its settings to move it. The screen is kept awake while a
-board is open.
+**On a tablet or a phone.** The board is the whole screen, and it keeps the shape
+you gave it: a six-column board is six columns wide everywhere, scrolling rather
+than rearranging itself under the operator. While editing, the folder's sounds
+slide over the pads from the **Sounds** button and get out of the way again as
+soon as one lands. Pads are moved by their grip, which works the same under a
+finger as under a mouse; a pad's row and column can also be typed into its
+settings. The screen is kept awake while a board is open.
 
 **Carrying a board around.** Board setup saves the whole board as a JSON file and
 loads one back. Pads refer to files by their path inside the folder, so a board
