@@ -266,6 +266,7 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   font-variant-numeric: tabular-nums;
 }
+.pad__key:empty { display: none; }
 .pad__key {
   grid-area: key;
   justify-self: end;
@@ -429,6 +430,8 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
 .book__panel { display: flex; flex-direction: column; min-height: 0; flex: 1; padding: var(--gap); gap: 8px; }
 .book__panel[hidden] { display: none; }
 .book__head { display: flex; align-items: center; gap: 10px; }
+.book__head .book__title { flex: 1; min-width: 0; }
+.book__head .btn { flex: none; }
 .book__title { margin: 0; font: 700 15px/1 var(--cond); }
 .book__empty { margin: 0; color: var(--ink-faint); font-size: 13px; }
 
