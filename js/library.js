@@ -51,8 +51,9 @@ export class Library {
     return first ? first.name : '';
   }
 
+  /** The place the operator opened, named for the rail. Empty until there is one. */
   get label() {
-    if (!this.chosen.length) return this.sources.length ? 'Sounds that came with the board' : '';
+    if (!this.chosen.length) return '';
     const extra = this.chosen.length - 1;
     return extra ? `${this.rootName} + ${extra} more` : this.rootName;
   }
@@ -178,8 +179,13 @@ export class Library {
    * The copies the board keeps for itself. They stand in for the real files
    * until — or unless — the browser hands those back.
    */
-  addCached(records, name) {
+  addCached(records) {
     if (!records.length) return [];
+    // The folder is in every path, so the copies can say where they came from
+    // without being told.
+    const roots = new Set(records.map((r) => r.path.split('/')[0]).filter((r, i, all) => all.length && r));
+    const nested = records.filter((r) => r.path.includes('/'));
+    const name = nested.length && roots.size === 1 ? [...roots][0] : 'Kept sounds';
     const src = this._source({ kind: 'cache', name });
     for (const rec of records) {
       if (this.entries.has(rec.path)) continue;

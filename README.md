@@ -97,7 +97,7 @@ press and release without moving and it just plays. Under a finger, rest on a pa
 for a moment and it comes away with you — a touch that moves straight away is
 scrolling the board, not dragging. Dropping a pad on the folder beside the board,
 or on the bar beneath it, takes it off the board and leaves the sound where it
-is. A pad's row and column can also be typed into its settings. There is no limit on how many sounds a
+is. There is no limit on how many sounds a
 board holds. **Empty the board** clears the pads without touching the sounds, and
 asks twice.
 

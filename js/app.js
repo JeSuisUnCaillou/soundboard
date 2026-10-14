@@ -47,7 +47,7 @@ class App {
     bindRefs();
     this.padEditor = new PadEditor({
       library: this.library,
-      onSave: (i, pad, moveTo) => this.setPad(i, pad, moveTo),
+      onSave: (i, pad) => this.setPad(i, pad),
       onClear: (i) => this.setPad(i, null),
       onLevel: (i, level) => this.engine.setPadLevel(i, level),
       onHear: (path) => this.preview(path),
@@ -118,8 +118,15 @@ class App {
       if (this.dragged) return;           // that click is the tail of a drag
       const i = Number(el.dataset.i);
       const pad = this.board.pads[i];
+      // An empty pad has nothing to set up: it wants a sound, which is in the
+      // folder.
+      if (this.editing && (!pad || !pad.file)) {
+        if (NARROW.matches) setBook(true);
+        else toast('Tap a sound in the folder, or its +, to put it on a pad.');
+        return;
+      }
       // While editing: the pencil sets the pad up, the pad itself is heard.
-      if (this.editing && (e.target.closest('.pad__pencil') || !pad || !pad.file)) {
+      if (this.editing && e.target.closest('.pad__pencil')) {
         this.padEditor.open(this.board, i);
         return;
       }
@@ -434,8 +441,7 @@ class App {
       const id = slug(this.library.rootName);
       const saved = await store.loadBoard(id);
       // A board built today starts as wide as the last one the operator set.
-      this.useBoard((saved && migrate(saved, { id }))
-        || newBoard({ id, name: this.library.rootName, cols: await store.getMeta('cols') }));
+      this.useBoard((saved && migrate(saved, { id })) || newBoard({ id, cols: await store.getMeta('cols') }));
       await store.setMeta('last', this.board.id);
     }
 
@@ -519,7 +525,7 @@ class App {
     if (board) {
       this.useBoard(board);
       const kept = await store.soundsFor(lastId);
-      if (kept.length) this.library.addCached(kept, board.name);
+      if (kept.length) this.library.addCached(kept);
       await this.absorb([]);
     }
 
@@ -532,7 +538,7 @@ class App {
       if (silent) {
         this.openPicker();
         if (board) {
-          refs.pickerBlurb.textContent = `“${board.name}” is here, with its pads. Point it at the sounds again to play them.`;
+          refs.pickerBlurb.textContent = 'The board is here, with its pads. Point it at the sounds again to play them.';
         }
       }
       return;
@@ -565,8 +571,7 @@ class App {
 
   /** A board to edit when there is none: empty, and saved from the start. */
   blankBoard() {
-    const name = this.library.rootName || 'Board';
-    this.useBoard(newBoard({ id: slug(name), name }));
+    this.useBoard(newBoard({ id: slug(this.library.rootName || 'board') }));
     store.setMeta('last', this.board.id).catch(() => {});
     this.saveNow();
   }
@@ -577,11 +582,7 @@ class App {
    * question.
    */
   async firstBoard() {
-    this.useBoard(newBoard({
-      id: 'default-board',
-      name: 'Default board',
-      cols: await store.getMeta('cols'),
-    }));
+    this.useBoard(newBoard({ id: 'default-board', cols: await store.getMeta('cols') }));
     await store.setMeta('last', this.board.id);
     this.place(bundledPaths());
     this.redraw();
@@ -661,17 +662,10 @@ class App {
     }
   }
 
-  setPad(i, pad, moveTo = null) {
+  setPad(i, pad) {
     this.board.pads[i] = pad;
     fitPads(this.board);
     this.engine.stop(i, { fade: 0 });
-    if (moveTo != null && moveTo !== i && moveTo >= 0 && moveTo < this.board.pads.length) {
-      move(this.board, i, moveTo);
-      this.engine.reset();
-      this.primeAll();
-      const { row, col } = rowCol(this.board, moveTo);
-      toast(`Moved to row ${row + 1}, column ${col + 1}.`);
-    }
     this.redraw();
     this.queueSave();
     if (pad) {
@@ -696,9 +690,8 @@ class App {
     toast(`${padTitle(this.board.pads[free])} is on row ${row + 1}, column ${col + 1}.`);
   }
 
-  applySetup({ name, cols, fadeIn, fadeOut }) {
+  applySetup({ cols, fadeIn, fadeOut }) {
     if (!this.board) return;
-    this.board.name = name;
     this.board.defaults = { fadeIn, fadeOut };
     // Only the column count is set: the pads keep their order and re-wrap, so
     // nothing comes off the board and nothing needs reloading.
@@ -715,7 +708,7 @@ class App {
     const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${slug(this.board.name)}.soundboard.json`;
+    a.download = `${slug(this.board.id)}.soundboard.json`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     toast('Board saved to your downloads.');
@@ -726,7 +719,6 @@ class App {
       const raw = JSON.parse(await file.text());
       const board = migrate(raw, { id: this.board.id });
       if (!board) throw new Error('that file is not a board');
-      board.name = raw.name || this.board.name;
       this.board = board;
       this.engine.reset();
       refs.master.value = Math.round(board.master * 100);

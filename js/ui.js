@@ -258,8 +258,11 @@ export function drawStop(engine) {
 }
 
 export function drawFolder(library) {
-  refs.folderName.textContent = library.isOpen ? library.label : 'No sounds yet';
-  refs.folderCount.textContent = library.isOpen
+  // The rail says where the sounds came from, and only when that is somewhere
+  // the operator chose: the ones that ship with the app need no announcing.
+  const own = library.label;
+  refs.folderName.textContent = own;
+  refs.folderCount.textContent = own
     ? `${library.entries.size} sound${library.entries.size === 1 ? '' : 's'}`
     : '';
 }

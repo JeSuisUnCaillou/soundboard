@@ -1,7 +1,7 @@
 // The two sheets: setting up one pad, and setting up the board.
 
 import { drawGels, toast } from './ui.js';
-import { newPad, rowCol, rowCount, MAX_COLS } from './model.js';
+import { newPad, MAX_COLS } from './model.js';
 
 const el = (id) => document.getElementById(id);
 
@@ -44,14 +44,9 @@ export class PadEditor {
   }
 
   open(board, i) {
-    const { row, col } = rowCol(board, i);
     const pad = board.pads[i] ? { ...board.pads[i] } : newPad(board, i, '');
     this.state = { board, i, pad };
 
-    el('padRow').value = row + 1;
-    el('padRow').max = rowCount(board);
-    el('padCol').value = col + 1;
-    el('padCol').max = board.cols;
     const missing = !!pad.file && !this.library.has(pad.file);
     el('padFileName').textContent = pad.file ? pad.file.split('/').pop() : 'No sound on this pad yet';
     el('padFileName').title = pad.file || '';
@@ -115,14 +110,8 @@ export class PadEditor {
     }
 
 
-    // Moving a pad by typing its row and column: the drag that does the same
-    // thing with a mouse has no equivalent under a finger.
-    const row = clamp(num(el('padRow').value, 0), 1, rowCount(board)) - 1;
-    const col = clamp(num(el('padCol').value, 0), 1, board.cols) - 1;
-    const moveTo = row * board.cols + col;
-
     this.dlg.close();
-    this.onSave(i, next, moveTo === i ? null : moveTo);
+    this.onSave(i, next);
   }
 }
 
@@ -154,7 +143,6 @@ export class SetupSheet {
 
   open(board) {
     this.board = board;
-    el('setBoardName').value = board.name;
     el('setCols').value = board.cols;
     el('setFadeIn').value = board.defaults.fadeIn;
     el('setFadeOut').value = board.defaults.fadeOut;
@@ -164,7 +152,6 @@ export class SetupSheet {
   apply() {
     if (!this.board) return;
     this.onApply({
-      name: el('setBoardName').value.trim() || this.board.name,
       cols: clamp(num(el('setCols').value, this.board.cols), 1, MAX_COLS),
       fadeIn: clamp(num(el('setFadeIn').value, 0), 0, 120),
       fadeOut: clamp(num(el('setFadeOut').value, 0), 0, 120),

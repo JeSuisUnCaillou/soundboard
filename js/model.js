@@ -22,11 +22,10 @@ const KEY_ROWS = [
   ['z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', '`', '#'],
 ];
 
-export function newBoard({ id, name, cols = 4 }) {
+export function newBoard({ id, cols = 4 }) {
   const board = {
     version: BOARD_VERSION,
     id,
-    name: name || id,
     cols: clampInt(cols, 1, MAX_COLS),
     master: 0.8,
     // Nothing starts or stops on a hard edge unless a pad asks for it.
@@ -77,10 +76,6 @@ export function fitPads(board) {
 export function setCols(board, cols) {
   board.cols = clampInt(cols, 1, MAX_COLS);
   return fitPads(board);
-}
-
-export function rowCount(board) {
-  return Math.max(1, Math.ceil(board.pads.length / board.cols));
 }
 
 export function filled(board) {
@@ -147,7 +142,6 @@ export function migrate(raw, { id } = {}) {
   if (!raw || typeof raw !== 'object' || !Array.isArray(raw.pads)) return null;
   const board = newBoard({
     id: id || raw.id || 'board',
-    name: raw.name,
     cols: raw.cols,
   });
   board.master = clampNum(raw.master, 0, 1, 0.8);

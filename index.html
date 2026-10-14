@@ -119,18 +119,9 @@
         </label>
       </div>
 
-      <div class="row row--split">
-        <label class="row"><span class="row__label">Row</span>
-          <input type="number" id="padRow" class="field field--tiny" min="1" step="1">
-        </label>
-        <label class="row"><span class="row__label">Column</span>
-          <input type="number" id="padCol" class="field field--tiny" min="1" step="1">
-        </label>
-        <label class="row"><span class="row__label">Key</span>
-          <input type="text" id="padKey" class="field field--tiny" maxlength="1" placeholder="q">
-        </label>
-        <span class="row row--grow"><span class="hint">Change the row or column to move the pad.</span></span>
-      </div>
+      <label class="row"><span class="row__label">Key</span>
+        <input type="text" id="padKey" class="field field--tiny" maxlength="1" placeholder="q">
+      </label>
 
       <fieldset class="row row--gels">
         <legend class="row__label">Gel</legend>
@@ -192,10 +183,6 @@
     </header>
 
     <div class="sheet__body">
-      <label class="row"><span class="row__label">Board name</span>
-        <input type="text" id="setBoardName" class="field" maxlength="48" placeholder="Act One">
-      </label>
-
       <label class="row"><span class="row__label">Columns</span>
         <input type="number" id="setCols" class="field field--num" min="1" max="12" step="1" value="4">
       </label>
