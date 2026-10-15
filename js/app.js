@@ -298,6 +298,9 @@ class App {
 
       drag = { from, el, ghost, dx: e.clientX - box.left, dy: e.clientY - box.top, target: null };
       el.classList.add('pad--dragging');
+      // Show where it can be dropped off the board before it gets there.
+      refs.book.classList.add('drop--ready');
+      refs.browse.classList.add('drop--ready');
       this.dragged = true;                  // the click that follows is not a tap
       try {
         handle.setPointerCapture(e.pointerId);
@@ -368,6 +371,8 @@ class App {
       const { from, target } = drag;
       drag.ghost.remove();
       drag.el.classList.remove('pad--dragging');
+      refs.book.classList.remove('drop--ready');
+      refs.browse.classList.remove('drop--ready');
       target?.classList.remove('pad--drop', 'drop--off');
       drag = null;
       if (!drop || !target) return;

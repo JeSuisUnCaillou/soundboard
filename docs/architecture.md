@@ -178,8 +178,9 @@ the tree previews it, the pencil (or shift-click) opens the pad
 sheet, a click on an empty pad makes it the *waiting pad* for the next **+**.
 Pads move by pointer events (`wirePadDragging`): a mouse drags after 6 px; a
 finger after resting 400 ms. Dropping on another pad swaps them (`model.move`);
-dropping on `#book` or `#browse` takes the pad off. Sounds dragged from the tree
-use HTML5 drag and drop with the `application/x-soundboard-path` type.
+dropping on `#book` or `#browse` takes the pad off. Both carry `.drop--ready`
+for as long as a pad is in hand, and the one under it `.drop--off`. Sounds
+dragged from the tree use HTML5 drag and drop with the `application/x-soundboard-path` type.
 
 Everything in edit mode is a button the keyboard reaches. A tree row holds
 two: `.lib__play` (hear it) and `.lib__add` (the **+**). The pencil is a

@@ -363,3 +363,52 @@ test('a board saved to a file loads back as it was, with missing sounds struck t
   await expect(page.locator('#setCols')).toHaveValue('4');
   await expect(page.locator('#setRows')).toHaveValue('2');
 });
+
+test('picking a pad up shows where it can be dropped off the board, before it gets there', async ({ page, hasTouch }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  // The folder beside the board on a wide screen, the bar beneath it on a narrow one.
+  const zone = page.locator(hasTouch ? '#browse' : '#book');
+  const sexy = pad(page, 'Sexy');
+  const box = await sexy.boundingBox();
+  const at = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  const off = await page.locator(hasTouch ? '#btnBrowse' : '#lib').boundingBox();
+  const there = { x: off.x + off.width / 2, y: off.y + off.height / 2 };
+
+  // A mouse moves the pad a little; a finger rests on it.
+  let hand;
+  if (hasTouch) {
+    const cdp = await page.context().newCDPSession(page);
+    const touch = (type, p) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: p ? [p] : [] });
+    hand = { move: (p) => touch('touchMove', p), up: () => touch('touchEnd') };
+    await touch('touchStart', at);
+  } else {
+    hand = { move: (p) => page.mouse.move(p.x, p.y), up: () => page.mouse.up() };
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await hand.move({ x: at.x + 10, y: at.y });
+  }
+  await expect(sexy).toHaveClass(/pad--dragging/);
+  await expect(zone).toHaveClass(/drop--ready/);
+  await expect(zone).not.toHaveClass(/drop--off/);
+  if (hasTouch) {
+    await expect.poll(() => zone.evaluate((el) => getComputedStyle(el, '::before').content))
+      .toBe('"Drop to take it off the board"');
+  } else {
+    await expect.poll(() => zone.locator('.book__title').evaluate((el) => getComputedStyle(el, '::after').content))
+      .toBe('" — drop to take it off the board"');
+  }
+
+  // Over it, it lights up; back over the board, it is only marked again.
+  await hand.move(there);
+  await expect(zone).toHaveClass(/drop--off/);
+  await hand.move(at);
+  await expect(zone).not.toHaveClass(/drop--off/);
+  await expect(zone).toHaveClass(/drop--ready/);
+
+  // Let go on the board, and the pad stays and the zone goes back to normal.
+  await hand.up();
+  await expect(sexy).not.toHaveClass(/pad--dragging/);
+  await expect(zone).not.toHaveClass(/drop--ready/);
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(3);
+});

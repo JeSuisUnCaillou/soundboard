@@ -98,8 +98,8 @@ press and release without moving and it just plays. Under a finger, rest on a pa
 for a moment and it comes away with you — a touch that moves straight away is
 scrolling the board, not dragging. Dropping a pad on the folder beside the board,
 or on the bar beneath it, takes it off the board and leaves the sound where it
-is. There is no limit on how many sounds a
-board holds. **Empty the board** clears the pads without touching the sounds, and
+is; that place is marked in red as soon as a pad is picked up. There is no
+limit on how many sounds a board holds. **Empty the board** clears the pads without touching the sounds, and
 asks twice.
 
 **Board settings** sets how many rows and columns the board has — three columns by

@@ -369,27 +369,34 @@ body[data-editing="on"] .pad__pencil:hover { color: var(--ink); }
 .pad--ghost-off { opacity: 0.55; filter: grayscale(0.6); }
 
 /* Somewhere a pad can be dropped to come off the board: the folder beside it
-   on a wide screen, the bar beneath it on a narrow one. */
-.drop--off {
+   on a wide screen, the bar beneath it on a narrow one. It is marked from the
+   moment a pad is picked up, and lights up once the pad is over it. */
+.drop--ready {
   outline: 2px dashed var(--alert);
   outline-offset: -6px;
+}
+.drop--off {
+  outline-style: solid;
   background: color-mix(in oklab, var(--alert) 12%, var(--console));
 }
-.drop--off .book__title::after {
+.drop--ready .book__title::after {
   content: " — drop to take it off the board";
   color: var(--alert);
   font-weight: 400;
 }
-.browse.drop--off::before {
+.browse.drop--ready::before {
   content: "Drop to take it off the board";
   position: absolute;
   inset: 0;
   z-index: 1;
   display: grid;
   place-items: center;
-  background: color-mix(in oklab, var(--alert) 16%, var(--console));
+  background: color-mix(in oklab, var(--alert) 8%, var(--console));
   color: var(--alert);
   font: 600 16px/1 var(--cond);
+}
+.browse.drop--off::before {
+  background: color-mix(in oklab, var(--alert) 22%, var(--console));
 }
 
 /* cue lights, the one piece of language borrowed wholesale from the booth.
