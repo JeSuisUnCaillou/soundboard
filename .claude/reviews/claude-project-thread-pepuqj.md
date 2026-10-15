@@ -40,3 +40,12 @@ Head reviewed: 65336b58f7b10243cea3e15d27819c8bd19f4e6f
 - bugs, architect: no finding.
 
 Reviewed head: 65336b58f7b10243cea3e15d27819c8bd19f4e6f
+
+# Pass 6
+
+Head reviewed: dc8a49f (after merging main a third time), then 8c27bf64f0574803cdab6c01a22b034e01cd6898
+
+- bugs: "a pad fading towards its stop point still answers a tap by stopping" set up Crickets, which now loops, so no fade towards the stop point ran. Fixed in 8c27bf6 with `padLoop: false`; the suite passes.
+- architect: no finding.
+
+Reviewed head: 8c27bf64f0574803cdab6c01a22b034e01cd6898
