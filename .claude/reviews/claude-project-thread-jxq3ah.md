@@ -1,6 +1,6 @@
 # Pass 1
 
-Head reviewed: 74b2fd0 (the change), whole branch against main.
+Head reviewed: ecbeded (the change), whole branch against main.
 
 - docs/architecture.md:43 still showed rows: 3 in the board format (both reviewers): fixed in e2f43e1. Text, not blocking.
 - docs/status.md says 25 tests, bugs reviewer counted 23: rejected, the suite runs 50 tests across two projects, 25 each (`npm run test:e2e`).
