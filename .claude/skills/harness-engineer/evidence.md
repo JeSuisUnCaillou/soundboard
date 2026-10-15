@@ -14,6 +14,7 @@ growing by one rule per pass.
 - Project threads
 - PRs, issues and CI
 - Team memory
+- Project instructions
 - This session
 
 ## The window
@@ -141,10 +142,18 @@ Team memory is at the path the session's system prompt gives. A worker's
 prompt does not give it, so the session that starts a worker passes the path
 along; with no path given, there is no memory to read, and the audit says so.
 
-Each file in the team memory folder is a candidate for bringing home, sorted
-with `where-each-fact-goes.md`. Before that, note
+Every file in the team memory folder, and every line of `MEMORY.md`, is
+brought home, sorted with `where-each-fact-goes.md`. Before that, note
 what is wrong: a memory that cites a path that is gone, a rule that `CLAUDE.md`
 now carries, a "as of" date more than a month old on a fact that moves.
+
+## Project instructions
+
+Their text is in your own system prompt, in the project-instructions block,
+when the session runs in the Claude project; a worker's prompt does not have
+it, so pass it along. Compare it line by line with `CLAUDE.md` and the skills:
+each line the repository does not say is brought home like a memory. Outside
+a project there is no such block, and the audit says so.
 
 ## This session
 
