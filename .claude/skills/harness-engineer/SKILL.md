@@ -45,7 +45,7 @@ costs on every turn of every session.
 | [`CLAUDE.md`](../../../CLAUDE.md): conventions for all work on the repository | every session, in full |
 | [`.claude/skills/*/SKILL.md`](../): one way of doing one thing | on invocation; siblings when a step names them |
 | `.claude/settings.json`: hooks and permissions the harness runs itself | every session on a clone |
-| the project instructions, set in the Claude project's settings | every session started from the project |
+| the project instructions, in the Claude project's settings; their text is in a project session's own system prompt | every session started from the project |
 | team memory, `MEMORY.md` as its index, at the path the system prompt gives | the index every session, a file when relevant |
 | [`e2e/`](../../../e2e/) and [`.github/workflows/`](../../../.github/workflows/): checks after the fact | every pull request and deploy |
 
@@ -66,9 +66,10 @@ remedy.
 ## Input
 
 **With nothing**: the retrospective pass, over the window since the last audit
-(the newest `.claude/audits/*-harness*.md` on `main`), else seven days, else
-what you are given. A pass cut before its PR is not resumed: its branch is
-dropped and yours starts again from the evidence.
+(the newest `.claude/audits/*-harness*.md` on `origin/main`), else seven days,
+else what you are given. A pass cut before its PR is not resumed: its branch is
+dropped and yours starts again from the evidence. Like any work here, the pass
+first finds or opens its issue, "Harness pass YYYY-MM-DD".
 
 **With a request**, a capability the harness lacks: the request is the evidence
 of the need. Look for how the thing is done today and what that costs, what the
@@ -97,15 +98,16 @@ holds for what you would be tempted to add next to it.
    [`where-each-fact-goes.md`](where-each-fact-goes.md). **A new rule needs two
    occurrences**, or one that cost a PR.
 5. **Write the audit** in `.claude/audits/YYYY-MM-DD-harness.md`
-   (`-harness-<topic>.md` for a request) **as the branch's first commit**, in
-   the format of [`audit-template.md`](audit-template.md). Every applied finding
-   carries its **expected impact**: measure, dated baseline, threshold, check
-   date, fallback.
+   (`-harness-<topic>.md` for a request) **as the pass's first commit**, in
+   the format of [`audit-template.md`](audit-template.md); a *measure* finding
+   lives in that commit. Every applied finding carries its **expected impact**:
+   measure, dated baseline, threshold, check date, fallback.
 6. **Apply** on the session's branch, one commit per finding, following
    [`how-we-write.md`](how-we-write.md); to split a file,
    [`splitting-a-file.md`](splitting-a-file.md). Applied without asking:
-   entropy, memories brought home, moves, cuts. Proposed, not written: removing
-   a rule, `.claude/settings.json`, a SessionStart hook, the setup script, the
+   entropy, moves, cuts, memories brought home into a skill (into `CLAUDE.md`
+   only if the commit takes as much out). Proposed, not written: removing a
+   rule, `.claude/settings.json`, a SessionStart hook, the setup script, the
    project instructions.
 7. **Check.** Replay the failure: at the turn where the defect happened, would
    the changed file have been loaded, with the rule high enough to be read? Run
@@ -118,7 +120,8 @@ holds for what you would be tempted to add next to it.
    merge waits for the user.
 9. **File what can only be done later** as `harness` issues: **one
    `Check: <topic>` issue per applied finding**, with the query that gives the
-   measure, the baseline, the threshold, the check date and the fallback; a
+   measure, the baseline, the threshold, the check date (a week after the pass
+   unless the measure needs more sessions) and the fallback; a
    memory to empty after the merge; a check this window could not make. If the
    user wants a check to run by itself, offer a one-shot scheduled task on its
    date and create it only on their word.
