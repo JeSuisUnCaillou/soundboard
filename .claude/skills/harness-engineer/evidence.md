@@ -94,6 +94,10 @@ in sequence), `list_thread_sessions` for which session drove which thread.
 Corrections and repeated instructions show up here first. Outside a project
 these tools are absent, and the sessions are the only source.
 
+**A thread's session is not in `list_sessions`.** Take its id from
+`list_thread_sessions` (`cse_…`): `list_events` reads it, and `get_session`
+gives its cost. Count these sessions in the window with the others.
+
 ## PRs, issues and CI
 
 With the GitHub MCP tools, on `JeSuisUnCaillou/soundboard`:
