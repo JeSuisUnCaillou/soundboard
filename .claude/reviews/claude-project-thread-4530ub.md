@@ -29,4 +29,11 @@ Head reviewed: 54d4af2 (the whole phone footer as the drop zone; a finger drags 
 - bugs: no findings.
 - architect: no findings.
 
-Reviewed head: 54d4af21e80a5de2cca3bc023aeb741d08939222
+# Pass 5
+
+Head reviewed: c0484f9 (main merged in, with its toast fix)
+
+- bugs: no findings.
+- architect: no findings.
+
+Reviewed head: c0484f9c3508ab1f4a5a8db246b7b48047073fb8
