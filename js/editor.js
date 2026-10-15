@@ -35,8 +35,11 @@ export class PadEditor {
     el('padKey').addEventListener('input', (e) => {
       e.target.value = e.target.value.trim().slice(0, 1).toLowerCase();
     });
+    // Enter in the name or the key saves, as a form does. Anywhere else it
+    // belongs to what has the focus: Cancel cancels, a gel is picked, a
+    // number field keeps it.
     this.dlg.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && e.target.type !== 'number') {
+      if (e.key === 'Enter' && e.target.matches('input[type=text]')) {
         e.preventDefault();
         this.save();
       }
@@ -121,13 +124,13 @@ export class SetupSheet {
     this.onApply = onApply;
     this.board = null;
 
+    // Done and the cross keep what was set; Escape leaves the board as it was.
     const close = () => {
       this.apply();
       this.dlg.close();
     };
     el('setupClose').addEventListener('click', close);
     el('setupDone').addEventListener('click', close);
-    this.dlg.addEventListener('close', () => this.apply());
 
     el('btnExport').addEventListener('click', onExport);
     el('btnImport').addEventListener('click', () => el('importFile').click());

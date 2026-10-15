@@ -60,7 +60,7 @@ A pad:
 | `trimStart`, `trimEnd` | 0, null | Start and stop points in seconds; `trimEnd` must be after `trimStart` or it is `null`. |
 | `tap` | `fadeout` | *Second tap*: `fadeout`, `restart`, `pause`, `overlay`, `ignore`. |
 | `solo` | false | Fade everything else out when this starts. |
-| `key` | from position | One lowercase character. Kept unique by `PadEditor.save`; `migrate` does not dedupe keys in an imported board. |
+| `key` | from position | One lowercase character (`migrate` lowercases an imported one). Kept unique by `PadEditor.save`; `migrate` does not dedupe keys in an imported board. |
 | `duration` | 0 | Measured length in seconds; 0 until measured. |
 
 **Changing the format.** Add the field in `newPad` (its default) and in

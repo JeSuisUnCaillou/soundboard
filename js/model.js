@@ -199,7 +199,7 @@ function migratePad(board, i, raw, version) {
   pad.trimEnd = Number.isFinite(raw.trimEnd) && raw.trimEnd > pad.trimStart ? raw.trimEnd : null;
   pad.tap = ['fadeout', 'restart', 'pause', 'overlay', 'ignore'].includes(raw.tap) ? raw.tap : 'fadeout';
   pad.solo = !!raw.solo;
-  pad.key = typeof raw.key === 'string' ? raw.key.slice(0, 1) : '';
+  pad.key = typeof raw.key === 'string' ? raw.key.slice(0, 1).toLowerCase() : '';
   pad.duration = clampNum(raw.duration, 0, 1e5, 0);
   return pad;
 }
