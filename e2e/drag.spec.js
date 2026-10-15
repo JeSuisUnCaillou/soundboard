@@ -45,6 +45,26 @@ test.describe('with a mouse', () => {
     await expectLayout(page, ['', 'Crickets ambiance', 'Sexy', '', 'Gunshot']);
   });
 
+  test('a pad moved is kept even if the page then goes without a word', async ({ page }) => {
+    // No beforeunload, pagehide or visibilitychange to save from, as when a
+    // page is torn down at once.
+    await page.addInitScript(() => {
+      for (const target of [window, document]) {
+        const add = target.addEventListener;
+        target.addEventListener = function (type, ...rest) {
+          if (['beforeunload', 'pagehide', 'visibilitychange'].includes(type)) return undefined;
+          return add.call(this, type, ...rest);
+        };
+      }
+    });
+    await openBoard(page);
+    await page.locator('#btnEdit').click();
+    await drag(page, pad(page, 'Gunshot'), slot(page, 4));
+    await expectLayout(page, ['', 'Crickets ambiance', 'Sexy', '', 'Gunshot']);
+    await page.reload();
+    await expectLayout(page, ['', 'Crickets ambiance', 'Sexy', '', 'Gunshot']);
+  });
+
   test('a pad dragged onto another swaps places with it', async ({ page }) => {
     await openBoard(page);
     await page.locator('#btnEdit').click();
