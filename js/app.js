@@ -626,44 +626,78 @@ class App {
    * Keep a copy of every sound that has been loaded, so the next launch comes
    * back with the whole folder — pads playing and the tree intact — before the
    * browser has granted anything. Pads are copied first, because those are the
-   * ones a show needs; copies of sounds that have gone are dropped.
+   * ones a show needs; copies of sounds that have gone are dropped. Asked again
+   * while copying, it goes round once more when it is done, so sounds that
+   * arrived meanwhile are kept too.
    */
   async keepSounds() {
-    if (!this.board || this.keeping || this.outOfRoom) return;
+    if (!this.board || this.outOfRoom) return;
+    if (this.keeping) {
+      this.keepAgain = true;
+      return;
+    }
     this.keeping = true;
-    const id = this.board.id;
     try {
-      // Ask the browser not to throw the show away when it wants space back.
-      if (!this.askedToPersist && navigator.storage && navigator.storage.persist) {
-        this.askedToPersist = true;
-        navigator.storage.persist().catch(() => {});
-      }
-      const onPads = filled(this.board).map(({ pad }) => pad.file);
-      const wanted = [...new Set([...onPads, ...this.library.list.map((e) => e.path)])];
-      const inLibrary = new Set(wanted);
-      const have = new Map((await store.soundsFor(id)).map((rec) => [rec.path, rec]));
+      do {
+        this.keepAgain = false;
+        await this.keepPass();
+      } while (this.keepAgain && this.board && !this.outOfRoom);
+    } finally {
+      this.keeping = false;
+    }
+  }
 
+  async keepPass() {
+    const id = this.board.id;
+    // Ask the browser not to throw the show away when it wants space back.
+    if (!this.askedToPersist && navigator.storage && navigator.storage.persist) {
+      this.askedToPersist = true;
+      navigator.storage.persist().catch(() => {});
+    }
+    const onPads = filled(this.board).map(({ pad }) => pad.file);
+    const wanted = [...new Set([...onPads, ...this.library.list.map((e) => e.path)])];
+    const inLibrary = new Set(wanted);
+    let have;
+    try {
+      have = new Map((await store.soundsFor(id)).map((rec) => [rec.path, rec]));
       for (const path of have.keys()) {
         if (!inLibrary.has(path)) await store.deleteSound(id, path);
       }
+    } catch {
+      return; // storage is not answering; the next change tries again
+    }
 
-      let copied = 0;
-      for (const path of wanted) {
-        if (!this.library.has(path) || this.library.isCached(path) || this.library.isBundled(path)) continue;
+    let copied = 0;
+    const missed = [];
+    for (const path of wanted) {
+      if (!this.library.has(path) || this.library.isCached(path) || this.library.isBundled(path)) continue;
+      // One sound that cannot be read (changed on disk, say) costs that sound
+      // its copy, not every sound after it.
+      try {
         const file = await this.library.file(path);
         const rec = have.get(path);
         if (rec && rec.size === file.size && rec.lastModified === (file.lastModified || 0)) continue;
         await store.putSound(id, path, file);
         copied += 1;
+      } catch (err) {
+        if (err && err.name === 'QuotaExceededError') {
+          this.outOfRoom = true;
+          toast('This browser is out of room. What is already kept will come back; the rest needs the folder again.');
+          return;
+        }
+        missed.push(path);
       }
-      if (copied > 20) toast(`${copied} sounds kept in this browser, ready for next time.`);
-    } catch (err) {
-      if (err && err.name === 'QuotaExceededError') {
-        this.outOfRoom = true;
-        toast('This browser is out of room. What is already kept will come back; the rest needs the folder again.');
-      }
-    } finally {
-      this.keeping = false;
+    }
+    // Said once per sound, not on every edit that tries it again.
+    this.unkept ||= new Set();
+    const fresh = missed.filter((path) => !this.unkept.has(path));
+    missed.forEach((path) => this.unkept.add(path));
+    if (fresh.length) {
+      toast(fresh.length === 1
+        ? `“${fresh[0].split('/').pop()}” could not be kept in this browser. Next time it needs the folder again.`
+        : `${fresh.length} sounds could not be kept in this browser. Next time they need the folder again.`);
+    } else if (copied > 20) {
+      toast(`${copied} sounds kept in this browser, ready for next time.`);
     }
   }
 

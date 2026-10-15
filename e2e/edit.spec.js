@@ -195,3 +195,40 @@ test('fewer columns and more rows at once keep every pad', async ({ page }) => {
   await expect(page.locator('#grid .pad--filled')).toHaveCount(4);
   await expect(page.locator('#toast')).not.toContainText('came off the board');
 });
+
+test('a sound that cannot be kept does not stop the others being kept', async ({ page }) => {
+  await page.addInitScript(() => {
+    delete window.showOpenFilePicker;
+    delete window.showDirectoryPicker;
+    // This browser cannot read one of the files when it comes to copy it, as
+    // when the file changed on disk after it was opened.
+    const put = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (value, ...rest) {
+      if (value && String(value.path).includes('broken')) {
+        throw new DOMException('The file could not be read.', 'NotReadableError');
+      }
+      return put.call(this, value, ...rest);
+    };
+  });
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+  await page.locator('#btnAdd').click();
+  const chooser = page.waitForEvent('filechooser');
+  await page.locator('#btnAddFiles').click();
+  await (await chooser).setFiles([
+    { name: 'broken.wav', mimeType: 'audio/wav', buffer: silentWav() },
+    { name: 'door slam.wav', mimeType: 'audio/wav', buffer: silentWav() },
+  ]);
+  await expect(page.locator('#toast')).toHaveText(
+    '“broken.wav” could not be kept in this browser. Next time it needs the folder again.',
+  );
+
+  await page.reload();
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(BUNDLED_TITLES.length);
+  // The board comes back where the operator was: editing, with the sounds open.
+  await expect(page.locator('#btnEdit')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#book')).toBeVisible();
+  await expect(page.locator('#lib .lib__item', { hasText: 'door slam' })).toBeVisible();
+  await expect(page.locator('#lib .lib__item', { hasText: 'broken' })).toHaveCount(0);
+});

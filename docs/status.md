@@ -23,7 +23,6 @@ screen wake lock.
 | Bug | Issue |
 | --- | --- |
 | Touching the master volume turns off every keyboard shortcut, Escape included | [#12](https://github.com/JeSuisUnCaillou/soundboard/issues/12) |
-| Keeping copies of sounds can silently skip some | [#19](https://github.com/JeSuisUnCaillou/soundboard/issues/19) |
 | Dropping several files or folders at once in Chromium adds only the first | [#20](https://github.com/JeSuisUnCaillou/soundboard/issues/20) |
 | The service worker is slow on weak wifi and can cache error pages | [#21](https://github.com/JeSuisUnCaillou/soundboard/issues/21) |
 | Sounds in the tree and pad settings cannot be reached from the keyboard | [#22](https://github.com/JeSuisUnCaillou/soundboard/issues/22) |
@@ -31,10 +30,11 @@ screen wake lock.
 
 ## Test coverage
 
-21 tests, each run at desktop and phone size, all green. Covered: the first
+28 tests, each run at desktop and phone size, all green. Covered: the first
 launch, tapping, Stop, Escape, the master volume, fade and second-tap edge
 cases, stop points (also with the tab hidden), a pad stopped while it is still starting, held keys, a cross-origin sound, edit mode, renaming a pad
-(with reload), emptying the board, adding sounds through the file input, and
+(with reload), emptying the board, adding sounds through the file input,
+resizing the board, Reconnect during a cue, a sound that cannot be kept, and
 coming back offline.
 
 Not covered yet:

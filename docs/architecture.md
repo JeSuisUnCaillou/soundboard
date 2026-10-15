@@ -185,6 +185,9 @@ use HTML5 drag and drop with the `application/x-soundboard-path` type.
 and `beforeunload`. `keepSounds()` copies every loaded sound (pads first) into
 IndexedDB, skipping bundled ones and unchanged ones, deleting copies of sounds
 no longer loaded; on `QuotaExceededError` it stops trying for the session.
+Called while a pass is running, it runs one more pass after it (`keepAgain`). A
+file that cannot be read is skipped, the rest are still kept, and the operator
+is told once per file.
 
 **Keys** (`onKey`): ignored in an open dialog, in a field, or with a modifier.
 Space = `stop()` (each live pad on its own fade out); Escape = cut all; a pad
