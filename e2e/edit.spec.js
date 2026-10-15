@@ -137,6 +137,55 @@ test('dropping several sounds at once adds every one of them', async ({ page }) 
   await expect(page.locator('#lib .lib__item', { hasText: 'phone ring' })).toBeVisible();
 });
 
+test('without file handles, dropping two folders and a sound adds all of them', async ({ page }) => {
+  // Firefox and Safari hand over a drop as entries, not handles. A test cannot
+  // drop a real folder, so a dropped item named like a folder here gives a
+  // folder entry holding one sound, as the browser's own entries would.
+  await page.addInitScript(() => {
+    delete window.showOpenFilePicker;
+    delete window.showDirectoryPicker;
+    const folders = { 'Act 1': 'rain.wav', 'Act 2': 'wind.wav' };
+    const fileEntry = (file) => ({ isDirectory: false, name: file.name, file: (ok) => ok(file) });
+    DataTransferItem.prototype.webkitGetAsEntry = function () {
+      const file = this.getAsFile();
+      const inside = folders[file.name];
+      if (!inside) return fileEntry(file);
+      let given = false;
+      return {
+        isDirectory: true,
+        name: file.name,
+        createReader: () => ({
+          readEntries: (ok) => {
+            const batch = given ? [] : [fileEntry(new File([file], inside, { type: 'audio/wav' }))];
+            given = true;
+            ok(batch);
+          },
+        }),
+      };
+    };
+  });
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+
+  const wav = silentWav().toString('base64');
+  await page.evaluate((data) => {
+    const bytes = Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
+    const dt = new DataTransfer();
+    for (const name of ['Act 1', 'Act 2', 'door slam.wav']) {
+      dt.items.add(new File([bytes], name, { type: 'audio/wav' }));
+    }
+    document.body.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
+  }, wav);
+
+  for (const folder of ['Act 1', 'Act 2']) {
+    await page.locator('#lib .tree__name', { hasText: folder }).click();
+  }
+  for (const sound of ['rain', 'wind', 'door slam']) {
+    await expect(page.locator('#lib .lib__item', { hasText: sound })).toBeVisible();
+  }
+});
+
 test('a pad is set up, and a sound heard and put on a pad, from the keyboard', async ({ page }) => {
   await openBoard(page);
   await page.locator('#btnEdit').click();

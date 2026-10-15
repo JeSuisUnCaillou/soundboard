@@ -308,7 +308,7 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
 .pad--missing .pad__time::after { content: " · missing"; color: var(--alert); }
 
 .pad--drop { border-color: var(--go); background: color-mix(in oklab, var(--go) 18%, var(--pad)); }
-.pad--dragging { opacity: 0.4; }
+.pad--dragging, .pad--dragging + .pad__pencil { opacity: 0.4; }
 
 .pad__stack {
   position: absolute;

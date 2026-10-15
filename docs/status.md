@@ -31,10 +31,10 @@ screen wake lock.
 
 ## Test coverage
 
-31 tests, each run at desktop and phone size, all green. Covered: the first
+32 tests, each run at desktop and phone size, all green. Covered: the first
 launch, tapping, Stop, Escape, the master volume, fade and second-tap edge
 cases, stop points, a pad stopped while it is still starting, held keys, a cross-origin sound, edit mode, renaming a pad
-(with reload), emptying the board, adding sounds through the file input, dropping several sounds at once,
+(with reload), emptying the board, adding sounds through the file input, dropping several sounds or folders at once,
 coming back offline, opening on weak wifi, keeping a good copy over a server
 error, asking no other site for anything, and setting up a pad, hearing a
 sound and putting it on a pad from the keyboard.

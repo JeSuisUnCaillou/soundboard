@@ -21,7 +21,7 @@ why things are the way they are is in [decisions.md](decisions.md).
 | `js/ui.js` | Drawing only: `drawGrid`, `paintPads` (per frame), `drawLibrary` (the tree), `drawStop`, `setPanel`, `setBook`, `toast`, `say`. Decides nothing. |
 | `js/gels.js` | The eleven *gels* and `DEFAULT_GEL`. |
 | `js/bundled.js` | The *bundled sounds* list and the `default/` path prefix. |
-| `sw.js` | The service worker: network first with a 3 s patience, cache as fallback. |
+| `sw.js` | The service worker: network first, cache as fallback. |
 | `sounds/` | The bundled sound files. |
 | `manifest.webmanifest`, `icon*` | Install metadata. |
 | `e2e/` | The test suite, see [testing.md](testing.md). |
@@ -219,7 +219,7 @@ within `PATIENCE` (3 s); after one such wait the cache answers at once for
 `SLOW_SPELL` (30 s), while the network still refreshes it behind. Only a `200`
 from the site itself is cached, so an error or a login page never replaces a
 good copy. A navigation the cache does not know gets `index.html`; any other
-miss fails as itself. The `SHELL` list (with the Latin fonts and every icon) is
+miss fails as itself. The `SHELL` list (with the fonts and every icon) is
 precached on install with `cache: 'reload'`, so the HTTP cache cannot hand it
 a stale copy. The fonts are the board's own, so nothing is asked of another
 site.
