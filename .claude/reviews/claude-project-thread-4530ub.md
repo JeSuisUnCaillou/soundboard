@@ -8,4 +8,11 @@ Head reviewed: fb1186b
 
 Nothing blocking, so no second pass.
 
-Reviewed head: e311559994ce8a93384f6c2499616d3e2dbf8926
+# Pass 2
+
+Head reviewed: 37adf72 (both zones restyled at the owner's request)
+
+- bugs: no findings.
+- architect: no findings.
+
+Reviewed head: 37adf728f656205db21834db3b093f3f7a397116
