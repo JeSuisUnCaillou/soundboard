@@ -669,13 +669,9 @@ select.field option:checked { background: var(--warn); color: #241a07; }
 
 /* ───────────────────────── tablets and phones ─────────────────────────
 
-   The board stays a fixed shell at every size: nothing about a show should
-   depend on having scrolled to the right place. On a narrow screen the prompt
-   book slides over the pads instead of sitting beside them, and the grid
-   reflows to whatever columns fit rather than squeezing the authored shape
-   into a phone. */
-
-#btnBook { display: none; }
+   On a narrow screen the book opens over the pads instead of sitting beside
+   them, and the grid keeps the shape it was given, scrolling rather than
+   rearranging itself under the operator. */
 
 @media (max-width: 900px) {
   :root { --book: 100%; }

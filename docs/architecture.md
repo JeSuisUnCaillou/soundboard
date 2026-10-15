@@ -62,6 +62,7 @@ A pad:
 | `solo` | false | Fade everything else out when this starts. |
 | `key` | from position | One lowercase character (`migrate` lowercases an imported one). Kept unique by `PadEditor.save`; `migrate` does not dedupe keys in an imported board. |
 | `duration` | 0 | Measured length in seconds; 0 until measured. |
+| `settled` | false | Saved from the pad sheet: its length no longer sets anything (`applyLengthDefaults`). Cleared when a new sound is dropped on it. |
 
 **Changing the format.** Add the field in `newPad` (its default) and in
 `migratePad` (read and clamp it from a stored or imported board), then in the
@@ -84,7 +85,9 @@ another pad holds takes it from that pad (`PadEditor.save`).
 a sound is a *hit* (tap set to `overlay`, fade in 0); otherwise a *cue* (gel
 `moss`). Only fields still at their untouched default move, and only once the
 length is known. It runs when a pad is made (`App.padFor`), when a pad is given
-a new sound by drag and drop, and when `measure()` finds pads with no duration.
+a new sound by drag and drop (`giveSound`, which first puts back what the old
+sound's length set), and when `measure()` finds pads with no duration. A
+`settled` pad, one saved from its sheet, is left alone.
 
 ## Where sounds come from (`library.js`)
 
@@ -108,7 +111,7 @@ a path held as a copy replaces the copy in place; a *different* sound with a
 clashing path gets `name (2).ext`. A pad therefore never silently changes sound.
 
 `url(path)` gives what an `<audio>` can play: the bundled URL, or a blob URL
-made once per path and revoked on `reset()`.
+made once per path, and revoked when a real file replaces the copy behind it.
 
 ## Playing (`engine.js`)
 

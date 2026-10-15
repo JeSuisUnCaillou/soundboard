@@ -1,6 +1,6 @@
 // Building a board: edit mode, the pad sheet, Board settings, emptying, adding sounds.
 
-import { test, expect, BUNDLED_TITLES, openBoard, pad, showSounds, silentWav } from './helpers.js';
+import { test, expect, BUNDLED_TITLES, openBoard, pad, showSounds, silentWav, isNarrow } from './helpers.js';
 
 test('edit mode shows the folder and the board controls', async ({ page }) => {
   await openBoard(page);
@@ -171,4 +171,58 @@ test('a key loaded in capitals from a board file is still taken from its pad whe
   await page.locator('#padKey').fill('q');
   await page.locator('#padSave').click();
   await expect(page.locator('#toast')).toHaveText('Q was taken, so it moved to this pad.');
+});
+
+test('a cue dropped on a hit’s pad fades out on a second tap, as a cue does', async ({ page }) => {
+  // Dragging from the tree needs the tree beside the board.
+  test.skip(isNarrow(page), 'On a phone the tree covers the board, so nothing is dragged onto a pad.');
+  await page.addInitScript(() => {
+    delete window.showOpenFilePicker;
+    delete window.showDirectoryPicker;
+  });
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+  await page.locator('#btnAdd').click();
+  const chooser = page.waitForEvent('filechooser');
+  await page.locator('#btnAddFiles').click();
+  await (await chooser).setFiles({ name: 'storm.wav', mimeType: 'audio/wav', buffer: silentWav(10) });
+
+  await page.locator('#lib .lib__item', { hasText: 'storm' }).dragTo(pad(page, 'Gunshot'));
+  await expect(pad(page, 'Gunshot').locator('.pad__time')).toHaveText('0:10');
+  await pad(page, 'Gunshot').locator('.pad__pencil').click();
+  await expect(page.locator('#padFileName')).toHaveText('storm.wav');
+  await expect(page.locator('#padTap')).toHaveValue('fadeout');
+});
+
+test('a pad set up before its sound is open keeps what was chosen once the sound arrives', async ({ page }) => {
+  await page.addInitScript(() => {
+    delete window.showOpenFilePicker;
+    delete window.showDirectoryPicker;
+  });
+  await openBoard(page);
+  // A board whose sound is not open yet, so its length is not known.
+  const board = { version: 3, cols: 3, rows: 3, pads: [{ file: 'door.wav', name: 'Door' }] };
+  await page.locator('#importFile').setInputFiles({
+    name: 'show.soundboard.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(board)),
+  });
+  await page.locator('#btnEdit').click();
+  await pad(page, 'Door').locator('.pad__pencil').click();
+  await page.locator('#padTap').selectOption('fadeout');
+  await page.locator('#padSave').click();
+  await expect(page.locator('#padEditor')).toBeHidden();
+
+  // The sound turns up, and it is short: a hit, were it left to its length.
+  await showSounds(page);
+  await page.locator('#btnAdd').click();
+  const chooser = page.waitForEvent('filechooser');
+  await page.locator('#btnAddFiles').click();
+  await (await chooser).setFiles({ name: 'door.wav', mimeType: 'audio/wav', buffer: silentWav(1) });
+  if (isNarrow(page)) await page.locator('#btnBrowseDone').click();
+  await expect(pad(page, 'Door').locator('.pad__time')).toHaveText('0:01');
+
+  await pad(page, 'Door').locator('.pad__pencil').click();
+  await expect(page.locator('#padTap')).toHaveValue('fadeout');
 });

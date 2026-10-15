@@ -100,6 +100,8 @@ export class PadEditor {
       tap: el('padTap').value,
       solo: el('padSolo').checked,
       key: el('padKey').value.trim().slice(0, 1).toLowerCase(),
+      // What is set here stands, whatever the sound's length turns out to be.
+      settled: true,
     };
     if (end != null && end <= start) toast('The stop point has to come after the start point, so it was cleared.');
 

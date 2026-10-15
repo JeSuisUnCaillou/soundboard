@@ -6,7 +6,7 @@ import { Engine, probeDuration } from './engine.js';
 import { store, prefs } from './store.js';
 import {
   newBoard, newPad, migrate, setCols, setRows, fitPads, filled, slug, move, padByKey, rowCol, padTitle,
-  applyLengthDefaults,
+  applyLengthDefaults, giveSound,
 } from './model.js';
 import { bundledPaths } from './bundled.js';
 import { PadEditor, SetupSheet } from './editor.js';
@@ -218,11 +218,7 @@ class App {
         this.setPad(to, await this.padFor(to, path));
         return;
       }
-      // A pad that is being given a different sound keeps everything the
-      // operator set on it, and takes the new sound's length.
-      const pad = { ...existing, file: path, duration: await this.lengthOf(path) };
-      applyLengthDefaults(this.board, pad);
-      this.setPad(to, pad);
+      this.setPad(to, giveSound(this.board, existing, path, await this.lengthOf(path)));
     });
 
     this.wirePadDragging();

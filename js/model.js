@@ -47,17 +47,35 @@ const LONG_GEL = 'moss';
  * A sound's length says what it probably is, which settles what the operator
  * would otherwise set by hand: a hit layers when it is tapped again and starts
  * at full level — faded in, a gunshot is not a gunshot — while a cue is green.
- * Only fields still at their untouched default move, and a length that could
- * not be read decides nothing.
+ * Only fields still at their untouched default move, a length that could not
+ * be read decides nothing, and a pad saved from its sheet is the operator's.
  */
 export function applyLengthDefaults(board, pad) {
-  if (!pad.duration) return;
+  if (!pad.duration || pad.settled) return;
   if (pad.duration < SHORT_SOUND) {
     if (pad.tap === 'fadeout') pad.tap = 'overlay';
     if (pad.fadeIn === board.defaults.fadeIn) pad.fadeIn = 0;
   } else if (pad.gel === DEFAULT_GEL) {
     pad.gel = LONG_GEL;
   }
+}
+
+/**
+ * A pad given a different sound keeps what the operator set on it. What the
+ * old sound's length set goes back to the board's default first, so a cue
+ * dropped on a former hit's pad fades out on a second tap, as a cue does.
+ */
+export function giveSound(board, pad, file, duration) {
+  // A new sound is a new start for what its length decides.
+  const next = { ...pad, file, duration, settled: false };
+  if (pad.duration && pad.duration < SHORT_SOUND) {
+    if (next.tap === 'overlay') next.tap = 'fadeout';
+    if (next.fadeIn === 0) next.fadeIn = board.defaults.fadeIn;
+  } else if (pad.duration && next.gel === LONG_GEL) {
+    next.gel = DEFAULT_GEL;
+  }
+  applyLengthDefaults(board, next);
+  return next;
 }
 
 // A new pad takes the board's defaults; what the sound is — a hit or a cue —
@@ -78,6 +96,7 @@ export function newPad(board, i, file) {
     solo: false,
     key: defaultKey(board, i),
     duration: 0,
+    settled: false,
   };
 }
 
@@ -201,6 +220,7 @@ function migratePad(board, i, raw, version) {
   pad.solo = !!raw.solo;
   pad.key = typeof raw.key === 'string' ? raw.key.slice(0, 1).toLowerCase() : '';
   pad.duration = clampNum(raw.duration, 0, 1e5, 0);
+  pad.settled = !!raw.settled;
   return pad;
 }
 

@@ -176,7 +176,7 @@ export class Library {
     if (!records.length) return [];
     // The folder is in every path, so the copies can say where they came from
     // without being told.
-    const roots = new Set(records.map((r) => r.path.split('/')[0]).filter((r, i, all) => all.length && r));
+    const roots = new Set(records.map((r) => r.path.split('/')[0]).filter(Boolean));
     const nested = records.filter((r) => r.path.includes('/'));
     const name = nested.length && roots.size === 1 ? [...roots][0] : 'Kept sounds';
     const src = this._source({ kind: 'cache', name });
@@ -264,13 +264,6 @@ export class Library {
     const made = URL.createObjectURL(await this.file(path));
     this._urls.set(path, made);
     return made;
-  }
-
-  reset() {
-    for (const url of this._urls.values()) URL.revokeObjectURL(url);
-    this._urls.clear();
-    this.entries.clear();
-    this.sources = [];
   }
 
   _source(src) {
