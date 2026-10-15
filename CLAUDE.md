@@ -1,5 +1,11 @@
 # CLAUDE.md
 
+## English only
+
+Everything in the repository is written in English: code, comments, docs,
+commit messages, and this file — even when the conversation is in another
+language.
+
 ## Always test in the app
 
 Every change must be tried in the running app before it is reported as done —
