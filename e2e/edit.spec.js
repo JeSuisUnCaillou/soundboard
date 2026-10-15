@@ -363,3 +363,69 @@ test('a board saved to a file loads back as it was, with missing sounds struck t
   await expect(page.locator('#setCols')).toHaveValue('4');
   await expect(page.locator('#setRows')).toHaveValue('2');
 });
+
+test('a pad’s level, fades and colour stay after a reload', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+
+  await pad(page, 'Crickets ambiance').locator('.pad__pencil').click();
+  await page.locator('#padGain').fill('40');
+  await expect(page.locator('#padGainOut')).toHaveText('40');
+  await page.locator('#padFadeIn').fill('2.5');
+  await page.locator('#padFadeOut').fill('6');
+  await page.locator('#padGels .gel[aria-label^="Fire"]').click();
+  await page.locator('#padSave').click();
+  await expect(page.locator('#padEditor')).toBeHidden();
+
+  await page.reload();
+  await pad(page, 'Crickets ambiance').locator('.pad__pencil').click();
+  await expect(page.locator('#padGain')).toHaveValue('40');
+  await expect(page.locator('#padGainOut')).toHaveText('40');
+  await expect(page.locator('#padFadeIn')).toHaveValue('2.5');
+  await expect(page.locator('#padFadeOut')).toHaveValue('6');
+  await expect(page.locator('#padGels .gel[aria-label^="Fire"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#padGels .gel[aria-pressed="true"]')).toHaveCount(1);
+});
+
+test('Board settings sets the number of rows and columns', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await expect(page.locator('#grid .pad')).toHaveCount(12);
+
+  await page.locator('#btnSetup').click();
+  await page.locator('#setCols').fill('4');
+  await page.locator('#setRows').fill('5');
+  await page.locator('#setupDone').click();
+  await expect(page.locator('#setup')).toBeHidden();
+  await expect(page.locator('#grid .pad')).toHaveCount(20);
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(BUNDLED_TITLES.length);
+  await expect(page.locator('#grid .pad').nth(19)).toHaveAttribute('aria-label', /row 5 column 4/);
+
+  await page.reload();
+  await expect(page.locator('#grid .pad')).toHaveCount(20);
+});
+
+test('a smaller board says which sounds it could not keep', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+
+  // A sound on the last row, which a board one row shorter has no room for.
+  await page.locator('#grid .pad').nth(8).click();
+  await expect(page.locator('#grid .pad').nth(8)).toHaveClass(/pad--waiting/);
+  await showSounds(page);   // a phone opens them by itself for a waiting pad
+  await page.locator('#lib .tree__name', { hasText: 'default' }).click();
+  await page.locator('#lib .lib__item', { hasText: 'gunshot' }).locator('.lib__add').click();
+  await expect(page.locator('#toast')).toHaveText(/^gunshot is on row 3, column 3\.$/i);
+  await expect(pad(page, 'Gunshot')).toHaveCount(2);
+
+  await page.locator('#btnSetup').click();
+  await page.locator('#setRows').fill('2');
+  await page.locator('#setupDone').click();
+  await expect(page.locator('#toast')).toHaveText('1 sound came off the board. They are still under Sounds.');
+  await expect(page.locator('#grid .pad')).toHaveCount(6);
+  await expect(pad(page, 'Gunshot')).toHaveCount(1);
+  for (const title of BUNDLED_TITLES) await expect(pad(page, title)).toBeVisible();
+
+  await showSounds(page);
+  await expect(page.locator('#lib .lib__item', { hasText: 'gunshot' })).toBeVisible();
+});
