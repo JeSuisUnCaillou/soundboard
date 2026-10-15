@@ -17,4 +17,8 @@ Head reviewed: 69bcacd.
 - padOf() relied on the pencil coming right after its pad: not blocking, fixed in 6685c74 (it looks the pad up by number, as the click does).
 - Nothing blocking found; the loop converged.
 
-Reviewed head: 6685c74aa7ec855a861517c83375cfd0d329b8a3
+# Pass 3
+
+Head: 28732c9, a merge of main (#49) with only a docs/testing.md conflict, resolved by keeping both sides' rows. No reviewers run: the branch's own code is unchanged since pass 2, and the whole suite passes on the merge (35 tests, 70 runs).
+
+Reviewed head: 28732c9dc84cfa6bb8b233ed18f0da3ae91743ad
