@@ -1,5 +1,6 @@
-// Building a board: edit mode, the pad sheet, Board settings, emptying, adding sounds.
+// Building a board: edit mode, the pad sheet, Board settings, board files, emptying, adding sounds.
 
+import { readFile } from 'node:fs/promises';
 import { test, expect, BUNDLED_TITLES, openBoard, pad, showSounds, silentWav } from './helpers.js';
 
 test('edit mode shows the folder and the board controls', async ({ page }) => {
@@ -171,4 +172,79 @@ test('a key loaded in capitals from a board file is still taken from its pad whe
   await page.locator('#padKey').fill('q');
   await page.locator('#padSave').click();
   await expect(page.locator('#toast')).toHaveText('Q was taken, so it moved to this pad.');
+});
+
+test('a board saved to a file loads back as it was, with missing sounds struck through', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+
+  // One pad set up away from its defaults, and a board of another size.
+  await pad(page, 'Gunshot').locator('.pad__pencil').click();
+  await page.locator('#padName').fill('Pistol');
+  await page.locator('#padKey').fill('g');
+  await page.locator('#padFadeIn').fill('2');
+  await page.locator('#padFadeOut').fill('4');
+  await page.locator('#padGels .gel[aria-label^="Primary Red"]').click();
+  await page.locator('#padSave').click();
+  await expect(page.locator('#padEditor')).toBeHidden();
+
+  await page.locator('#btnSetup').click();
+  await page.locator('#setCols').fill('4');
+  await page.locator('#setRows').fill('2');
+  // The sheet applies its fields as it closes, so the size is in place before
+  // the board is saved (saving in the same visit is #45).
+  await page.locator('#setupDone').click();
+  await expect(page.locator('#grid .pad')).toHaveCount(8);
+
+  await page.locator('#btnSetup').click();
+  const download = page.waitForEvent('download');
+  await page.locator('#btnExport').click();
+  await expect(page.locator('#toast')).toHaveText('Board saved to your downloads.');
+  const board = JSON.parse(await readFile(await (await download).path(), 'utf8'));
+  expect(board.cols).toBe(4);
+  expect(board.rows).toBe(2);
+
+  // The file travels to a machine where one of its sounds is not open.
+  const crickets = board.pads.find((p) => p && p.file.includes('crickets'));
+  crickets.file = 'Show/thunder.wav';
+  crickets.name = 'Thunder';
+
+  // Throw this board away, size and all.
+  await page.locator('#setupDone').click();
+  await page.locator('#btnEmpty').click();
+  await page.locator('#btnEmpty').click();
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(0);
+  await page.locator('#btnSetup').click();
+  await page.locator('#setCols').fill('3');
+  await page.locator('#setRows').fill('3');
+  await page.locator('#setupDone').click();
+  await expect(page.locator('#grid .pad')).toHaveCount(9);
+
+  await page.locator('#btnSetup').click();
+  const chooser = page.waitForEvent('filechooser');
+  await page.locator('#btnImport').click();
+  await (await chooser).setFiles({
+    name: 'show.soundboard.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(board)),
+  });
+  await expect(page.locator('#toast')).toHaveText('Board loaded. 1 pad point at files this folder does not have.');
+
+  await expect(page.locator('#grid .pad')).toHaveCount(8);
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(3);
+  await expect(pad(page, 'Sexy')).not.toHaveClass(/pad--missing/);
+  await expect(pad(page, 'Thunder')).toHaveClass(/pad--missing/);
+  const pistol = pad(page, 'Pistol');
+  await expect(pistol).not.toHaveClass(/pad--missing/);
+  await expect(pistol.locator('.pad__key')).toHaveText('g');
+
+  await pistol.locator('.pad__pencil').click();
+  await expect(page.locator('#padFadeIn')).toHaveValue('2');
+  await expect(page.locator('#padFadeOut')).toHaveValue('4');
+  await expect(page.locator('#padGels .gel[aria-label^="Primary Red"]')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#padCancel').click();
+
+  await page.locator('#btnSetup').click();
+  await expect(page.locator('#setCols')).toHaveValue('4');
+  await expect(page.locator('#setRows')).toHaveValue('2');
 });
