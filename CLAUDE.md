@@ -135,8 +135,24 @@ The owner merges. When the owner says "validated" or "merge once green" about
 a thread's pull requests, merge each one as soon as it is green.
 
 Once the work is pushed, review it with `Skill(skill: "review-loop")` before
-handing it over; a Stop hook starts it otherwise. The skill says which pull
-requests Claude merges by itself once it converges (small bug fixes) and
-which wait for the owner.
+handing it over; a Stop hook starts it otherwise. Its step 7 says which pull
+requests Claude then merges and which wait for the owner.
 
 Merge with a squash, so the title ends with the pull request number, `… (#n)`.
+
+## Periodic review
+
+Every 20 pull requests merged into `main`, the harness and the whole codebase
+get a review. A weekly scheduled task in the Claude project starts a session
+that follows this section:
+
+1. If an issue labelled `periodic-review` is open, an earlier run was cut
+   short: take it up at the step it reached. Otherwise count the pull
+   requests merged into `main` since the newest one was closed, or numbered
+   above #50 if there is none. Under 20, stop and say so.
+2. Open an issue labelled `periodic-review`, "Periodic review after #n". It is
+   the harness pass's issue too: the pass opens no other, and its PR says
+   `Refs #n`, so merging it leaves this issue to step 4.
+3. Run `Skill(skill: "harness-engineer")` and the review loop on its branch,
+   then `Skill(skill: "architecture-review")`.
+4. Close the issue once the architecture review has posted its report on it.

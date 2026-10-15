@@ -534,3 +534,32 @@ test('a smaller board says which sounds it could not keep', async ({ page }) => 
   await showSounds(page);
   await expect(page.locator('#lib .lib__item', { hasText: 'gunshot' })).toBeVisible();
 });
+
+test('a pad under a toast still answers a tap', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  const toast = page.locator('#toast');
+  await expect(toast).toBeVisible();
+
+  // Find a pad the toast covers, and tap it where the toast is.
+  const over = await toast.boundingBox();
+  const pads = page.locator('#grid .pad');
+  let target = null;
+  let at = null;
+  for (let i = 0; i < await pads.count() && !target; i++) {
+    if (!(await pads.nth(i).evaluate((el) => el.classList.contains('pad--empty')))) continue;
+    const box = await pads.nth(i).boundingBox();
+    const left = Math.max(box.x, over.x);
+    const right = Math.min(box.x + box.width, over.x + over.width);
+    const top = Math.max(box.y, over.y);
+    const bottom = Math.min(box.y + box.height, over.y + over.height);
+    if (right - left > 4 && bottom - top > 4) {
+      target = pads.nth(i);
+      at = { x: (left + right) / 2, y: (top + bottom) / 2 };
+    }
+  }
+  expect(target, 'the first launch’s toast covers an empty pad').not.toBeNull();
+
+  await page.mouse.click(at.x, at.y);
+  await expect(target).toHaveClass(/pad--waiting/);
+});
