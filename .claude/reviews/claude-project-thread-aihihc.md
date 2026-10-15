@@ -61,4 +61,18 @@ Head: 59fa23c (CI on 195ea09 failed on a Chromium crash in main's offline tests,
 - bugs: no finding (checked in Playwright 1.56.1's sources that the file gets its own worker and the switch reaches no other spec).
 - architect: no finding.
 
-Reviewed head: 59fa23c87a111cc2d463fabbb97aba5b73d65433
+# Pass 9
+
+Head: 1702db2 (CI on d2ff606 caught a race in the refused Reconnect test: edit mode comes back only at the end of boot; fixed in 1702db2).
+
+- bugs: the same race in three more reloads of kept.spec.js; fixed in 319ddbd with one reload() helper that waits for edit mode to come back as it was left.
+- architect: no finding.
+
+# Pass 10
+
+Head: 319ddbd
+
+- bugs: no finding (left out as low-confidence: in storage.spec.js, Sting's count of 0 after the reload also holds before the board is drawn; the steps after it need the empty slot, so a lost clear still fails the test).
+- architect: no finding.
+
+Reviewed head: 319ddbd7d5601a16319eed78ace83af3b8a455ba
