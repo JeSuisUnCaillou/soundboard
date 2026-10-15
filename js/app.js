@@ -664,8 +664,9 @@ class App {
         navigator.storage.persist().catch(() => {});
       }
       if (!this.forgotOthers) {
-        this.forgotOthers = true;
-        await store.forgetOtherBoards(id);
+        // Room for this board's copies matters more than tidying: a failure
+        // here is tried again next time, and the copying goes on.
+        this.forgotOthers = await store.forgetOtherBoards(id).then(() => true, () => false);
       }
       const onPads = filled(this.board).map(({ pad }) => pad.file);
       const wanted = [...new Set([...onPads, ...this.library.list.map((e) => e.path)])];

@@ -61,17 +61,17 @@ export function applyLengthDefaults(board, pad) {
 }
 
 /**
- * A pad given a different sound keeps what the operator set on it. What the
- * old sound's length set goes back to the board's default first, so a cue
- * dropped on a former hit's pad fades out on a second tap, as a cue does.
+ * A pad given a different sound keeps what the operator set on it. On a pad
+ * nobody has saved from its sheet, what the old sound's length set goes back
+ * to the board's default first, so a cue dropped on a former hit's pad fades
+ * out on a second tap, as a cue does.
  */
 export function giveSound(board, pad, file, duration) {
-  // A new sound is a new start for what its length decides.
-  const next = { ...pad, file, duration, settled: false };
-  if (pad.duration && pad.duration < SHORT_SOUND) {
+  const next = { ...pad, file, duration };
+  if (!pad.settled && pad.duration && pad.duration < SHORT_SOUND) {
     if (next.tap === 'overlay') next.tap = 'fadeout';
     if (next.fadeIn === 0) next.fadeIn = board.defaults.fadeIn;
-  } else if (pad.duration && next.gel === LONG_GEL) {
+  } else if (!pad.settled && pad.duration && next.gel === LONG_GEL) {
     next.gel = DEFAULT_GEL;
   }
   applyLengthDefaults(board, next);

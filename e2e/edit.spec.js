@@ -209,6 +209,31 @@ test('a cue dropped on a hit’s pad fades out on a second tap, as a cue does', 
   await expect(page.locator('#padTap')).toHaveValue('fadeout');
 });
 
+test('a pad saved from its sheet keeps its second tap when a cue is dropped on it', async ({ page }) => {
+  test.skip(isNarrow(page), 'On a phone the tree covers the board, so nothing is dragged onto a pad.');
+  await page.addInitScript(() => {
+    delete window.showOpenFilePicker;
+    delete window.showDirectoryPicker;
+  });
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await pad(page, 'Gunshot').locator('.pad__pencil').click();
+  await page.locator('#padTap').selectOption('overlay');
+  await page.locator('#padSave').click();
+  await expect(page.locator('#padEditor')).toBeHidden();
+
+  await showSounds(page);
+  await page.locator('#btnAdd').click();
+  const chooser = page.waitForEvent('filechooser');
+  await page.locator('#btnAddFiles').click();
+  await (await chooser).setFiles({ name: 'storm.wav', mimeType: 'audio/wav', buffer: silentWav(10) });
+  await page.locator('#lib .lib__item', { hasText: 'storm' }).dragTo(pad(page, 'Gunshot'));
+  await expect(pad(page, 'Gunshot').locator('.pad__time')).toHaveText('0:10');
+
+  await pad(page, 'Gunshot').locator('.pad__pencil').click();
+  await expect(page.locator('#padTap')).toHaveValue('overlay');
+});
+
 test('a pad set up before its sound is open keeps what was chosen once the sound arrives', async ({ page }) => {
   await page.addInitScript(() => {
     delete window.showOpenFilePicker;

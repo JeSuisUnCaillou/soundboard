@@ -424,7 +424,7 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
 .book__title { margin: 0; font: 700 15px/1 var(--cond); }
 .book__empty { margin: 0; color: var(--ink-faint); font-size: 13px; }
 
-.lib { margin: 0; padding: 0; list-style: none; overflow-y: auto; overflow-x: hidden; min-height: 0; }
+.lib { margin: 0; padding: 0; overflow-y: auto; overflow-x: hidden; min-height: 0; }
 .lib__item {
   display: flex;
   justify-content: space-between;

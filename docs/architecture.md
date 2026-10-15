@@ -14,7 +14,7 @@ why things are the way they are is in [decisions.md](decisions.md).
 | `js/app.js` | The `App` class: owns the open board and the edit state, wires every event (taps, keys, drags, drops, pickers), saves, restores, keeps the screen awake. The only module that decides things. |
 | `js/engine.js` | `Engine`: Web Audio. One *channel* per pad, extra *voices* for layering and previews, fades, the per-frame `tick()`. Also `probeDuration()`. |
 | `js/library.js` | `Library`: every sound the board can reach, from every *source*, keyed by path. Folder walking, pickers, drops, dedup, blob URLs. |
-| `js/model.js` | The board and pad data: `newBoard`, `newPad`, `migrate`, resizing, keys, `applyLengthDefaults`, formatting helpers. Pure functions, no DOM. |
+| `js/model.js` | The board and pad data: `newBoard`, `newPad`, `migrate`, resizing, keys, `applyLengthDefaults`, `giveSound`, formatting helpers. Pure functions, no DOM. |
 | `js/store.js` | `store` (IndexedDB) and `prefs` (localStorage). |
 | `js/editor.js` | `PadEditor` (the pad sheet) and `SetupSheet` (Board settings). Read fields, validate, hand the result back to `App` through callbacks. |
 | `js/ui.js` | Drawing only: `drawGrid`, `paintPads` (per frame), `drawLibrary` (the tree), `drawStop`, `setPanel`, `setBook`, `toast`, `say`. Decides nothing. |
@@ -62,7 +62,7 @@ A pad:
 | `solo` | false | Fade everything else out when this starts. |
 | `key` | from position | One lowercase character (`migrate` lowercases an imported one). Kept unique by `PadEditor.save`; `migrate` does not dedupe keys in an imported board. |
 | `duration` | 0 | Measured length in seconds; 0 until measured. |
-| `settled` | false | Saved from the pad sheet: its length no longer sets anything (`applyLengthDefaults`). Cleared when a new sound is dropped on it. |
+| `settled` | false | Saved from the pad sheet: its length, or a new sound's, no longer sets anything (`applyLengthDefaults`, `giveSound`). |
 
 **Changing the format.** Add the field in `newPad` (its default) and in
 `migratePad` (read and clamp it from a stored or imported board), then in the
@@ -183,9 +183,9 @@ use HTML5 drag and drop with the `application/x-soundboard-path` type.
 `beforeunload`, `pagehide` and the page going hidden (a phone may close a
 hidden page with no unload event). Every storage call at launch goes through
 `remembered()`: if IndexedDB fails, the board runs from memory and says once
-that the next launch starts afresh. `keepSounds()` copies every loaded sound (pads first) into
-IndexedDB, skipping bundled ones and unchanged ones, deleting copies of sounds
-no longer loaded; on `QuotaExceededError` it stops trying for the session.
+that the next launch starts afresh. `keepSounds()` copies every loaded sound
+(pads first) into IndexedDB, skipping bundled ones and unchanged ones, deleting
+copies of sounds no longer loaded; on `QuotaExceededError` it stops trying for the session.
 
 **Keys** (`onKey`): ignored in an open dialog, in a field, or with a modifier.
 Space = `stop()` (each live pad on its own fade out); Escape = cut all; a pad
