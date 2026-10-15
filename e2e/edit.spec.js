@@ -172,6 +172,25 @@ test('a new board starts three columns by four rows', async ({ page }) => {
   await expect(page.locator('#setRows')).toHaveValue('4');
 });
 
+test('a board saved with the crickets under their old name still plays them', async ({ page }) => {
+  await openBoard(page);
+  const board = {
+    version: 3,
+    cols: 3,
+    rows: 3,
+    pads: [{ file: 'default/crickets ambiance.wav', name: 'Night' }],
+  };
+  await page.locator('#importFile').setInputFiles({
+    name: 'show.soundboard.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(board)),
+  });
+  const night = pad(page, 'Night');
+  await expect(night).not.toHaveClass(/pad--missing/);
+  await night.click();
+  await expect(night).toHaveClass(/pad--playing/);
+});
+
 test('a key loaded in capitals from a board file is still taken from its pad when another pad wants it', async ({ page }) => {
   await openBoard(page);
   const board = {
