@@ -122,29 +122,41 @@ export class Library {
     return files ? this.addFiles(files) : null;
   }
 
-  /** A folder or a few files dropped onto the window. */
+  /** Folders and files dropped onto the window, as many as there are. */
   async addDrop(dataTransfer) {
+    // The drop can be read only while its event is being handled: after the
+    // first await, Chromium hands back nothing for the remaining items. So
+    // everything is asked for before anything is waited on.
     const items = [...dataTransfer.items].filter((i) => i.kind === 'file');
     if (!items.length) return [];
 
     if (CAN_PERSIST && typeof items[0].getAsFileSystemHandle === 'function') {
+      const handles = await Promise.all(items.map((i) => i.getAsFileSystemHandle()));
       const added = [];
-      for (const item of items) {
-        const handle = await item.getAsFileSystemHandle();
+      for (const handle of handles) {
         if (handle) added.push(...await this.addHandle(handle));
       }
       return added;
     }
 
-    const entries = items.map((i) => (i.webkitGetAsEntry ? i.webkitGetAsEntry() : null)).filter(Boolean);
-    const dir = entries.find((e) => e.isDirectory);
-    if (dir) {
+    const entries = items.map((i) => (i.webkitGetAsEntry ? i.webkitGetAsEntry() : null));
+    const added = [];
+    const loose = [];
+    entries.forEach((entry, n) => {
+      if (!entry || !entry.isDirectory) {
+        const file = items[n].getAsFile();
+        if (file) loose.push(file);
+      }
+    });
+    // Each folder is a place of its own, as if it had been opened by itself.
+    for (const dir of entries.filter((e) => e && e.isDirectory)) {
       const src = this._source({ kind: 'dir', name: dir.name });
       const found = new Map();
       await walkEntry(dir, dir.name, found);
-      return this._merge([...found.values()], src);
+      added.push(...await this._merge([...found.values()], src));
     }
-    return dataTransfer.files.length ? this.addFiles(dataTransfer.files) : [];
+    if (loose.length) added.push(...await this.addFiles(loose));
+    return added;
   }
 
   /** A stored handle, reopened. Throws if permission is refused. */
