@@ -24,7 +24,7 @@ why things are the way they are is in [decisions.md](decisions.md).
 | `sounds/` | The bundled sound files. |
 | `manifest.webmanifest`, `icon*` | Install metadata. |
 | `e2e/` | The test suite, see [testing.md](testing.md). |
-| `.github/workflows/` | `e2e.yml` (tests on every PR) and `pages.yml` (tests, then deploy `main`), see [deployment.md](deployment.md). |
+| `.github/workflows/` | `e2e.yml` (tests on every PR), `pages.yml` (tests, then deploy `main`) and `periodic-review.yml` (an issue every 20 merges), see [deployment.md](deployment.md). |
 
 Dependencies point one way: `app.js` imports everything; `editor.js` imports
 `ui.js` and `model.js`; `ui.js` imports `model.js`, `gels.js`, `store.js`;

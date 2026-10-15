@@ -21,6 +21,7 @@ the repository is the site.
 | --- | --- | --- |
 | `.github/workflows/e2e.yml` | every pull request, `workflow_call`, manual | `npm ci`, install Chromium, `npm run test:e2e`, upload the report on failure. Node 22, `ubuntu-24.04`, 15 min timeout. |
 | `.github/workflows/pages.yml` | push to `main`, manual | `test` (calls `e2e.yml`), then `deploy`: upload the whole repository as the Pages artifact and deploy it. |
+| `.github/workflows/periodic-review.yml` | a pull request merged into `main`, manual | Counts the PRs merged since the newest `periodic-review` issue and, at 20 with none open, opens one for the owner: see [CLAUDE.md](../CLAUDE.md#periodic-review). |
 
 The runner is pinned (`ubuntu-24.04`) so a deploy that worked on Friday works
 on Monday; actions follow their major tag and are bumped deliberately.

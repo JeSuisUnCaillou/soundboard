@@ -1,0 +1,66 @@
+# Every 20 pull requests merged into main, opens an issue labelled
+# periodic-review: the notice that a harness pass and a review of the whole
+# codebase are due. CLAUDE.md § Periodic review says what a session does with
+# it. Nothing here can start a session; the issue is what one picks up.
+#
+# The count runs from the newest periodic-review issue, not as a multiple of
+# the total, so a run that was missed is made up by the next merge.
+
+name: Periodic review
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: read
+
+# Two merges close together must not open two issues.
+concurrency:
+  group: periodic-review
+  cancel-in-progress: false
+
+jobs:
+  count:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      EVERY: 20
+      # Before the first issue, the count starts after #50: the first harness
+      # passes and the first whole-codebase review were all done by then.
+      FIRST_SINCE: 2026-10-15T14:00:00Z
+    steps:
+      - name: Open the issue when it is due
+        run: |
+          open=$(gh api "repos/$REPO/issues?labels=periodic-review&state=open&per_page=1" --jq length)
+          if [ "$open" -gt 0 ]; then
+            echo "A periodic-review issue is already open."
+            exit 0
+          fi
+
+          since=$(gh api "repos/$REPO/issues?labels=periodic-review&state=all&sort=created&direction=desc&per_page=1" \
+            --jq '.[0].created_at // empty')
+          since=${since:-$FIRST_SINCE}
+
+          merged=$(gh api --paginate "repos/$REPO/pulls?state=closed&base=main&per_page=100" \
+            --jq ".[] | select(.merged_at != null and .merged_at > \"$since\") | .number" | sort -n)
+          count=$(printf '%s' "$merged" | grep -c . || true)
+          echo "$count pull requests merged since $since."
+          [ "$count" -ge "$EVERY" ] || exit 0
+
+          first=$(printf '%s\n' "$merged" | head -n 1)
+          last=$(printf '%s\n' "$merged" | tail -n 1)
+          gh label create periodic-review --repo "$REPO" --force \
+            --description "A harness pass and an architecture review are due" >/dev/null
+          gh issue create --repo "$REPO" --label periodic-review \
+            --assignee "${{ github.repository_owner }}" \
+            --title "Periodic review after #$last" \
+            --body "$count pull requests have been merged since the last periodic review, #$first to #$last.
+
+          Time for the two reviews in [CLAUDE.md § Periodic review](https://github.com/$REPO/blob/main/CLAUDE.md#periodic-review): a harness-engineer pass, then an architecture review of the whole codebase. Close this issue once both are done."
