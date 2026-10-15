@@ -287,7 +287,7 @@ test('a pad tapped while it fades in stops', async ({ page }) => {
 test('a pad fading towards its stop point still answers a tap by stopping', async ({ page }) => {
   await openBoard(page);
   // Stop at 4 s with a 3 s fade: the pad starts fading on its own after 1 s.
-  await setUpPad(page, 'Crickets', { padEnd: '4', padFadeOut: '3' });
+  await setUpPad(page, 'Crickets', { padEnd: '4', padFadeOut: '3', padLoop: false });
   const crickets = pad(page, 'Crickets');
 
   await crickets.click();
