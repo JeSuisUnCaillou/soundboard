@@ -29,7 +29,7 @@ screen wake lock.
 
 ## Test coverage
 
-78 tests, all green: each runs at desktop and phone size, except the 10 drag
+77 tests, all green: each runs at desktop and phone size, except the 8 drag
 tests, which run by mouse on desktop or by finger on phone. Covered: the first
 launch, tapping, Stop, Escape, the master volume, fade and second-tap edge
 cases, every second-tap mode, layering, both kinds of loop, start and stop

@@ -1,6 +1,6 @@
 // Moving pads in edit mode: a mouse drags, a finger rests and then drags.
 
-import { test, expect, openBoard, pad, pencil, showSounds } from './helpers.js';
+import { test, expect, openBoard, pad, showSounds } from './helpers.js';
 
 /** The pad in this place on the board, counted from the top left. */
 function slot(page, i) {
@@ -82,42 +82,6 @@ test.describe('with a mouse', () => {
     await expect(row).not.toHaveClass(/lib__item--used/);
   });
 
-  test('a sound dragged from the folder onto an empty pad goes on it', async ({ page }) => {
-    await openBoard(page);
-    await page.locator('#btnEdit').click();
-    await showSounds(page);
-    await page.locator('#lib .tree__name', { hasText: 'default' }).click();
-
-    await page.locator('#lib .lib__item', { hasText: 'crickets' }).dragTo(slot(page, 4));
-    await expectLayout(page, ['Gunshot', 'Crickets ambiance', 'Sexy', '', 'Crickets ambiance']);
-
-    await page.reload();
-    await expectLayout(page, ['Gunshot', 'Crickets ambiance', 'Sexy', '', 'Crickets ambiance']);
-  });
-
-  test('a sound dragged onto a filled pad takes its place, and the pad keeps its settings', async ({ page }) => {
-    await openBoard(page);
-    await page.locator('#btnEdit').click();
-    await pencil(page, 'Gunshot').click();
-    await page.locator('#padName').fill('Pistol');
-    await page.locator('#padKey').fill('m');
-    await page.locator('#padSave').click();
-    await showSounds(page);
-    await page.locator('#lib .tree__name', { hasText: 'default' }).click();
-
-    await page.locator('#lib .lib__item', { hasText: 'crickets' }).dragTo(pad(page, 'Pistol'));
-    await pencil(page, 'Pistol').click();
-    await expect(page.locator('#padFileName')).toHaveText('crickets ambiance.wav');
-    await expect(page.locator('#padKey')).toHaveValue('m');
-    await page.locator('#padCancel').click();
-
-    // It plays the new sound: a cue now, which fades out on a second tap.
-    await page.locator('#btnEdit').click();
-    const pistol = pad(page, 'Pistol');
-    await page.keyboard.press('m');
-    await expect(pistol).toHaveClass(/pad--playing/);
-    await expect(pistol.locator('.pad__time')).toHaveText(/-0:2\d/);
-  });
 });
 
 test.describe('with a finger', () => {

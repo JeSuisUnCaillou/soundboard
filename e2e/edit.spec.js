@@ -361,6 +361,23 @@ test('a board file saved from Board settings holds the size just typed there', a
   expect(saved.cols).toBe(4);
 });
 
+test('a sound dragged from the folder onto an empty pad goes on it, and stays after a reload', async ({ page }) => {
+  test.skip(isNarrow(page), 'On a phone the tree covers the board, so nothing is dragged onto a pad.');
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+  await page.locator('#lib .tree__name', { hasText: 'default' }).click();
+  const empty = page.locator('#grid .pad').nth(4);
+  await expect(empty).toHaveClass(/pad--empty/);
+
+  await page.locator('#lib .lib__item', { hasText: 'crickets' }).dragTo(empty);
+  await expect(pad(page, 'Crickets ambiance')).toHaveCount(2);
+  await expect(page.locator('#grid .pad').nth(4)).toContainText('Crickets ambiance', { ignoreCase: true });
+
+  await page.reload();
+  await expect(page.locator('#grid .pad').nth(4)).toContainText('Crickets ambiance', { ignoreCase: true });
+});
+
 test('a cue dropped on a hit’s pad fades out on a second tap, as a cue does', async ({ page }) => {
   // Dragging from the tree needs the tree beside the board.
   test.skip(isNarrow(page), 'On a phone the tree covers the board, so nothing is dragged onto a pad.');
