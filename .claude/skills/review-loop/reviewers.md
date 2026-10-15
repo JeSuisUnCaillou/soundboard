@@ -73,7 +73,9 @@ a tap that does not play, a pad that lies about its state, a sound cut or
 left playing, something lost after a reload or offline, an error swallowed.
 Judge against the README and docs/decisions.md § Product: a board that
 hesitates, guesses or rearranges itself mid-show is wrong. Trace each finding
-from a real event (a tap, a key, a drop, a reload) to the failure.
+from a real event (a tap, a key, a drop, a reload) to the failure. For a
+change under .claude/ or .github/, the one who meets the failure is a session
+or a CI run: trace it from what they would really do.
 ```
 
 **simplicity**
