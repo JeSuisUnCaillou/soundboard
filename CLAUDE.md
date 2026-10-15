@@ -61,3 +61,10 @@ link to the branch so they can try it themselves:
 
 Remind them to reload if the old version shows up: the service worker keeps a
 copy of the app.
+
+## Open a pull request for every branch
+
+Whenever you create a branch and push work to it, open a pull request for it
+against `main` — do not wait to be asked. Give it a title and description that
+say what changed and why, and include the raw.githack link above so the
+reviewer can try it.
