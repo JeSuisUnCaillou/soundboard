@@ -796,6 +796,8 @@ select.field option:checked { background: var(--warn); color: #241a07; }
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
+/* While editing, a finger on a filled pad drags it rather than the board. */
+body[data-editing="on"] .pad--filled { touch-action: none; }
 .pad, .lib__item {
   user-select: none;
   -webkit-user-select: none;

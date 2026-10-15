@@ -256,16 +256,16 @@ class App {
    * Dragging a pad somewhere else. Pointer events rather than HTML5 drag and
    * drop, which does not exist under a finger.
    *
-   * With a mouse the whole pad is a handle: press anywhere but the pencil and
-   * move, and the pad comes with you; press and release without moving and it
-   * simply plays. A touch that moves straight away is left to scroll the board;
-   * a finger that rests on a pad for a moment picks it up.
+   * The whole pad is a handle, under a mouse or a finger: press anywhere but
+   * the pencil and move, and the pad comes with you; press and release without
+   * moving and it simply plays. While editing, a filled pad does not scroll the
+   * board (its touch-action is none); the empty places and the gaps do.
    */
   wirePadDragging() {
     let drag = null;
     let armed = null;        // pressed, not yet a drag
     const SLOP = 6;          // how far a mouse moves before it means to drag
-    const HOLD = 400;        // how long a finger rests before it picks a pad up
+    const TOUCH_SLOP = 10;   // a finger wobbles more on a tap
 
     /** Where the pad would land: another pad, or somewhere that takes it off. */
     const at = (e) => {
@@ -312,7 +312,6 @@ class App {
     };
 
     const disarm = () => {
-      if (armed) clearTimeout(armed.timer);
       armed = null;
     };
 
@@ -323,42 +322,25 @@ class App {
       const from = Number(el.dataset.i);
       if (!this.board.pads[from] || !this.board.pads[from].file) return;
 
-      armed = { el, from, x: e.clientX, y: e.clientY, id: e.pointerId, touch: e.pointerType === 'touch', timer: null };
-      if (!armed.touch) return;
-
-      // A finger has to be able to scroll the board, so it picks a pad up by
-      // resting on it rather than by moving: hold, and the pad comes away.
-      const point = { clientX: e.clientX, clientY: e.clientY, pointerId: e.pointerId };
-      armed.timer = setTimeout(() => {
-        const { el: held, from: which } = armed;
-        armed = null;
-        begin(held, which, point, held);
-        if (navigator.vibrate) navigator.vibrate(12);
-        over(at(point));
-      }, HOLD);
+      armed = { el, from, x: e.clientX, y: e.clientY, id: e.pointerId, touch: e.pointerType === 'touch' };
     });
 
     refs.grid.addEventListener('pointermove', (e) => {
       if (!drag) {
         if (!armed || e.pointerId !== armed.id) return;
         const moved = Math.hypot(e.clientX - armed.x, e.clientY - armed.y);
-        // A finger that moves before the hold is up is scrolling, not dragging.
-        if (armed.touch) {
-          if (moved > 12) disarm();
-          return;
-        }
-        if (moved < SLOP) return;
-        const { el, from } = armed;
+        if (moved < (armed.touch ? TOUCH_SLOP : SLOP)) return;
+        const { el, from, touch } = armed;
         armed = null;
         begin(el, from, e, el);
+        if (touch && navigator.vibrate) navigator.vibrate(12);
       }
       drag.ghost.style.transform = `translate(${e.clientX - drag.dx}px, ${e.clientY - drag.dy}px)`;
       over(at(e));
     });
 
-    // Once a pad is in hand the board must hold still under it. The pad's own
-    // touch-action cannot say so — it is fixed when the finger lands, long
-    // before the hold is up — so the scroll is refused here instead.
+    // Once a pad is in hand the board must hold still under it. The pad's
+    // touch-action already says so; this covers a browser that ignores it.
     refs.grid.addEventListener('touchmove', (e) => {
       if (drag) e.preventDefault();
     }, { passive: false });

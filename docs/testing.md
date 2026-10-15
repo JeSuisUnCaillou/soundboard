@@ -100,7 +100,7 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 | `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades, each second-tap mode, tapping back on during a fade out, solo, priming a big board, start and stop points, a pad stopped while starting, keys (held, and a pad's own), cross-origin sound. |
 | `edit.spec.js` | Building a board: edit mode, the pad sheet (name, level, fades, gel, kept after a reload), Board settings (rows and columns, growing and shrinking), saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), the keyboard in edit mode. |
 | `offline.spec.js` | The service worker: reload with the network off, wifi that never answers, a server error, the board's own fonts. |
-| `drag.spec.js` | Moving pads in edit mode: by mouse on `desktop`, by a resting finger on `phone` (each `describe` skips the other project). Swapping, moving to an empty place, taking a pad off, the drop-off place marked from pick-up, and a press or a quick swipe that is not a drag. |
+| `drag.spec.js` | Moving pads in edit mode: by mouse on `desktop`, by a finger on `phone` (each `describe` skips the other project). Swapping, moving to an empty place, taking a pad off, the drop-off place marked from pick-up, and a press that is not a drag. |
 
 What is not covered yet is listed in [status.md](status.md#test-coverage).
 

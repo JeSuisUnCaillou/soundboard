@@ -1,4 +1,4 @@
-// Moving pads in edit mode: a mouse drags, a finger rests and then drags.
+// Moving pads in edit mode, by mouse and by finger: press and move, and the pad comes along.
 
 import { test, expect, openBoard, pad, showSounds } from './helpers.js';
 
@@ -133,67 +133,70 @@ test.describe('with a finger', () => {
     };
   }
 
-  async function holdAndDrag(page, from, to) {
+  async function fingerDrag(page, from, to) {
     const hand = await finger(page);
     const a = await centre(from);
     const b = await centre(to);
     await hand.down(a);
-    // Resting picks the pad up.
-    await expect(from).toHaveClass(/pad--dragging/);
     for (let n = 1; n <= 8; n++) {
       await hand.move({ x: a.x + ((b.x - a.x) * n) / 8, y: a.y + ((b.y - a.y) * n) / 8 });
     }
     await hand.up();
   }
 
-  test('a pad held and dragged to an empty place moves there, and stays after a reload', async ({ page }) => {
+  test('a pad dragged by a finger to an empty place moves there, and stays after a reload', async ({ page }) => {
     await openBoard(page);
     await page.locator('#btnEdit').click();
     // On a phone the first launch's toast covers that place, and catches the
     // drop until it goes (#51).
     await expect(page.locator('#toast')).toBeHidden();
 
-    await holdAndDrag(page, pad(page, 'Gunshot'), slot(page, 4));
+    await fingerDrag(page, pad(page, 'Gunshot'), slot(page, 4));
     await expectLayout(page, ['', 'Crickets ambiance', 'Sexy', '', 'Gunshot']);
 
     await page.reload();
     await expectLayout(page, ['', 'Crickets ambiance', 'Sexy', '', 'Gunshot']);
   });
 
-  test('a pad held and dragged onto another swaps places with it', async ({ page }) => {
+  test('a pad dragged by a finger onto another swaps places with it', async ({ page }) => {
     await openBoard(page);
     await page.locator('#btnEdit').click();
 
-    await holdAndDrag(page, pad(page, 'Crickets ambiance'), pad(page, 'Sexy'));
+    await fingerDrag(page, pad(page, 'Crickets ambiance'), pad(page, 'Sexy'));
     await expectLayout(page, ['Gunshot', 'Sexy', 'Crickets ambiance']);
   });
 
-  test('a finger that moves at once scrolls instead of picking the pad up', async ({ page }) => {
+  test('a finger that moves at once takes the pad along, with no wait', async ({ page }) => {
     await openBoard(page);
     await page.locator('#btnEdit').click();
     const crickets = pad(page, 'Crickets ambiance');
     const hand = await finger(page);
     const a = await centre(crickets);
-    const b = await centre(slot(page, 4));
 
     await hand.down(a);
     await hand.move({ x: a.x, y: a.y + 20 });
-    await hand.move(b);
-    // Well past the time a resting finger takes to pick a pad up, it has not.
-    const started = Date.now();
-    await expect.poll(async () => {
-      if (await crickets.evaluate((el) => el.classList.contains('pad--dragging'))) return 'picked up';
-      return Date.now() - started > 1000 ? 'left alone' : 'waiting';
-    }, { intervals: [100] }).toBe('left alone');
+    await expect(crickets).toHaveClass(/pad--dragging/);
+    await hand.move(await centre(slot(page, 4)));
     await hand.up();
-    await expectLayout(page, ['Gunshot', 'Crickets ambiance', 'Sexy', '', '']);
+    await expectLayout(page, ['Gunshot', '', 'Sexy', '', 'Crickets ambiance']);
   });
 
-  test('a pad held and dragged onto the bar at the bottom comes off the board', async ({ page }) => {
+  test('a finger that touches a pad and lifts plays it', async ({ page }) => {
+    await openBoard(page);
+    await page.locator('#btnEdit').click();
+    const crickets = pad(page, 'Crickets ambiance');
+    const a = await centre(crickets);
+
+    await page.touchscreen.tap(a.x, a.y);
+    await expect(crickets).toHaveClass(/pad--playing/);
+    await expectLayout(page, ['Gunshot', 'Crickets ambiance', 'Sexy']);
+  });
+
+  test('a pad dragged by a finger onto the bar at the bottom comes off the board', async ({ page }) => {
     await openBoard(page);
     await page.locator('#btnEdit').click();
 
-    await holdAndDrag(page, pad(page, 'Sexy'), page.locator('#btnBrowse'));
+    await fingerDrag(page, pad(page, 'Sexy'), page.locator('#btnBrowse'));
     await expect(page.locator('#toast')).toHaveText(/^sexy is off the board\. The sound is still under Sounds\.$/i);
     await expectLayout(page, ['Gunshot', 'Crickets ambiance', '']);
 
@@ -214,6 +217,7 @@ test.describe('with a finger', () => {
     const a = await centre(sexy);
 
     await hand.down(a);
+    await hand.move({ x: a.x, y: a.y + 20 });
     await expect(sexy).toHaveClass(/pad--dragging/);
     await expectDropZoneMarked(zone);
 

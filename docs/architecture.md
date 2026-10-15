@@ -176,8 +176,9 @@ on pads; only `firstBoard()` lays sounds out, through `place()`.
 mode a click on a filled pad still fires it (a listen), a click on a sound in
 the tree previews it, the pencil (or shift-click) opens the pad
 sheet, a click on an empty pad makes it the *waiting pad* for the next **+**.
-Pads move by pointer events (`wirePadDragging`): a mouse drags after 6 px; a
-finger after resting 400 ms. Dropping on another pad swaps them (`model.move`);
+Pads move by pointer events (`wirePadDragging`): a mouse drags after 6 px, a
+finger after 10 px; a filled pad has `touch-action: none` while editing, so the
+finger moves the pad rather than the board. Dropping on another pad swaps them (`model.move`);
 dropping on `#book`, or anywhere on `#transport` while `#browse` shows in it,
 takes the pad off. Whichever of the two the layout shows is marked
 `.drop--ready` for as long as a pad is in hand, and `.drop--off` while the pad
