@@ -30,4 +30,22 @@ Head reviewed: 1dac2014e2fc62cf88f2dd4cf5a650f10923cc12 (after merging main: pen
 - bugs: boards saved before this branch have no `settled`, so a hit pad an operator set to layer on purpose is treated as length-set, and a cue dropped on it goes back to fades it out — left to the user: an old board cannot tell an operator's choice from the length's, and treating every old pad as settled would keep the #23 bug on every existing board.
 - architect: no findings.
 
-Reviewed head: 1dac2014e2fc62cf88f2dd4cf5a650f10923cc12
+
+# Pass 4
+
+Head reviewed: ce6b50d (after merging main again: #55)
+
+- bugs: a launch whose read failed could save a stand-in board over the real one, or let forgetOtherBoards drop it (blocking) — fixed in 5cd9fa9: after a failed read, nothing is written that session.
+- bugs: the moss-to-default branch of giveSound had no test — fixed in 5cd9fa9.
+- bugs: the queryPermission catch had no test — fixed in 5cd9fa9 (a stored place that cannot be asked).
+- bugs: the dbPromise reset and onblocked change had no test — removed in 5cd9fa9; open() is main's again.
+- architect: no findings.
+
+# Pass 5
+
+Head reviewed: 5cd9fa99e3b42c358aa011a0adee70edf1e1e6c1
+
+- bugs: no findings.
+- architect: no findings.
+
+Reviewed head: 5cd9fa99e3b42c358aa011a0adee70edf1e1e6c1
