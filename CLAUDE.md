@@ -134,4 +134,9 @@ GitHub refuses a review from a pull request's own author.
 The owner merges. When the owner says "validated" or "merge once green" about
 a thread's pull requests, merge each one as soon as it is green.
 
+Once the work is pushed, review it with `Skill(skill: "review-loop")` before
+handing it over; a Stop hook starts it otherwise. The skill says which pull
+requests Claude merges by itself once it converges (small bug fixes) and
+which wait for the owner.
+
 Merge with a squash, so the title ends with the pull request number, `… (#n)`.
