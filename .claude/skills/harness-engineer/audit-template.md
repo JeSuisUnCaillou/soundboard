@@ -21,7 +21,7 @@ Previous: <link to the previous audit, or "first">.
 | questions asked whose answer was written down | | |
 | pushes per PR (median, max) | | |
 | e2e runs red on a PR, then green | | |
-| cost per session in `usage.cost_usd` (median, total) | | |
+| cost per session in `external_metadata.usage.cost_usd` (median, total) | | |
 | harness files changed | | |
 | harness shape (`shape.py`): files over a threshold, description characters, duplicates | | |
 | open `harness` issues at window end | | |

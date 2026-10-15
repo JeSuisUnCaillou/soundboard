@@ -36,11 +36,12 @@ loaded through `ToolSearch` if they are deferred:
 
 - `list_sessions` (`limit: 100`, then `after_id` to page back) gives each
   session's title, `created_at`, `updated_at`, `origin` (`android`, `ios`,
-  `web_claude_ai`…), `status_bucket`, `post_turn_summary` and `usage`
-  (`cost_usd`, cache read and write tokens). **It lists every repository of the
-  account**: keep only the sessions whose `session_context.sources` name
-  `JeSuisUnCaillou/soundboard`, and say in the audit how many others you
-  dropped.
+  `web_claude_ai`…), `status_bucket`, `post_turn_summary` and
+  `external_metadata.usage` (`cost_usd`, `cache_read_tokens`,
+  `cache_write_tokens`; absent on sessions run from the CLI). **It lists every
+  repository of the account**: keep only the sessions whose
+  `session_context.sources` name `JeSuisUnCaillou/soundboard`, and say in the
+  audit how many others you dropped.
 - `list_events` with `kinds: ["user", "assistant", "result"]` and `limit: 100`
   reads one session's conversation without hook and stream noise; page back
   with `before_id` set to `first_id` while `has_more` holds. The filter runs
@@ -80,9 +81,9 @@ What to look for, in order of yield:
    Playwright browser download.
 5. **A rule quoted from memory** and wrong: a figure, a path, a skill's name.
 
-Cost is `usage.cost_usd` per session, summed over the window and per kind of
-work (feature, fix, tests, harness, by title); what matters is the trend
-between two audits, not the figure of the day.
+Cost is `external_metadata.usage.cost_usd` per session, summed over the window
+and per kind of work (feature, fix, tests, harness, by title); what matters is
+the trend between two audits, not the figure of the day.
 
 ## Project threads
 

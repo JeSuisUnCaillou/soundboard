@@ -34,9 +34,9 @@ From `list_sessions`, keeping the soundboard sessions of the window
 
 - **sessions**: their number, by `origin` and by `status_bucket`; a `failed`
   one is read.
-- **cost**: `usage.cost_usd` per session, its median and total; and
-  `cache_write_tokens` against `cache_read_tokens`, since a session that keeps
-  rewriting its cache is one that kept waiting.
+- **cost**: `external_metadata.usage.cost_usd` per session, its median and
+  total; and `cache_write_tokens` against `cache_read_tokens`, since a session
+  that keeps rewriting its cache is one that kept waiting.
 - **user corrections**: read by hand in the `user` events and the threads, never
   counted by keyword.
 
