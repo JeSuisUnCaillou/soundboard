@@ -157,6 +157,12 @@ loads one back. Pads refer to files by their path inside the folder, so a board
 travels with its folder to another machine or another browser. A pad whose file
 is missing is shown struck through rather than quietly dropped.
 
+**A pad that will not load says so.** Each pad's sound is loaded as the board
+is set up. If the browser cannot read a file, or will not open one more player
+for it, the pad gets a red dashed border and "will not load", and a message
+names it, so it turns up before the show rather than at the tap. Tapping it
+tries again.
+
 ## How it is built
 
 Static files, no dependencies, no build: an HTML shell, one stylesheet, and ES

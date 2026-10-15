@@ -96,6 +96,29 @@ test('sounds added from the file picker land in the folder and can go on a pad',
   await expect(pad(page, 'Door slam')).toHaveCount(1);
 });
 
+test('a pad whose file will not load says so before it is tapped', async ({ page }) => {
+  await page.addInitScript(() => {
+    delete window.showOpenFilePicker;
+    delete window.showDirectoryPicker;
+  });
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+
+  await page.locator('#btnAdd').click();
+  const chooser = page.waitForEvent('filechooser');
+  await page.locator('#btnAddFiles').click();
+  await (await chooser).setFiles({ name: 'thunder.wav', mimeType: 'audio/wav', buffer: Buffer.from('not a sound at all') });
+  await page.locator('#lib .lib__item', { hasText: 'thunder' }).locator('.lib__add').click();
+
+  const thunder = pad(page, 'Thunder');
+  await expect(thunder).toHaveClass(/pad--broken/);
+  await expect(thunder).toHaveAttribute('aria-label', /will not load/);
+  await expect(page.locator('#toast')).toHaveText(/^“thunder” will not load, so it will not play\.$/i);
+  // The pads that do load are left as they were.
+  await expect(pad(page, 'Sexy')).not.toHaveClass(/pad--broken/);
+});
+
 test('sounds added to an emptied board wait under Sounds instead of filling pads', async ({ page }) => {
   await page.addInitScript(() => {
     delete window.showOpenFilePicker;

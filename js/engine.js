@@ -23,6 +23,7 @@ export class Engine {
     this.extras = new Set();   // layered one-shot voices
     this.masterLevel = 0.8;
     this.onchange = () => {};
+    this.onbroken = () => {};  // a pad's file would not load
   }
 
   /**
@@ -315,6 +316,12 @@ export class Engine {
     this.onchange();
   }
 
+  /** Whether a pad's file was tried and would not load. */
+  wontLoad(i) {
+    const ch = this.channels.get(i);
+    return !!(ch && ch.broken);
+  }
+
   // ── internals ───────────────────────────────────────────────────────────
 
   async _channel(i, pad) {
@@ -334,13 +341,28 @@ export class Engine {
         this.onchange();
       };
       el.addEventListener('ended', ch.onEnded);
+      // Found out while the board is being set up, not at the tap in the
+      // show: a file the browser cannot read, or one player too many.
+      el.addEventListener('error', () => {
+        if (this.channels.get(i) !== ch || !ch.path || ch.broken) return;
+        ch.broken = true;
+        this.onbroken(i);
+      });
+      el.addEventListener('loadeddata', () => {
+        if (!ch.broken) return;
+        ch.broken = false;
+        this.onbroken(i);
+      });
       this.channels.set(i, ch);
       if (this.woke) this._nudge(ch);
     }
     if (ch.path !== pad.file) {
+      ch.broken = false;
       ch.el.src = await this.lib.url(pad.file);
       ch.path = pad.file;
       ch.el.load();
+    } else if (ch.el.error) {
+      ch.el.load();   // try again: whatever stopped it may have passed
     }
     return ch;
   }

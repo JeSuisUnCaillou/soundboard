@@ -306,6 +306,8 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
 .pad--missing { border-style: dashed; border-top-style: dashed; background: none; }
 .pad--missing .pad__name { color: rgba(255, 255, 255, 0.45); text-decoration: line-through; }
 .pad--missing .pad__time::after { content: " · missing"; color: var(--alert); }
+.pad--broken { border-style: dashed; border-top-style: dashed; border-color: var(--alert); }
+.pad--broken .pad__time::after { content: " · will not load"; color: var(--alert); }
 
 .pad--drop { border-color: var(--go); background: color-mix(in oklab, var(--go) 18%, var(--pad)); }
 .pad--dragging, .pad--dragging + .pad__pencil { opacity: 0.4; }

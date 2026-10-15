@@ -66,7 +66,7 @@ Move it to `helpers.js` when a second spec needs it.
 
 The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 
-- What to assert on: `pad--playing`, `pad--paused`, `pad--missing`,
+- What to assert on: `pad--playing`, `pad--paused`, `pad--missing`, `pad--broken`,
   `pad--waiting`, `lib__item--used`, `#toast` text, `aria-pressed`,
   `disabled`. A fade that must finish is waited for by asserting its end state.
 - Branch on `isNarrow(page)` only where the layout really differs (the book,
