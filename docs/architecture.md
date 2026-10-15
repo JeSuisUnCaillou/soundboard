@@ -137,8 +137,10 @@ made once per path and revoked on `reset()`.
   (0.0001), never on `el.volume`. `_stopVoice` ramps and then `settle()`s on a
   timer: pause, rewind to `trimStart`, back to `idle` (or dropped, for extras).
 - `tick()` runs every animation frame while anything plays (`App.run`): it
-  honours `trimEnd` (loop back or stop), starts the fade out early enough to
-  land on the stop point, and loops from `trimStart`.
+  honours `trimEnd` (loop back or stop) and, unless the pad loops, starts the
+  fade out early enough to land on the stop point. A loop with trim points is
+  run by hand (`el.loop` is off); when the file itself ends, the `ended`
+  handler sends it back to `trimStart` (`_goRound`).
 - `reset()` tears down every element. The app calls it whenever paths may now
   point at different blobs (reconnect, moves, resizing that drops pads, import, empty).
 - iOS: `wake()` on the first gesture nudges every primed element to play and
