@@ -42,7 +42,7 @@ how `board.spec.js` tests a sound served cross-origin.
 | `expect` | Re-exported from Playwright. |
 | `openBoard(page)` | Go to `/` and wait for the default board's twelve pads. Every test starts from a fresh browser context, so this is always a first launch. |
 | `pad(page, title)` | A filled pad by the name it shows. |
-| `BUNDLED_TITLES` | The twelve pad titles of the Default board, in board order. Gunshot and Explosion (3 s) are hits by length; Phone and Sting are set up as hits though they run longer; Storm, Crickets and Birds loop as places; Suspense, Romance, Sad, Hero and Happy loop as music. The first board is full, so a test that adds a sound clears a pad first. |
+| `BUNDLED_TITLES` | The twelve pad titles of the Default board, in board order; how each pad is set up is in `BUNDLED` (`js/bundled.js`). The first board is full, so a test that adds a sound clears a pad first. |
 | `showSounds(page)` | Open the book wherever the layout keeps it (**Browse files** on phone). |
 | `isNarrow(page)` | Viewport ≤ 900px. |
 | `silentWav(seconds, rate)` | A WAV buffer made in the test, for adding sounds. Never commit test audio. |
