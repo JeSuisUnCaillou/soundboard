@@ -27,7 +27,7 @@ export const BUNDLED = [
   { file: 'sting.mp3', name: 'Sting', ...HIT },
   { file: 'storm.mp3', name: 'Storm', ...PLACE, gain: 0.5 },
   { file: 'crickets.mp3', name: 'Crickets', ...PLACE, gain: 0.8 },
-  { file: 'birds.mp3', name: 'Birds', ...PLACE },
+  { file: 'birds.mp3', name: 'Birds', ...PLACE, gain: 0.7 },
   { file: 'suspense.mp3', name: 'Suspense', ...MOOD },
   { file: 'romance.mp3', name: 'Romance', ...MOOD, gain: 0.85 },
   { file: 'sad.mp3', name: 'Sad', ...MOOD, gain: 0.75 },
