@@ -28,25 +28,27 @@ screen wake lock.
 
 ## Test coverage
 
-40 tests, each run at desktop and phone size, all green. Covered: the first
+50 tests, each run at desktop and phone size, all green. Covered: the first
 launch, tapping, Stop, Escape, the master volume, fade and second-tap edge
-cases, stop points (also with the tab hidden), a pad stopped while it is still starting, held keys, a cross-origin sound, edit mode, renaming a pad
-(with reload), emptying the board, adding sounds through the file input, saving a
-board file and loading it back (missing sounds struck through), dropping several sounds or folders at once,
-resizing the board, Reconnect during a cue, keeping sounds added mid-copy and
-skipping one that cannot be kept,
-coming back offline, opening on weak wifi, keeping a good copy over a server
-error, asking no other site for anything, and setting up a pad, hearing a
-sound and putting it on a pad from the keyboard.
+cases, every second-tap mode, start and stop points (also with the tab
+hidden), solo, a pad stopped while it is still starting, held keys and a pad's
+own key, a cross-origin sound, edit mode, renaming a pad and its level, fades
+and gel (with reload), Board settings rows and columns (columns and rows
+changed at once too), shrinking the board, the waiting pad, emptying the
+board, adding sounds through the file input, saving a board file and loading
+it back (missing sounds struck through), dropping several sounds or folders
+at once, Reconnect during a cue, keeping sounds added mid-copy and skipping
+one that cannot be kept, coming back offline, opening on weak wifi, keeping a
+good copy over a server error, asking no other site for anything, and setting
+up a pad, hearing a sound and putting it on a pad from the keyboard.
 
 Not covered yet:
 
 | Gap | Issue |
 | --- | --- |
-| Pad settings beyond the name (key, loop, second-tap modes, trims, solo, level, gel) and Board settings rows / columns beyond one resize that keeps every pad | [#6](https://github.com/JeSuisUnCaillou/soundboard/issues/6) |
 | Moving and removing pads by mouse and by finger | [#7](https://github.com/JeSuisUnCaillou/soundboard/issues/7) |
 | Playback modes, a refused Reconnect, and a browser out of room for the kept copies | [#24](https://github.com/JeSuisUnCaillou/soundboard/issues/24) |
-| Dropping a folder on the window, the library filter, the waiting pad | none |
+| Dropping a folder on the window, the library filter | none |
 
 ## Known loose ends
 

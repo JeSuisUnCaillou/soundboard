@@ -44,7 +44,7 @@ how `board.spec.js` tests a sound served cross-origin.
 | `pad(page, title)` | A filled pad by the name it shows. |
 | `pencil(page, title)` | The button that opens that pad's settings in edit mode, by its label. |
 | `BUNDLED_TITLES` | `['Gunshot', 'Crickets ambiance', 'Sexy']`. Gunshot (3 s) is a hit; Crickets ambiance (26 s) and Sexy (2 min 54) are cues. |
-| `showSounds(page)` | Open the book wherever the layout keeps it (**Browse files** on phone). |
+| `showSounds(page)` | Open the book wherever the layout keeps it (**Browse files** on phone), unless it is open already. |
 | `isNarrow(page)` | Viewport ≤ 900px. |
 | `silentWav(seconds, rate)` | A WAV buffer made in the test, for adding sounds. Never commit test audio. |
 
@@ -95,8 +95,8 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 
 | Spec | Covers |
 | --- | --- |
-| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades and second taps, tapping back on during a fade out, solo, priming a big board, stop points (also in a hidden tab), a pad stopped while starting, keys, cross-origin sound, Reconnect during a cue. |
-| `edit.spec.js` | Building a board: edit mode, the pad sheet, Board settings (resizing too), saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), keeping copies of sounds, the keyboard in edit mode. |
+| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades, each second-tap mode, tapping back on during a fade out, solo, priming a big board, start and stop points (also in a hidden tab), a pad stopped while starting, keys (held, and a pad's own), cross-origin sound, Reconnect during a cue. |
+| `edit.spec.js` | Building a board: edit mode, the pad sheet (name, level, fades, gel, kept after a reload), Board settings (rows and columns, growing and shrinking, both at once), saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), keeping copies of sounds, the keyboard in edit mode. |
 | `offline.spec.js` | The service worker: reload with the network off, wifi that never answers, a server error, the board's own fonts. |
 
 What is not covered yet is listed in [status.md](status.md#test-coverage).
