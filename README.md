@@ -99,8 +99,8 @@ for a moment and it comes away with you — a touch that moves straight away is
 scrolling the board, not dragging. Dropping a pad on the folder beside the board,
 or on the bar beneath it, takes it off the board and leaves the sound where it
 is; that place is marked in red as soon as a pad is picked up. There is no
-limit on how many sounds a board holds. **Empty the board** clears the pads without touching the sounds, and
-asks twice.
+limit on how many sounds a board holds. **Empty the board** clears the pads
+without touching the sounds, and asks twice.
 
 **Board settings** sets how many rows and columns the board has — three columns by
 four rows to begin with. That is the whole board: twelve pads hold twelve sounds, and the rest
