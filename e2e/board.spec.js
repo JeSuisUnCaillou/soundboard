@@ -358,15 +358,15 @@ test('Reconnect in the middle of a cue cuts nothing', async ({ page }) => {
     };
   });
   await openBoard(page);
-  const wav = [...silentWav(30)];
-  await page.evaluate(async (bytes) => {
+  const writeRain = (seconds) => page.evaluate(async (bytes) => {
     const root = await navigator.storage.getDirectory();
     const show = await root.getDirectoryHandle('Show', { create: true });
     const file = await show.getFileHandle('rain.wav', { create: true });
     const out = await file.createWritable();
     await out.write(new Uint8Array(bytes));
     await out.close();
-  }, wav);
+  }, [...silentWav(seconds)]);
+  await writeRain(30);
 
   await page.locator('#btnEdit').click();
   await showSounds(page);
@@ -391,14 +391,17 @@ test('Reconnect in the middle of a cue cuts nothing', async ({ page }) => {
   await rain.click();
   await expect(page.locator('#grid .pad--playing')).toHaveCount(2);
 
+  // Meanwhile the file in the folder has been made longer than its copy.
+  await writeRain(45);
   await reconnect.click();
   await expect(reconnect).toBeHidden();
   await expectStillPlayingAfter(page, rain, 1500);
   await expect(crickets).toHaveClass(/pad--playing/);
 
-  // Once stopped, the pad plays again, now from the folder.
-  await rain.click();
+  // Once stopped, the pad plays again, now from the folder's longer file.
+  await page.keyboard.press('Escape');
   await expect(rain).not.toHaveClass(/pad--playing/);
   await rain.click();
   await expect(rain).toHaveClass(/pad--playing/);
+  await expect(rain.locator('.pad__time')).toHaveText(/^-0:4[0-5]$/);
 });
