@@ -1,14 +1,62 @@
 # Working on the soundboard
 
-A static web app: `index.html`, `css/`, `js/` (ES modules), `sw.js`. No build
-step and no runtime dependencies — keep it that way. `package.json` exists only
-for the test tooling. The README's "How it is built" section maps the files.
+A sound-cue board for theatre: a static web app (`index.html`, `css/`, `js/` ES
+modules, `sw.js`) that plays the operator's own audio files from a grid of
+pads, offline. No build step and no runtime dependencies — keep it that way.
+`package.json` exists only for the test tooling.
+
+## Read this first
+
+- [README.md](README.md) — what the board does, from the operator's side. It is
+  the specification: a behaviour it describes is a behaviour to keep.
+- [docs/architecture.md](docs/architecture.md) — what each file owns, the board
+  and pad format, how a sound gets from the disk to the speakers, what is
+  stored where, and recipes for common changes. **Read it before touching
+  code.**
+- [docs/decisions.md](docs/decisions.md) — why it is built this way, and the
+  voice the UI, comments and commits are written in. Changing one of these is
+  the owner's call.
+- [docs/glossary.md](docs/glossary.md) — every term (pad, hit, cue, gel, kept
+  copies, live, released…) with the code that carries it.
+- [docs/testing.md](docs/testing.md) — running and writing the end-to-end
+  tests.
+- [docs/status.md](docs/status.md) — what works, what is untested, loose ends.
+- [docs/deployment.md](docs/deployment.md) — CI, GitHub Pages, branch previews.
+
+## One fact, one place
+
+Each piece of information has one owning file; others link to it. When
+something changes, update its owner — and only its owner.
+
+| Topic | Owner |
+| --- | --- |
+| What the board does, for an operator; browser support | `README.md` |
+| Code map, data format, audio engine, storage, offline, recipes | `docs/architecture.md` |
+| Why: product rules, technical choices, voice | `docs/decisions.md` |
+| Vocabulary | `docs/glossary.md` |
+| How to run and write tests, helpers, coverage by spec | `docs/testing.md` |
+| What exists, test gaps, known loose ends | `docs/status.md` |
+| Workflows, Pages, previews | `docs/deployment.md` |
+| Tasks, bugs, ideas, their order | [GitHub issues](https://github.com/JeSuisUnCaillou/soundboard/issues) |
+| Rules for working here | this file |
+
+A change that alters behaviour, a file's role, a stored format or a convention
+updates the doc that owns it in the same commit. A doc that disagrees with the
+code is a bug: fix whichever is wrong.
 
 ## English only
 
 Everything in the repository is written in English: code, comments, docs,
 commit messages, and this file — even when the conversation is in another
 language.
+
+## Track work in GitHub issues
+
+Work is tracked in the repository's GitHub issues. Before starting a piece of
+work, find its issue or open one that says what and why. Reference it from the
+pull request (`Closes #n`) so merging closes it. Something found along the way
+and not done goes in a new issue, not in a TODO comment. When an issue opens or
+closes a gap listed in `docs/status.md`, update that table.
 
 ## End-to-end tests
 
@@ -45,6 +93,9 @@ How the tests are written:
 - The tests are served by `e2e/serve.js`, which answers byte-range requests.
   `python3 -m http.server` does not, and Chromium will not play a sound
   through it under test.
+
+The helpers, a worked example and the limits of the suite are in
+[docs/testing.md](docs/testing.md).
 
 CI runs the suite on every pull request (`.github/workflows/e2e.yml`), and
 the Pages deploy runs it first and does not publish if it fails.
