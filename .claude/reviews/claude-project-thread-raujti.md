@@ -49,3 +49,10 @@ Head reviewed: 5cd9fa99e3b42c358aa011a0adee70edf1e1e6c1
 - architect: no findings.
 
 Reviewed head: 5cd9fa99e3b42c358aa011a0adee70edf1e1e6c1
+
+## Pass 6 (after merging main again)
+
+- bugs: no findings. Main's drag work never changes a pad's sound, carries `settled` with the pad and saves.
+- architect: docs/status.md test count and covered list were stale after the merge; fixed in ddcb8be (67 tests, storage and drop behaviours listed; #23 and #45 rows dropped since this PR closes them).
+
+Reviewed head: ddcb8be89c5b92c86dd63780f98421cfc5180b3d
