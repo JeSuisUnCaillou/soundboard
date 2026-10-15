@@ -53,19 +53,18 @@ Move it to `helpers.js` when a second spec needs it.
 
 ## Writing a test
 
-- Drive it the way an operator does: click pads, press keys, open sheets by
-  their buttons, fill fields by the ids in `index.html`.
-- Assert on what is on screen: classes (`pad--playing`, `pad--paused`,
-  `pad--missing`, `pad--waiting`, `lib__item--used`), text, `#toast`,
-  `aria-pressed`, `disabled`. Never call into the app's modules or read
-  IndexedDB.
-- Wait with `await expect(...)`, never `waitForTimeout`. A fade that must
-  finish is waited for by asserting its end state.
-- Pass in both projects. Branch on `isNarrow(page)` only where the layout
-  really differs (the book, the bottom bar).
+The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
+
+- What to assert on: `pad--playing`, `pad--paused`, `pad--missing`,
+  `pad--waiting`, `lib__item--used`, `#toast` text, `aria-pressed`,
+  `disabled`. A fade that must finish is waited for by asserting its end state.
+- Branch on `isNarrow(page)` only where the layout really differs (the book,
+  the bottom bar).
+- `page.route` cannot see requests the service worker answers: a test that
+  routes requests needs `test.use({ serviceWorkers: 'block' })`, as the
+  cross-origin test in `board.spec.js` does.
 - Persistence is tested by `page.reload()` and asserting the board came back.
-- Adding sounds: delete the File System Access pickers in an init script so the
-  board falls back to `<input type=file>`, then answer it:
+- Adding sounds, with the pickers deleted as CLAUDE.md says:
 
   ```js
   await page.addInitScript(() => {

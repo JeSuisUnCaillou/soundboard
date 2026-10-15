@@ -156,13 +156,12 @@ is missing is shown struck through rather than quietly dropped.
 Static files, no dependencies, no build: an HTML shell, one stylesheet, and ES
 modules for the wiring, the audio engine, the library of sounds, the board
 model, storage, the setup sheets and drawing. Each pad keeps its own `<audio>`
-element wired through a gain node, buffered ahead of time, so a tap starts the
-sound in a few milliseconds; fades are exponential ramps on that gain node, so
-a fade out can be interrupted by a fade in without a click. Boards, folder
-handles and the kept copies of the sounds live in IndexedDB.
+element, buffered ahead of time, so a tap starts the sound in a few
+milliseconds. Boards, folder handles and the kept copies of the sounds live in
+IndexedDB.
 
 The file-by-file map, the board format and the reasons behind it are in
-[docs/](docs/architecture.md) — start with [CLAUDE.md](CLAUDE.md) if you are
+[docs/architecture.md](docs/architecture.md) — start with [CLAUDE.md](CLAUDE.md) if you are
 going to change something.
 
 ## Testing

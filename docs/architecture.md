@@ -39,7 +39,7 @@ A board, as stored and as exported (`model.js`, `BOARD_VERSION = 3`):
 ```js
 {
   version: 3,
-  id: 'default-board',          // slug of the first source's name
+  id: 'default-board',          // or a slug of the first source, for a board made with none open
   cols: 3, rows: 3,             // 1..12 each (MAX_COLS, MAX_ROWS)
   master: 0.8,                  // 0..1
   defaults: { fadeIn: 1, fadeOut: 1.5 },   // seconds, for new pads
@@ -60,7 +60,7 @@ A pad:
 | `trimStart`, `trimEnd` | 0, null | Start and stop points in seconds; `trimEnd` must be after `trimStart` or it is `null`. |
 | `tap` | `fadeout` | *Second tap*: `fadeout`, `restart`, `pause`, `overlay`, `ignore`. |
 | `solo` | false | Fade everything else out when this starts. |
-| `key` | from position | One lowercase character; unique on the board. |
+| `key` | from position | One lowercase character. Kept unique by `PadEditor.save`; `migrate` does not dedupe keys in an imported board. |
 | `duration` | 0 | Measured length in seconds; 0 until measured. |
 
 **Changing the format.** Add the field in `newPad` (its default) and in
@@ -73,7 +73,7 @@ board that has not been through it.
 
 **Size is fixed.** `fitPads` pads or truncates `pads` to `cols * rows`; nothing
 grows a board. Shrinking returns how many filled pads fell off, and the app
-toasts it. Changing `cols` re-wraps the same array, so pads keep their order,
+toasts it (and see [#17](https://github.com/JeSuisUnCaillou/soundboard/issues/17): changing columns is buggy). Changing `cols` re-wraps the same array, so pads keep their order,
 not their row and column.
 
 **Keys** default from the pad's position on a keyboard-shaped grid (`KEY_ROWS`:
@@ -93,7 +93,7 @@ The library is additive: sources are added, never swapped. Each entry is
 
 | Source kind | How it arrives | Backed by | Survives a reload? |
 | --- | --- | --- | --- |
-| `bundled` | Always, at boot (`addBundled`) | `url: sounds/<file>` | Yes, it is part of the app. Path prefix `default/`. |
+| `bundled` | Always, at boot (`addBundled`) | `url: sounds/${encodeURIComponent(file)}` | Yes, it is part of the app. Path prefix `default/`. |
 | `dir` / `file` with `handle` | `showDirectoryPicker` / `showOpenFilePicker` / a drop with `getAsFileSystemHandle` (desktop Chromium) | `FileSystemHandle` | The handle is stored; permission usually must be granted again (*Reconnect*). |
 | `dir` / `files` without handle | `<input type=file>` (with `webkitdirectory` for a folder), or a drop via `webkitGetAsEntry` | `File` | No; only through the *kept copies*. |
 | `cache` | At restore, from IndexedDB (`addCached`) | `File` made from the stored blob | Yes. |
@@ -140,7 +140,7 @@ made once per path and revoked on `reset()`.
   honours `trimEnd` (loop back or stop), starts the fade out early enough to
   land on the stop point, and loops from `trimStart`.
 - `reset()` tears down every element. The app calls it whenever paths may now
-  point at different blobs (reconnect, moves, resizing, import, empty).
+  point at different blobs (reconnect, moves, resizing that drops pads, import, empty).
 - iOS: `wake()` on the first gesture nudges every primed element to play and
   pause at silence, so each answers its first tap.
 - `voiceElement()` sets `crossOrigin = 'anonymous'`: a media element from
@@ -156,7 +156,8 @@ wire events, add the bundled sounds, then `restore()`:
 2. Otherwise load and `migrate` the board, add its kept copies, `absorb([])`.
 3. Stored handles all `granted` → `reconnect()` silently. Some not → show
    **Reconnect** (pads already play from copies) or, if nothing at all can
-   play, open the picker with **Reopen**.
+   play, open the picker with **Reopen**. With no stored handles and nothing
+   playable, the picker opens without **Reopen**.
 
 **Adding sounds** always ends in `absorb(added)`: create a board if there is
 none (id = slug of the first source), store handles, save, `primeAll()` (first 48
@@ -181,7 +182,9 @@ no longer loaded; on `QuotaExceededError` it stops trying for the session.
 
 **Keys** (`onKey`): ignored in an open dialog, in a field, or with a modifier.
 Space = `stop()` (each live pad on its own fade out); Escape = cut all; a pad
-key fires that pad, ignoring auto-repeat.
+key fires that pad, ignoring auto-repeat. Because of the field rule, keyboard
+focus left on the master slider turns every shortcut off, Escape included
+([#12](https://github.com/JeSuisUnCaillou/soundboard/issues/12)).
 
 ## What is remembered
 

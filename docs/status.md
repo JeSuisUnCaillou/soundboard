@@ -9,13 +9,31 @@ _Last reviewed: 2026-10-15._
 
 ## What works
 
-Everything the [README](../README.md) describes is built and live: the default
-board, adding folders and files by picker or drop, the library tree with
-filter, auto-placement, pad settings (name, gel, level, fades, loop, trims,
-key, second tap, solo), board settings (size, default fades, save and load a
-board file), moving and removing pads by mouse and by finger, Stop / Space /
-Escape, the master volume, kept copies and Reconnect, offline through the
-service worker, install as an app, and the screen wake lock.
+Everything the [README](../README.md) describes is built and live, apart from
+the known bugs below: the default board on a first launch, adding folders and
+files by picker or drop, the library tree with filter, pad settings (name, gel,
+level, fades, loop, trims, key, second tap, solo), board settings (size,
+default fades, save and load a board file), moving and removing pads by mouse
+and by finger, Stop / Space / Escape, the master volume, kept copies and
+Reconnect, offline through the service worker, install as an app, and the
+screen wake lock.
+
+## Known bugs
+
+| Bug | Issue |
+| --- | --- |
+| Touching the master volume turns off every keyboard shortcut, Escape included | [#12](https://github.com/JeSuisUnCaillou/soundboard/issues/12) |
+| A looping pad with a stop point and a fade out plays once and stops | [#13](https://github.com/JeSuisUnCaillou/soundboard/issues/13) |
+| A looping pad with a start point but no stop point does not loop | [#14](https://github.com/JeSuisUnCaillou/soundboard/issues/14) |
+| A pad whose `play()` fails stays silent for the session while still lighting up | [#15](https://github.com/JeSuisUnCaillou/soundboard/issues/15) |
+| Stop points, loop points and fades to a stop point only work while the tab is visible | [#16](https://github.com/JeSuisUnCaillou/soundboard/issues/16) |
+| Changing columns in Board settings throws pads away or leaves sounds on the wrong pads | [#17](https://github.com/JeSuisUnCaillou/soundboard/issues/17) |
+| Pressing Reconnect during a show cuts every sound dead | [#18](https://github.com/JeSuisUnCaillou/soundboard/issues/18) |
+| Keeping copies of sounds can silently skip some | [#19](https://github.com/JeSuisUnCaillou/soundboard/issues/19) |
+| Dropping several files or folders at once in Chromium adds only the first | [#20](https://github.com/JeSuisUnCaillou/soundboard/issues/20) |
+| The service worker is slow on weak wifi and can cache error pages | [#21](https://github.com/JeSuisUnCaillou/soundboard/issues/21) |
+| Sounds in the tree and pad settings cannot be reached from the keyboard | [#22](https://github.com/JeSuisUnCaillou/soundboard/issues/22) |
+| Smaller fixes from the code review | [#23](https://github.com/JeSuisUnCaillou/soundboard/issues/23) |
 
 ## Test coverage
 
@@ -32,20 +50,28 @@ Not covered yet:
 | Saving a board file and loading it back; missing files struck through | [#5](https://github.com/JeSuisUnCaillou/soundboard/issues/5) |
 | Pad settings beyond the name (key, loop, second-tap modes, trims, solo, level, gel) and Board settings rows / columns | [#6](https://github.com/JeSuisUnCaillou/soundboard/issues/6) |
 | Moving and removing pads by mouse and by finger | [#7](https://github.com/JeSuisUnCaillou/soundboard/issues/7) |
-| Reconnect and stored handles (cannot be driven from a test) | none |
+| Playback modes, Reconnect and the kept copies | [#24](https://github.com/JeSuisUnCaillou/soundboard/issues/24) |
 | Dropping a folder on the window, the library filter, the waiting pad | none |
 
 ## Known loose ends
 
+Not filed as issues yet; open one before working on any of them.
+
 - Sounds no longer lay themselves out on the board, except the bundled ones on
-  a first launch. `App.absorb` in `js/app.js` still places up to `AUTO_PLACE`
-  (10) added sounds when the board has no filled pad, which only happens after
-  **Empty the board**.
+  a first launch, but `App.absorb` in `js/app.js` still places up to
+  `AUTO_PLACE` (10) added sounds when the board has no filled pad, which only
+  happens after **Empty the board**. Text left from the old behaviour: the
+  "Add more sounds" picker blurb ("lands on the first free pads",
+  `openPicker`), the comments on `AUTO_PLACE` and `absorb`, and the header of
+  `js/model.js`, which says the board "grows past" its size (`fitPads` never
+  grows it).
 - Offline, the Google Fonts stylesheet is not available (the service worker
   only caches same-origin files), so the board falls back to system fonts.
 - `sw.js` precaches `icon.svg` but not the PNG icons.
 - Remote branches left from merged work (`ccr-*`, `claude/compassionate-gauss-*`,
   `claude/mobile-upload-bug-*`) can be deleted.
 - `store.listBoards` / `deleteBoard` exist but there is no way to switch
-  between boards in the UI: the board in use is the one keyed by the first
-  folder opened, or `default-board`.
+  between boards in the UI. In practice the board is always `default-board`:
+  a first launch creates it and stores it as the last board. Only when no
+  board loads at all do `absorb` and `blankBoard` make one named after the
+  first source.

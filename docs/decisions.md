@@ -57,8 +57,7 @@ is in [architecture.md](architecture.md).
 - **One kept `<audio>` per pad, through its own gain node.** Buffered when the
   pad is set up, so a tap plays in milliseconds rather than after a fetch.
 - **Fades are exponential ramps on the gain node**, never on `el.volume`, so a
-  fade out can be interrupted by a fade in without a click, and fades sound
-  even to the ear.
+  fade out can be interrupted by a fade in without a click.
 - **Media elements are fetched with CORS** (`crossOrigin = 'anonymous'`).
   Otherwise a sound served from another origin plays as silence in the audio
   graph.
