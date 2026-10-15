@@ -36,4 +36,11 @@ Head reviewed: c0484f9 (main merged in, with its toast fix)
 - bugs: no findings.
 - architect: no findings.
 
-Reviewed head: c0484f9c3508ab1f4a5a8db246b7b48047073fb8
+# Pass 6
+
+Head reviewed: e957033 (main merged in again: the drag tests follow the twelve-sound board)
+
+- bugs: no findings.
+- architect: no findings.
+
+Reviewed head: e957033b4dc64f9f2b6f2be5fb3307b50959a6b0
