@@ -43,6 +43,27 @@ test('the master volume follows its slider', async ({ page }) => {
   await expect(page.locator('#masterValue')).toHaveText('35');
 });
 
+test('the keys still work after the master volume is touched', async ({ page }) => {
+  await openBoard(page);
+  const crickets = pad(page, 'Crickets ambiance');
+  const key = (await crickets.locator('.pad__key').textContent()).trim();
+
+  // Grabbing the slider leaves the focus on it, as a hand on a mouse does.
+  const master = page.locator('#master');
+  await master.click();
+  await expect(master).toBeFocused();
+
+  await page.keyboard.press(key);
+  await expect(crickets).toHaveClass(/pad--playing/);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#grid .pad--playing')).toHaveCount(0);
+
+  await page.keyboard.press(key);
+  await expect(crickets).toHaveClass(/pad--playing/);
+  await page.keyboard.press(' ');
+  await expect(crickets).not.toHaveClass(/pad--playing/);
+});
+
 /** Change a pad's settings in its sheet, then go back to running the show. */
 async function setUpPad(page, title, fields) {
   await page.locator('#btnEdit').click();

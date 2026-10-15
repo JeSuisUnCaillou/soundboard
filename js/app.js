@@ -20,6 +20,13 @@ const PATH_TYPE = 'application/x-soundboard-path';
 // Below this width the sounds list slides over the pads instead of sitting beside them.
 const NARROW = window.matchMedia('(max-width: 900px)');
 
+// Fields that take typing, where a letter is a letter and not a pad. A slider,
+// a checkbox or a button keeps the focus after a click but takes no text, so
+// the show's keys still work while one is focused.
+const TYPED = 'textarea, select, '
+  + 'input:not([type=range]):not([type=checkbox]):not([type=radio])'
+  + ':not([type=button]):not([type=submit]):not([type=reset]):not([type=color]):not([type=file])';
+
 class App {
   constructor() {
     this.library = new Library();
@@ -242,8 +249,8 @@ class App {
    *
    * With a mouse the whole pad is a handle: press anywhere but the pencil and
    * move, and the pad comes with you; press and release without moving and it
-   * simply plays. A touch that starts on a pad is left to scroll the board — a
-   * pad is moved under a finger by typing its row and column in its settings.
+   * simply plays. A touch that moves straight away is left to scroll the board;
+   * a finger that rests on a pad for a moment picks it up.
    */
   wirePadDragging() {
     let drag = null;
@@ -383,7 +390,7 @@ class App {
   onKey(e) {
     if (document.querySelector('dialog[open]')) return;
     const t = e.target;
-    if (t instanceof HTMLElement && (t.matches('input, select, textarea') || t.isContentEditable)) return;
+    if (t instanceof HTMLElement && (t.matches(TYPED) || t.isContentEditable)) return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (!this.board) return;
 
