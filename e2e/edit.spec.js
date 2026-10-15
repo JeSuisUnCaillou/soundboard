@@ -394,6 +394,95 @@ test('a pad set up before its sound is open keeps what was chosen once the sound
   await expect(page.locator('#padTap')).toHaveValue('fadeout');
 });
 
+test('fewer columns and more rows at once keep every pad', async ({ page }) => {
+  await page.addInitScript(() => {
+    delete window.showOpenFilePicker;
+    delete window.showDirectoryPicker;
+  });
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+
+  // A fourth pad in the last place of the 3 × 4 board.
+  await page.locator('#grid .pad--empty').last().click();
+  // On a phone the waiting pad opens the sounds by itself.
+  await expect(page.locator('#book')).toBeVisible();
+  await page.locator('#btnAdd').click();
+  const chooser = page.waitForEvent('filechooser');
+  await page.locator('#btnAddFiles').click();
+  await (await chooser).setFiles({ name: 'door slam.wav', mimeType: 'audio/wav', buffer: silentWav() });
+  await page.locator('#lib .lib__item', { hasText: 'door slam' }).locator('.lib__add').click();
+  await expect(page.locator('#toast')).toContainText('is on row 4, column 3.');
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(4);
+
+  // 2 × 8 has sixteen places, room for all four.
+  await page.locator('#btnSetup').click();
+  await page.locator('#setCols').fill('2');
+  await page.locator('#setRows').fill('8');
+  await page.locator('#setupDone').click();
+  await expect(page.locator('#setup')).toBeHidden();
+
+  await expect(page.locator('#grid .pad')).toHaveCount(16);
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(4);
+  await expect(page.locator('#toast')).not.toContainText('came off the board');
+});
+
+test('sounds added while others are being kept are kept too, past one that cannot be', async ({ page }) => {
+  await page.addInitScript(() => {
+    delete window.showOpenFilePicker;
+    delete window.showDirectoryPicker;
+    // The browser cannot read one file when it comes to copy it, as when it
+    // changed on disk after it was opened; and copying another takes until
+    // the test lets it finish, as a long file on a slow disk does.
+    const put = IDBObjectStore.prototype.put;
+    const complete = Object.getOwnPropertyDescriptor(IDBTransaction.prototype, 'oncomplete');
+    const held = new Promise((resolve) => {
+      window.finishCopying = resolve;
+    });
+    IDBObjectStore.prototype.put = function (value, ...rest) {
+      const path = String(value && value.path);
+      if (path.includes('broken')) throw new DOMException('The file could not be read.', 'NotReadableError');
+      const req = put.call(this, value, ...rest);
+      if (path.includes('rain')) {
+        const tx = this.transaction;
+        Object.defineProperty(tx, 'oncomplete', {
+          set(fn) {
+            complete.set.call(tx, (e) => held.then(() => fn(e)));
+          },
+        });
+      }
+      return req;
+    };
+  });
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+  const add = async (files) => {
+    await page.locator('#btnAdd').click();
+    const chooser = page.waitForEvent('filechooser');
+    await page.locator('#btnAddFiles').click();
+    await (await chooser).setFiles(files.map((name) => ({ name, mimeType: 'audio/wav', buffer: silentWav() })));
+  };
+
+  await add(['rain.wav']);
+  await expect(page.locator('#toast')).toHaveText('1 sound added, under Sounds in edit mode. The board is left as it is.');
+  // Rain is still being copied when these arrive.
+  await add(['broken.wav', 'door slam.wav']);
+  await expect(page.locator('#toast')).toHaveText('2 sounds added, under Sounds in edit mode. The board is left as it is.');
+  await page.evaluate(() => window.finishCopying());
+  await expect(page.locator('#toast')).toHaveText(
+    '“broken.wav” could not be kept in this browser. Next time it needs the folder again.',
+  );
+
+  await page.reload();
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(BUNDLED_TITLES.length);
+  // The board comes back where the operator was: editing, with the sounds open.
+  await expect(page.locator('#btnEdit')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#book')).toBeVisible();
+  await expect(page.locator('#lib .lib__item', { hasText: 'rain' })).toBeVisible();
+  await expect(page.locator('#lib .lib__item', { hasText: 'door slam' })).toBeVisible();
+  await expect(page.locator('#lib .lib__item', { hasText: 'broken' })).toHaveCount(0);
+});
+
 test('a board saved to a file loads back as it was, with missing sounds struck through', async ({ page }) => {
   await openBoard(page);
   await page.locator('#btnEdit').click();

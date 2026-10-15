@@ -75,8 +75,10 @@ board that has not been through it.
 
 **Size is fixed.** `fitPads` pads or truncates `pads` to `cols * rows`; nothing
 grows a board. Shrinking returns how many filled pads fell off, and the app
-toasts it (and see [#17](https://github.com/JeSuisUnCaillou/soundboard/issues/17): changing columns is buggy). Changing `cols` re-wraps the same array, so pads keep their order,
-not their row and column.
+toasts it. `resize` sets columns and rows together before fitting, so a
+change of both never loses pads at a halfway size. Changing `cols` re-wraps the
+same array, so pads keep their order and their index (and so their engine
+*channel*), not their row and column.
 
 **Keys** default from the pad's position on a keyboard-shaped grid (`KEY_ROWS`:
 `1..=`, `q..]`, `a..\`, `z..#`), skipping keys already taken. Saving a key that
@@ -145,13 +147,17 @@ made once per path, and revoked when a real file replaces the copy behind it.
 - Fades are `exponentialRampToValueAtTime` on the gain node towards `FLOOR`
   (0.0001), never on `el.volume`. `_stopVoice` ramps and then `settle()`s on a
   timer: pause, rewind to `trimStart`, back to `idle` (or dropped, for extras).
-- `tick()` runs every animation frame while anything plays (`App.run`): it
+- `tick()` runs every animation frame while anything plays (`App.run`), and
+  every 50 ms on a timer while the tab is hidden, which gets no frames: it
   honours `trimEnd` (loop back or stop) and, unless the pad loops, starts the
   fade out early enough to land on the stop point. A loop with trim points is
   run by hand (`el.loop` is off); when the file itself ends, the `ended`
   handler sends it back to `trimStart` (`_goRound`).
 - `reset()` tears down every element. The app calls it whenever paths may now
-  point at different blobs (reconnect, moves, resizing that drops pads, import, empty).
+  point at different blobs (moves, resizing that drops pads, import, empty).
+- `repoint()` is the gentle reset, for **Reconnect**: idle channels are dropped
+  and primed again from the real files, while a voice still sounding keeps its
+  element, is marked `stale`, and is rebuilt (`_renew`) once it falls silent.
 - iOS: `wake()` on the first gesture nudges every primed element to play and
   pause at silence, so each answers its first tap.
 - `voiceElement()` sets `crossOrigin = 'anonymous'`: a media element from
@@ -199,6 +205,9 @@ that nothing done now will be kept, and `write()` stores nothing more that
 session, so a stand-in board never replaces the one that could not be read. `keepSounds()` copies every loaded sound
 (pads first) into IndexedDB, skipping bundled ones and unchanged ones, deleting
 copies of sounds no longer loaded; on `QuotaExceededError` it stops trying for the session.
+Called while a pass is running, it runs one more pass after it (`keepAgain`). A
+file that cannot be read is skipped, the rest are still kept, and the operator
+is told once per file.
 
 **Keys** (`onKey`): ignored in an open dialog, in a field that takes typing
 (`TYPED`: not a slider, checkbox or button), or with a modifier.
