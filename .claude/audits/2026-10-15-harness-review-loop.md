@@ -50,14 +50,14 @@ harness runs itself.
 **Pillar**: context
 **Evidence**: the request; `.claude/skills/` holds only `harness-engineer`;
 the reviews and comments of #26 (none) and #27 (one, unrecorded).
-**Remedy**: write — `.claude/skills/review-loop/`, adapted from oots-france:
-fresh Sonnet reviewers on the whole diff each pass, fixes by the author, a pass
-again while one finding is blocking, a review file per branch that carries the
-rejected findings to the next pass. Dropped from the model: the plugin agents
-(reviewers are briefed in `reviewers.md` against this repository's docs), the
-history rewrite (PRs here are squash-merged), the notification mute and the
-background CI skill (no local machine; CI results already wake a session that
-watches its PR).
+**Remedy**: write — `.claude/skills/review-loop/`, adapted from oots-france
+and made lighter at the user's request ("a fast and efficient review-loop",
+2026-10-15 13:20): two fresh Sonnet reviewers (bugs, rules) on the whole diff
+each pass, fixes by the author, another pass only after a blocking fix, three
+passes at most, a review file per branch that carries the rejected findings to
+the next pass. Dropped from the model: the plugin agents, the reviewer set
+chosen per pass, the separate non-convergence guide, the history rewrite (PRs
+here are squash-merged), the notification mute and the background CI skill.
 **Expected impact**: PRs merged after this one whose branch carries a
 `.claude/reviews/<branch>.md` with at least one pass — baseline 0 of 6,
 2026-10-15 — expected every PR opened from a cloud session — check on
@@ -115,9 +115,9 @@ in the project's settings.
 
 ## What I could not check
 
-- Whether a `Stop` hook from the repository's `.claude/settings.json` runs in a
-  project thread session: this session started before the file existed, so
-  hooks were already loaded. The script was run by hand in every case it
-  handles (see the PR); the first thread after the merge is the real test.
+- Whether the hook runs in a thread session that starts from a clone already
+  holding it. It did run in this pass's own thread session, which picked the
+  new `.claude/settings.json` up mid-session and refused two stops on this
+  branch before its review was recorded.
 - The cost of a pass. oots-france measured its own in its audits; ours will be
   read from `external_metadata.usage.cost_usd` at the next pass.
