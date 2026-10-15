@@ -74,6 +74,9 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
   requests (weak wifi, a server error), use `context.route`:
   `playwright.config.js` sets `PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS`
   so that it sees them.
+- Headless Chromium keeps every tab visible. A test of the board in a hidden
+  tab overrides `document.hidden` and `visibilityState` in an init script and
+  dispatches `visibilitychange`, as the stop-point test in `board.spec.js` does.
 - Persistence is tested by `page.reload()` and asserting the board came back.
 - Adding sounds, with the pickers deleted as CLAUDE.md says:
 
@@ -104,8 +107,8 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 
 | Spec | Covers |
 | --- | --- |
-| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades, each second-tap mode, tapping back on during a fade out, solo, priming a big board, start and stop points, a pad stopped while starting, keys (held, and a pad's own), cross-origin sound. |
-| `edit.spec.js` | Building a board: edit mode, the pad sheet (name, level, fades, gel, kept after a reload), Board settings (rows and columns, growing and shrinking), saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), dropping a sound on a pad, a pad set up before its sound is open, the keyboard in edit mode. |
+| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades, each second-tap mode, tapping back on during a fade out, solo, priming a big board, start and stop points (also in a hidden tab), a pad stopped while starting, keys (held, and a pad's own), cross-origin sound, Reconnect during a cue. |
+| `edit.spec.js` | Building a board: edit mode, the pad sheet (name, level, fades, gel, kept after a reload), Board settings (rows and columns, growing and shrinking, both at once), saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), dropping a sound on a pad, a pad set up before its sound is open, keeping copies of sounds, the keyboard in edit mode. |
 | `offline.spec.js` | The service worker: reload with the network off, wifi that never answers, a server error, the board's own fonts. |
 | `drag.spec.js` | Moving pads in edit mode: by mouse on `desktop`, by a resting finger on `phone` (each `describe` skips the other project). Swapping, moving to an empty place, taking a pad off, and a press or a quick swipe that is not a drag. |
 | `storage.spec.js` | What is kept between launches: a browser that keeps nothing, a launch whose storage fails once, a kept folder that cannot be asked about, saving when the page is hidden, clearing an abandoned board, the wake lock, a picker dismissed without a cancel event. |
@@ -117,5 +120,9 @@ What is not covered yet is listed in [status.md](status.md#test-coverage).
 - Chromium only: Safari and Firefox behaviour (iOS gesture rules, no folder
   picker) is not exercised. Check it by hand on a device when a change touches
   `engine.wake`, pickers or touch handling.
-- The File System Access API (handles, Reconnect) cannot be driven from a test.
+- The File System Access pickers cannot be answered from a test. A handle
+  can still be had from the browser's private storage
+  (`navigator.storage.getDirectory()`): the Reconnect test in `board.spec.js`
+  returns one from a stubbed `showDirectoryPicker` and stubs
+  `queryPermission` / `requestPermission` to make the board ask again.
 - Audio is not listened to: "playing" means the pad shows `pad--playing`.
