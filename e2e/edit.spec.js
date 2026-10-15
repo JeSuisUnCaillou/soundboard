@@ -391,13 +391,8 @@ test('picking a pad up shows where it can be dropped off the board, before it ge
   await expect(sexy).toHaveClass(/pad--dragging/);
   await expect(zone).toHaveClass(/drop--ready/);
   await expect(zone).not.toHaveClass(/drop--off/);
-  if (hasTouch) {
-    await expect.poll(() => zone.evaluate((el) => getComputedStyle(el, '::before').content))
-      .toBe('"Drop to take it off the board"');
-  } else {
-    await expect.poll(() => zone.locator('.book__title').evaluate((el) => getComputedStyle(el, '::after').content))
-      .toBe('" — drop to take it off the board"');
-  }
+  await expect.poll(() => zone.evaluate((el) => getComputedStyle(el, '::after').content))
+    .toBe('"Drop to take it off the board"');
 
   // Over it, it lights up; back over the board, it is only marked again.
   await hand.move(there);
