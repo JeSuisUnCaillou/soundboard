@@ -1,6 +1,6 @@
 // Running the show: the first board, firing pads, stopping them.
 
-import { test, expect, BUNDLED_TITLES, openBoard, pad, pencil } from './helpers.js';
+import { test, expect, BUNDLED_TITLES, isNarrow, openBoard, pad, pencil, showSounds, silentWav } from './helpers.js';
 
 test('the first launch lays out the sounds that ship with the board', async ({ page }) => {
   await openBoard(page);
@@ -100,15 +100,22 @@ test('Stop greys out as soon as everything is fading out', async ({ page }) => {
 test('a pad tapped while it fades out starts again, and keeps playing', async ({ page }) => {
   await openBoard(page);
   const crickets = pad(page, 'Crickets ambiance');
+  const left = async () => {
+    const [m, sec] = (await crickets.locator('.pad__time').textContent()).replace('-', '').split(':');
+    return Number(m) * 60 + Number(sec);
+  };
 
+  // Far enough in that starting again from the top shows on the clock, however
+  // slowly the steps below run.
   await crickets.click();
-  await expect(crickets).toHaveClass(/pad--playing/);
+  await expect.poll(left, { timeout: 15000 }).toBeLessThanOrEqual(21);
   await crickets.click();
   await expect(crickets).not.toHaveClass(/pad--playing/);
 
   await crickets.click();
   await expect(crickets).toHaveClass(/pad--playing/);
   await expect(page.locator('#btnStop')).toBeEnabled();
+  expect(await left()).toBeGreaterThan(22);
   // Well past the end of the 1.5 s fade it interrupted, it is still running.
   await expectStillPlayingAfter(page, crickets, 3000);
 });
@@ -339,6 +346,36 @@ test('the keys still work after a button is clicked, and Space does not press it
   await expect(page.locator('#grid .pad--playing')).toHaveCount(0);
 });
 
+test('a stop point is honoured while the board is in another tab', async ({ page }) => {
+  // Headless Chromium keeps every tab visible, so switching away is played
+  // out here the way the browser announces it.
+  await page.addInitScript(() => {
+    let away = false;
+    Object.defineProperty(Document.prototype, 'hidden', { get: () => away, configurable: true });
+    Object.defineProperty(Document.prototype, 'visibilityState', {
+      get: () => (away ? 'hidden' : 'visible'),
+      configurable: true,
+    });
+    window.switchTab = (gone) => {
+      away = gone;
+      document.dispatchEvent(new Event('visibilitychange'));
+    };
+  });
+  await openBoard(page);
+  await setUpPad(page, 'Crickets ambiance', { padEnd: '2', padFadeOut: '0' });
+  const crickets = pad(page, 'Crickets ambiance');
+
+  await crickets.click();
+  await expect(crickets).toHaveClass(/pad--playing/);
+  await page.evaluate(() => window.switchTab(true));
+
+  // The operator is reading the script elsewhere; the cue still ends on time.
+  await expect(crickets).not.toHaveClass(/pad--playing/, { timeout: 5000 });
+  await expect(page.locator('#btnStop')).toBeDisabled();
+  await page.evaluate(() => window.switchTab(false));
+  await expect(crickets).not.toHaveClass(/pad--playing/);
+});
+
 test('holding a pad’s key is one tap', async ({ page }) => {
   await openBoard(page);
   const crickets = pad(page, 'Crickets ambiance');
@@ -452,6 +489,71 @@ test.describe('a pad stopped while its sound is still starting', () => {
     await expect.poll(level, { timeout: 5000 }).toBeGreaterThan(0.001);
     await expect(page.locator('#toast')).not.toContainText('would not play');
   });
+});
+
+test('Reconnect in the middle of a cue cuts nothing', async ({ page }) => {
+  // A real folder handle, from the browser's own private storage, stands in
+  // for the operator's folder. Each page load starts without permission to
+  // read it, as browsers do, so the board offers Reconnect.
+  await page.addInitScript(() => {
+    let granted = false;
+    FileSystemHandle.prototype.queryPermission = async () => (granted ? 'granted' : 'prompt');
+    FileSystemHandle.prototype.requestPermission = async () => {
+      granted = true;
+      return 'granted';
+    };
+    window.showDirectoryPicker = async () => {
+      const root = await navigator.storage.getDirectory();
+      return root.getDirectoryHandle('Show');
+    };
+  });
+  await openBoard(page);
+  const writeRain = (seconds) => page.evaluate(async (bytes) => {
+    const root = await navigator.storage.getDirectory();
+    const show = await root.getDirectoryHandle('Show', { create: true });
+    const file = await show.getFileHandle('rain.wav', { create: true });
+    const out = await file.createWritable();
+    await out.write(new Uint8Array(bytes));
+    await out.close();
+  }, [...silentWav(seconds)]);
+  await writeRain(30);
+
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+  await page.locator('#btnAdd').click();
+  await page.locator('#btnAddFolder').click();
+  await page.locator('#lib .tree__name', { hasText: 'Show' }).click();
+  await page.locator('#lib .lib__item', { hasText: 'rain' }).locator('.lib__add').click();
+  await expect(pad(page, 'Rain')).toHaveCount(1);
+  await expect(page.locator('#toast')).toContainText('is on row');
+  if (isNarrow(page)) await expect(page.locator('#book')).toBeHidden();
+  await page.locator('#btnEdit').click();
+
+  await page.reload();
+  const reconnect = page.locator('#btnReconnect');
+  await expect(reconnect).toHaveText('Reconnect “Show”');
+
+  // Both pads play from what the board kept: a sound that ships with it, and
+  // the copy of the folder's.
+  const crickets = pad(page, 'Crickets ambiance');
+  const rain = pad(page, 'Rain');
+  await crickets.click();
+  await rain.click();
+  await expect(page.locator('#grid .pad--playing')).toHaveCount(2);
+
+  // Meanwhile the file in the folder has been made longer than its copy.
+  await writeRain(45);
+  await reconnect.click();
+  await expect(reconnect).toBeHidden();
+  await expectStillPlayingAfter(page, rain, 1500);
+  await expect(crickets).toHaveClass(/pad--playing/);
+
+  // Once stopped, the pad plays again, now from the folder's longer file.
+  await page.keyboard.press('Escape');
+  await expect(rain).not.toHaveClass(/pad--playing/);
+  await rain.click();
+  await expect(rain).toHaveClass(/pad--playing/);
+  await expect(rain.locator('.pad__time')).toHaveText(/^-0:4[0-5]$/);
 });
 
 test('a pad’s own key fires it', async ({ page }) => {

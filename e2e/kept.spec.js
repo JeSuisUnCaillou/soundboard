@@ -80,7 +80,9 @@ test.describe('a folder opened with a handle', () => {
       FileSystemHandle.prototype.queryPermission = function (...args) {
         return localStorage.getItem('test:ask') ? Promise.resolve('prompt') : query.apply(this, args);
       };
+      // With test:refuse set too, the operator says no when asked.
       FileSystemHandle.prototype.requestPermission = function () {
+        if (localStorage.getItem('test:refuse')) return Promise.resolve('denied');
         localStorage.removeItem('test:ask');
         return Promise.resolve('granted');
       };
@@ -116,6 +118,32 @@ test.describe('a folder opened with a handle', () => {
     await expect(page.locator('#btnReconnect')).toBeHidden();
     await editing(page);
     await expect(row(page, 'wind')).toBeVisible();
+  });
+
+  test('stays on its copies, and keeps offering Reconnect, when permission is refused', async ({ page }) => {
+    await openBoard(page);
+    await onDisk(page, 'rain.wav', silentWav(30));
+    await editing(page);
+    await page.locator('#btnAdd').click();
+    await page.locator('#btnAddFolder').click();
+    await openFolder(page, 'Show');
+    await row(page, 'rain').locator('.lib__add').click();
+    await expect(pad(page, 'Rain')).toHaveCount(1);
+
+    await page.evaluate(() => {
+      localStorage.setItem('test:ask', 'yes');
+      localStorage.setItem('test:refuse', 'yes');
+    });
+    await page.reload();
+    await running(page);
+    const reconnect = page.locator('#btnReconnect');
+    await reconnect.click();
+    await expect(page.locator('#toast')).toHaveText('Without permission to read them, the board stays on the copies it kept.');
+    await expect(reconnect).toBeVisible();
+
+    const rain = pad(page, 'Rain');
+    await rain.click();
+    await expect(rain).toHaveClass(/pad--playing/);
   });
 
   test('plays from its copies until Reconnect, which brings the folder back', async ({ page }) => {
@@ -157,6 +185,46 @@ test.describe('a folder opened with a handle', () => {
     await editing(page);
     await expect(row(page, 'wind')).toBeVisible();
   });
+});
+
+test('a browser out of room says so, and what it kept still comes back', async ({ page }) => {
+  // While window.full is set, the browser refuses to keep another sound.
+  await page.addInitScript(() => {
+    delete window.showOpenFilePicker;
+    delete window.showDirectoryPicker;
+    const put = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (...args) {
+      if (window.full && this.name === 'sounds') throw new DOMException('The quota has been exceeded.', 'QuotaExceededError');
+      return put.apply(this, args);
+    };
+  });
+  await openBoard(page);
+  const add = async (name) => {
+    await editing(page);
+    await page.locator('#btnAdd').click();
+    const chooser = page.waitForEvent('filechooser');
+    await page.locator('#btnAddFiles').click();
+    await (await chooser).setFiles({ name, mimeType: 'audio/wav', buffer: silentWav(30) });
+    await expect(row(page, name.replace('.wav', ''))).toBeVisible();
+  };
+
+  await add('rain.wav');
+  await row(page, 'rain').locator('.lib__add').click();
+  await expect(pad(page, 'Rain')).toHaveCount(1);
+
+  await page.evaluate(() => { window.full = true; });
+  await add('wind.wav');
+  await expect(page.locator('#toast')).toHaveText('This browser is out of room. What is already kept will come back; the rest needs the folder again.');
+  // The show goes on meanwhile.
+  await running(page);
+  await pad(page, 'Rain').click();
+  await expect(pad(page, 'Rain')).toHaveClass(/pad--playing/);
+
+  await page.reload();
+  await expect(pad(page, 'Rain')).not.toHaveClass(/pad--missing/);
+  await editing(page);
+  await expect(row(page, 'rain')).toBeVisible();
+  await expect(row(page, 'wind')).toHaveCount(0);
 });
 
 test('a pad whose sound is missing says so, and plays once the sound is added', async ({ page }) => {
