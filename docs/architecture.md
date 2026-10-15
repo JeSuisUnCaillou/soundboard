@@ -180,6 +180,13 @@ finger after resting 400 ms. Dropping on another pad swaps them (`model.move`);
 dropping on `#book` or `#browse` takes the pad off. Sounds dragged from the tree
 use HTML5 drag and drop with the `application/x-soundboard-path` type.
 
+Everything in edit mode is a button the keyboard reaches. A tree row holds
+two: `.lib__play` (hear it) and `.lib__add` (the **+**). The pencil is a
+`.pad__pencil` button beside its pad, not inside it (a button cannot hold
+another): every pad is placed in its grid cell by hand (`grid-area`) and the
+pencil shares the cell, laid over the pad's corner. `padOf()` in `app.js`
+maps a pencil back to its pad for drags and drops.
+
 **Saving**: `queueSave()` debounces 500 ms; `saveNow()` on structural changes
 and `beforeunload`. `keepSounds()` copies every loaded sound (pads first) into
 IndexedDB, skipping bundled ones and unchanged ones, deleting copies of sounds

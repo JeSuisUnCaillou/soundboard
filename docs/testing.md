@@ -42,6 +42,7 @@ how `board.spec.js` tests a sound served cross-origin.
 | `expect` | Re-exported from Playwright. |
 | `openBoard(page)` | Go to `/` and wait for the default board's three pads. Every test starts from a fresh browser context, so this is always a first launch. |
 | `pad(page, title)` | A filled pad by the name it shows. |
+| `pencil(page, title)` | The button that opens that pad's settings in edit mode, by its label. |
 | `BUNDLED_TITLES` | `['Gunshot', 'Crickets ambiance', 'Sexy']`. Gunshot (3 s) is a hit; Crickets ambiance (26 s) and Sexy (2 min 54) are cues. |
 | `showSounds(page)` | Open the book wherever the layout keeps it (**Browse files** on phone). |
 | `isNarrow(page)` | Viewport ≤ 900px. |

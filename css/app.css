@@ -16,7 +16,7 @@
   /* ink */
   --ink:      #f2ece6;
   --ink-dim:  #b7a99c;
-  --ink-faint:#8a7c70;
+  --ink-faint:#9d8f81;   /* 4.5:1 or better on a pad, for the small print */
 
   /* cue lights */
   --alert:    #d8372b;
@@ -293,7 +293,7 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
     inset 0 0 0 1px color-mix(in oklab, var(--gel) 45%, transparent);
 }
 .pad--playing .pad__travel { background: var(--gel); height: 4px; }
-.pad--playing .pad__pencil { color: rgba(255, 255, 255, 0.78); }
+.pad--playing + .pad__pencil { color: rgba(255, 255, 255, 0.78); }
 
 .pad--paused {
   background: color-mix(in oklab, var(--gel) 28%, var(--pad));
@@ -321,34 +321,41 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
 }
 
 /* The pencil stands exactly where the go light stands, so a pad's name sits in
-   the same place whether the board is being played or being built. */
+   the same place whether the board is being played or being built. It is a
+   button of its own in the pad's grid cell, laid over the pad's corner: the
+   margins are the pad's border and padding. */
 body[data-editing="on"] .pad__lamp { display: none; }
 
 .pad__pencil { display: none; }
-body[data-editing="on"] .pad--filled .pad__pencil {
-  position: absolute;
-  top: 9px; right: 10px;
+body[data-editing="on"] .pad__pencil {
+  position: relative;
+  align-self: start;
+  justify-self: end;
   display: grid;
   place-items: center;
   width: 16px; height: 16px;
+  margin: 12px 11px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--ink-dim);
   cursor: pointer;
 }
 /* The area a finger can hit, spread outside the box so the layout is exactly
    the lamp's and the pad does not shift when editing starts. */
-body[data-editing="on"] .pad--filled .pad__pencil::after {
+body[data-editing="on"] .pad__pencil::after {
   content: "";
   position: absolute;
   inset: -11px;
 }
-body[data-editing="on"] .pad--filled .pad__pencil::before {
+body[data-editing="on"] .pad__pencil::before {
   content: "";
   width: 16px; height: 16px;
   background: currentColor;
   -webkit-mask: var(--pencil) center / contain no-repeat;
   mask: var(--pencil) center / contain no-repeat;
 }
-body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
+body[data-editing="on"] .pad__pencil:hover { color: var(--ink); }
 
 .pad--ghost {
   position: fixed;
@@ -472,14 +479,32 @@ body[data-editing="on"] .pad--filled .pad__pencil:hover { color: var(--ink); }
   background: var(--go);
 }
 
-/* Put this one on a pad. The row itself is for hearing it. */
+/* The row is for hearing the sound: a button that looks like the row. */
+.lib__play {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: inherit;
+}
+
+/* Put this one on a pad. */
 .lib__add {
   flex: none;
   position: relative;
   width: 24px; height: 24px;
   margin: -3px 0;
+  padding: 0;
   border: 1px solid var(--line);
   border-radius: 4px;
+  background: none;
   cursor: pointer;
 }
 .lib__add::before, .lib__add::after {

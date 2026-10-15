@@ -1,6 +1,6 @@
 // Building a board: edit mode, the pad sheet, emptying, adding sounds.
 
-import { test, expect, BUNDLED_TITLES, openBoard, pad, showSounds, silentWav } from './helpers.js';
+import { test, expect, BUNDLED_TITLES, openBoard, pad, pencil, showSounds, silentWav } from './helpers.js';
 
 test('edit mode shows the folder and the board controls', async ({ page }) => {
   await openBoard(page);
@@ -19,7 +19,7 @@ test('a pad renamed in its sheet keeps the name after a reload', async ({ page }
   await openBoard(page);
   await page.locator('#btnEdit').click();
 
-  await pad(page, 'Gunshot').locator('.pad__pencil').click();
+  await pencil(page, 'Gunshot').click();
   const sheet = page.locator('#padEditor');
   await expect(sheet).toBeVisible();
   await expect(page.locator('#padFileName')).toHaveText('gunshot.mp3');
@@ -135,4 +135,31 @@ test('dropping several sounds at once adds every one of them', async ({ page }) 
 
   await expect(page.locator('#lib .lib__item', { hasText: 'door slam' })).toBeVisible();
   await expect(page.locator('#lib .lib__item', { hasText: 'phone ring' })).toBeVisible();
+});
+
+test('a pad is set up, and a sound heard and put on a pad, from the keyboard', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+
+  const pen = pencil(page, 'Gunshot');
+  await pen.focus();
+  await expect(pen).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#padEditor')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#padEditor')).toBeHidden();
+
+  await showSounds(page);
+  await page.locator('#lib .tree__name', { hasText: 'default' }).focus();
+  await page.keyboard.press('Enter');
+  const row = page.locator('#lib .lib__item', { hasText: 'crickets' });
+  const hear = row.getByRole('button', { name: /^crickets ambiance/i });
+  await hear.focus();
+  await page.keyboard.press('Enter');
+  await expect(row).toHaveClass(/lib__item--playing/);
+
+  const put = page.getByRole('button', { name: /^Put crickets ambiance\.wav on a pad$/i });
+  await put.focus();
+  await page.keyboard.press('Enter');
+  await expect(pad(page, 'Crickets ambiance')).toHaveCount(2);
 });

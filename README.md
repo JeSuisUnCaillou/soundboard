@@ -91,7 +91,8 @@ does a pad, so a cue can be checked before and after it goes on the board. The
 **+** beside a sound puts it on the next free pad — or on a particular one:
 click an empty pad and it lights up and waits, and the next **+** lands there.
 Clicking it again lets it go. The pencil in a pad's corner opens its settings,
-where **Hear it** plays it again. With a mouse the whole pad
+where **Hear it** plays it again. All of these can be reached with Tab and
+pressed with Enter. With a mouse the whole pad
 is a handle: press anywhere but the pencil and move, and the pad comes with you;
 press and release without moving and it just plays. Under a finger, rest on a pad
 for a moment and it comes away with you — a touch that moves straight away is

@@ -1,6 +1,6 @@
 // Running the show: the first board, firing pads, stopping them.
 
-import { test, expect, BUNDLED_TITLES, openBoard, pad } from './helpers.js';
+import { test, expect, BUNDLED_TITLES, openBoard, pad, pencil } from './helpers.js';
 
 test('the first launch lays out the sounds that ship with the board', async ({ page }) => {
   await openBoard(page);
@@ -67,7 +67,7 @@ test('the keys still work after the master volume is touched', async ({ page }) 
 /** Change a pad's settings in its sheet, then go back to running the show. */
 async function setUpPad(page, title, fields) {
   await page.locator('#btnEdit').click();
-  await pad(page, title).locator('.pad__pencil').click();
+  await pencil(page, title).click();
   for (const [id, value] of Object.entries(fields)) {
     const field = page.locator(`#${id}`);
     if (typeof value === 'boolean') await field.setChecked(value);

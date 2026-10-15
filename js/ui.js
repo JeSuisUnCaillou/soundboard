@@ -42,6 +42,9 @@ export function drawGrid(board, { editing, missing = () => false, waiting = -1 }
     el.className = 'pad';
     el.dataset.i = String(i);
     const { row, col } = rowCol(board, i);
+    // Placed by hand, so that a filled pad's pencil can share its cell.
+    el.style.gridArea = `${row + 1} / ${col + 1}`;
+    let pen = null;
 
     if (pad && pad.file) {
       el.classList.add('pad--filled');
@@ -56,8 +59,8 @@ export function drawGrid(board, { editing, missing = () => false, waiting = -1 }
         span('pad__time', pad.duration ? fmtTime(pad.duration) : ''),
         span('pad__key', pad.key || ''),
         span('pad__travel', ''),
-        pencil(),
       );
+      pen = pencil(i, padTitle(pad));
       el.setAttribute('aria-label', `${padLabel(pad, row, col)}${missing(pad.file) ? ', file missing' : ''}`);
       if (!el.title) el.title = padTitle(pad);   // the whole name, when it is clipped
     } else {
@@ -73,6 +76,10 @@ export function drawGrid(board, { editing, missing = () => false, waiting = -1 }
 
     padEls.set(i, el);
     grid.append(el);
+    if (pen) {
+      pen.style.gridArea = el.style.gridArea;
+      grid.append(pen);
+    }
   });
 }
 
@@ -207,11 +214,16 @@ function soundRow(entry, used, showPath) {
   li.draggable = true;
   li.dataset.path = entry.path;
   li.title = entry.path;
-  li.append(
+  // The row is heard, the plus puts it on a pad: two buttons, so both can be
+  // reached from the keyboard and named to a screen reader.
+  const play = document.createElement('button');
+  play.type = 'button';
+  play.className = 'lib__play';
+  play.append(
     span('lib__name', showPath ? entry.path : entry.name),
     span('lib__dir', used.has(entry.path) ? 'on the board' : ''),
-    add('Put it on the next free pad'),
   );
+  li.append(play, add(`Put ${entry.name} on a pad`));
   return li;
 }
 
@@ -297,10 +309,11 @@ function span(cls, text) {
 
 /** The plus on a row in the tree: puts that sound on the next free pad. */
 function add(label) {
-  const el = document.createElement('span');
+  const el = document.createElement('button');
+  el.type = 'button';
   el.className = 'lib__add';
-  el.title = label;
-  el.setAttribute('aria-hidden', 'true');
+  el.title = 'Put it on the next free pad';
+  el.setAttribute('aria-label', label);
   return el;
 }
 
@@ -311,12 +324,18 @@ export function markPreview(path) {
   }
 }
 
-/** Opens the pad's settings, in the place the go light has otherwise. */
-function pencil() {
-  const el = document.createElement('span');
+/**
+ * Opens the pad's settings, in the place the go light has otherwise. A button
+ * of its own beside the pad rather than inside it, since a button cannot hold
+ * another, and this one has to be reached from the keyboard.
+ */
+function pencil(i, title) {
+  const el = document.createElement('button');
+  el.type = 'button';
   el.className = 'pad__pencil';
-  el.setAttribute('aria-hidden', 'true');
+  el.dataset.i = String(i);
   el.title = 'Set this pad up';
+  el.setAttribute('aria-label', `Set up ${title}`);
   return el;
 }
 
