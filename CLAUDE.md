@@ -143,7 +143,16 @@ Merge with a squash, so the title ends with the pull request number, `… (#n)`.
 
 ## Periodic review
 
-An open issue labelled `periodic-review` (opened every 20 merges, see
-[docs/deployment.md](docs/deployment.md#workflows)) is taken up by running
-`Skill(skill: "harness-engineer")`, then `Skill(skill: "architecture-review")`,
-then commenting on it with the harness PR and the issues filed, and closing it.
+Every 20 pull requests merged into `main`, the harness and the whole codebase
+get a review. A weekly scheduled task in the Claude project starts a session
+that follows this section:
+
+1. Count the pull requests merged into `main` since the newest issue labelled
+   `periodic-review` was opened, or after #50 if there is none. Under 20, stop
+   and say so.
+2. Open an issue labelled `periodic-review`, "Periodic review after #n", as
+   the work's issue.
+3. Run `Skill(skill: "harness-engineer")`, then
+   `Skill(skill: "architecture-review")`.
+4. Comment on the issue with the harness PR and the issues filed, and close
+   it. The harness PR waits for the owner.

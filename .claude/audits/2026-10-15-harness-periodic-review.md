@@ -33,27 +33,29 @@ of the same day was a one-off whose findings became #12 to #24. The
 review-loop's architect reviewer sees one branch's diff, so drift spread over
 several PRs (a module growing, a doc slowly wrong) is seen by no one.
 
-Nothing in the repository can start a cloud session. What it can do is notice
-the 20th merge and leave a notice where sessions and the owner look: an issue.
+Nothing in the repository can start a cloud session; a scheduled task in the
+Claude project can, and the repository tells it what to do.
 
 ## Findings
 
 ### 1. Nothing notices that 20 PRs have been merged
 
 **Pillar**: constraints
-**Evidence**: the request; `.github/workflows/` holds only `e2e.yml` and
-`pages.yml`; the two passes of 2026-10-15 both started from a message.
-**Remedy**: control — `.github/workflows/periodic-review.yml`, on every merge
-into `main`: counts the PRs merged since the newest `periodic-review` issue
-was opened (or since 2026-10-15 14:00 UTC, after #50, for the first), and at
-20, with none open, opens one assigned to the owner. Counting from the last
-issue rather than a modulo of the total means a missed run is caught by the
-next merge.
+**Evidence**: the request; the two passes of 2026-10-15 both started from a
+message.
+**Remedy**: control — a weekly scheduled task in the Claude project, chosen
+by the owner over a GitHub workflow (2026-10-15 14:05: "i don't want a github
+workflow, i want a scheduled task"). Its prompt only points to `CLAUDE.md` §
+Periodic review, which holds the count: PRs merged since the newest
+`periodic-review` issue, or after #50 for the first. Counting from the last
+issue rather than a modulo of the total means a week with more than 20 merges
+is caught all the same; the review runs up to a week after the 20th merge.
 **Expected impact**: `periodic-review` issues opened, against PRs merged —
-baseline none, 2026-10-15 — expected one per 20 merges — check when the 20th
-PR after #50 is merged — if not: read the workflow's runs (`actions_list`,
-`periodic-review.yml`) for the count it printed.
-**Applied**: yes, commit "Open a periodic-review issue every 20 merged pull requests".
+baseline none, 2026-10-15 — expected one within a week of each 20th merge —
+check when the 20th PR after #50 is merged — if not: read the scheduled
+task's last runs for the count they found.
+**Applied**: yes, the scheduled task "Periodic soundboard review" (Mondays
+07:47 UTC) and commit "Count the merges from a scheduled task, not a workflow".
 
 ### 2. No skill reviews the whole codebase for architecture
 
@@ -78,14 +80,13 @@ the second periodic review — if not: move the rejected lines into a file under
 
 **Pillar**: context
 **Evidence**: `CLAUDE.md` names neither review.
-**Remedy**: write — `CLAUDE.md` § Periodic review: what opens the issue, the
-two skills to run in order, how it closes; the trigger itself is described
-once, in `docs/deployment.md`. `CLAUDE.md` goes from 142 to 149 lines, far
-under the 300 of `how-we-write.md`.
+**Remedy**: write — `CLAUDE.md` § Periodic review: the count, the issue, the
+two skills in order, how it closes. `CLAUDE.md` goes from 142 to 158 lines,
+far under the 300 of `how-we-write.md`.
 **Expected impact**: `periodic-review` issues closed with a harness PR and an
 architecture comment linked — baseline none — expected every one — check at
-the first periodic review — if not: put the two steps in the issue body itself,
-which the workflow writes.
+the first periodic review — if not: write the steps into the scheduled task's
+prompt itself.
 **Applied**: yes, commit "CLAUDE.md: what to do with a periodic-review issue".
 
 ## Memories and project instructions brought home
@@ -95,16 +96,14 @@ which the workflow writes.
 
 None: the request came from the chat and goes straight into the repository.
 
-## Proposed outside the repository
+## Done outside the repository
 
-A scheduled routine that checks once a week for an open `periodic-review`
-issue and, when there is one, starts a session that runs it. Without it, the
-issue waits for the owner (notified by the assignment) to ask a session to take
-it up. Created only on the owner's word.
+The scheduled task "Periodic soundboard review", created on the owner's word
+in the project thread: weekly, Mondays 07:47 UTC, a fresh session each time,
+push notification on completion. It stores no connectors; the project's own
+GitHub access is what its sessions use.
 
 ## What I could not check
 
-- The workflow on GitHub itself: it runs on merges into `main`, so its first
-  real run is after this PR is merged. Its commands were run here against the
-  live repository with the REST API, both ways (count under 20, count forced
-  over with an earlier start).
+- A real run of the scheduled task: the first is on 2026-10-19, and it should
+  stop at the count (under 20 merges after #50).
