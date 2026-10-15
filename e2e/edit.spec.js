@@ -1,7 +1,7 @@
-// Building a board: edit mode, the pad sheet, Board settings, emptying, adding sounds.
+// Building a board: edit mode, the pad sheet, Board settings, board files, emptying, adding sounds.
 
-import { readFileSync } from 'node:fs';
-import { test, expect, BUNDLED_TITLES, openBoard, pad, showSounds, silentWav, isNarrow } from './helpers.js';
+import { readFile } from 'node:fs/promises';
+import { test, expect, BUNDLED_TITLES, openBoard, pad, pencil, showSounds, silentWav, isNarrow } from './helpers.js';
 
 test('edit mode shows the folder and the board controls', async ({ page }) => {
   await openBoard(page);
@@ -20,7 +20,7 @@ test('a pad renamed in its sheet keeps the name after a reload', async ({ page }
   await openBoard(page);
   await page.locator('#btnEdit').click();
 
-  await pad(page, 'Gunshot').locator('.pad__pencil').click();
+  await pencil(page, 'Gunshot').click();
   const sheet = page.locator('#padEditor');
   await expect(sheet).toBeVisible();
   await expect(page.locator('#padFileName')).toHaveText('gunshot.mp3');
@@ -99,12 +99,127 @@ test('sounds added to an emptied board wait under Sounds instead of filling pads
   await expect(page.locator('#grid .pad--filled')).toHaveCount(0);
 });
 
+test('dropping several sounds at once adds every one of them', async ({ page }) => {
+  // A real drop of files cannot be made from a test. This one stands in for
+  // Chromium's: each dropped item gives a real file handle, but only while the
+  // drop is being handled; asked for later, it gives nothing, as Chromium does.
+  await page.addInitScript(() => {
+    window.dropOpen = false;
+    DataTransferItem.prototype.getAsFileSystemHandle = function () {
+      if (!window.dropOpen) return Promise.resolve(null);
+      const file = this.getAsFile();
+      return (async () => {
+        const root = await navigator.storage.getDirectory();
+        const handle = await root.getFileHandle(file.name, { create: true });
+        const out = await handle.createWritable();
+        await out.write(file);
+        await out.close();
+        return handle;
+      })();
+    };
+  });
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+
+  const wav = silentWav().toString('base64');
+  await page.evaluate((data) => {
+    const bytes = Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
+    const dt = new DataTransfer();
+    for (const name of ['door slam.wav', 'phone ring.wav']) {
+      dt.items.add(new File([bytes], name, { type: 'audio/wav' }));
+    }
+    window.dropOpen = true;
+    document.body.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
+    window.dropOpen = false;
+  }, wav);
+
+  await expect(page.locator('#lib .lib__item', { hasText: 'door slam' })).toBeVisible();
+  await expect(page.locator('#lib .lib__item', { hasText: 'phone ring' })).toBeVisible();
+});
+
+test('without file handles, dropping two folders and a sound adds all of them', async ({ page }) => {
+  // Firefox and Safari hand over a drop as entries, not handles. A test cannot
+  // drop a real folder, so a dropped item named like a folder here gives a
+  // folder entry holding one sound, as the browser's own entries would.
+  await page.addInitScript(() => {
+    delete window.showOpenFilePicker;
+    delete window.showDirectoryPicker;
+    const folders = { 'Act 1': 'rain.wav', 'Act 2': 'wind.wav' };
+    const fileEntry = (file) => ({ isDirectory: false, name: file.name, file: (ok) => ok(file) });
+    DataTransferItem.prototype.webkitGetAsEntry = function () {
+      const file = this.getAsFile();
+      const inside = folders[file.name];
+      if (!inside) return fileEntry(file);
+      let given = false;
+      return {
+        isDirectory: true,
+        name: file.name,
+        createReader: () => ({
+          readEntries: (ok) => {
+            const batch = given ? [] : [fileEntry(new File([file], inside, { type: 'audio/wav' }))];
+            given = true;
+            ok(batch);
+          },
+        }),
+      };
+    };
+  });
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+
+  const wav = silentWav().toString('base64');
+  await page.evaluate((data) => {
+    const bytes = Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
+    const dt = new DataTransfer();
+    for (const name of ['Act 1', 'Act 2', 'door slam.wav']) {
+      dt.items.add(new File([bytes], name, { type: 'audio/wav' }));
+    }
+    document.body.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
+  }, wav);
+
+  for (const folder of ['Act 1', 'Act 2']) {
+    await page.locator('#lib .tree__name', { hasText: folder }).click();
+  }
+  for (const sound of ['rain', 'wind', 'door slam']) {
+    await expect(page.locator('#lib .lib__item', { hasText: sound })).toBeVisible();
+  }
+});
+
+test('a pad is set up, and a sound heard and put on a pad, from the keyboard', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+
+  const pen = pencil(page, 'Gunshot');
+  await pen.focus();
+  await expect(pen).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#padEditor')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#padEditor')).toBeHidden();
+
+  await showSounds(page);
+  await page.locator('#lib .tree__name', { hasText: 'default' }).focus();
+  await page.keyboard.press('Enter');
+  const row = page.locator('#lib .lib__item', { hasText: 'crickets' });
+  const hear = row.getByRole('button', { name: /^crickets ambiance/i });
+  await hear.focus();
+  await page.keyboard.press('Enter');
+  await expect(row).toHaveClass(/lib__item--playing/);
+
+  const put = page.getByRole('button', { name: /^Put crickets ambiance\.wav on a pad$/i });
+  await put.focus();
+  await page.keyboard.press('Enter');
+  await expect(pad(page, 'Crickets ambiance')).toHaveCount(2);
+});
+
 test('Enter saves the pad sheet from the name, and presses whatever button has the focus', async ({ page }) => {
   await openBoard(page);
   await page.locator('#btnEdit').click();
   const sheet = page.locator('#padEditor');
 
-  await pad(page, 'Gunshot').locator('.pad__pencil').click();
+  await pencil(page, 'Gunshot').click();
   await page.locator('#padName').fill('Pistol');
   await page.locator('#padCancel').focus();
   await page.keyboard.press('Enter');
@@ -112,7 +227,7 @@ test('Enter saves the pad sheet from the name, and presses whatever button has t
   await expect(pad(page, 'Gunshot')).toBeVisible();
   await expect(pad(page, 'Pistol')).toHaveCount(0);
 
-  await pad(page, 'Gunshot').locator('.pad__pencil').click();
+  await pencil(page, 'Gunshot').click();
   await page.locator('#padName').fill('Pistol');
   await page.keyboard.press('Enter');
   await expect(sheet).toBeHidden();
@@ -168,7 +283,7 @@ test('a key loaded in capitals from a board file is still taken from its pad whe
   await expect(pad(page, 'Shot')).toBeVisible();
 
   await page.locator('#btnEdit').click();
-  await pad(page, 'Song').locator('.pad__pencil').click();
+  await pencil(page, 'Song').click();
   await page.locator('#padKey').fill('q');
   await page.locator('#padSave').click();
   await expect(page.locator('#toast')).toHaveText('Q was taken, so it moved to this pad.');
@@ -183,7 +298,7 @@ test('a board file saved from Board settings holds the size just typed there', a
 
   const download = page.waitForEvent('download');
   await page.locator('#btnExport').click();
-  const saved = JSON.parse(readFileSync(await (await download).path(), 'utf8'));
+  const saved = JSON.parse(await readFile(await (await download).path(), 'utf8'));
   expect(saved.cols).toBe(4);
 });
 
@@ -204,7 +319,7 @@ test('a cue dropped on a hit’s pad fades out on a second tap, as a cue does', 
 
   await page.locator('#lib .lib__item', { hasText: 'storm' }).dragTo(pad(page, 'Gunshot'));
   await expect(pad(page, 'Gunshot').locator('.pad__time')).toHaveText('0:10');
-  await pad(page, 'Gunshot').locator('.pad__pencil').click();
+  await pencil(page, 'Gunshot').click();
   await expect(page.locator('#padFileName')).toHaveText('storm.wav');
   await expect(page.locator('#padTap')).toHaveValue('fadeout');
 });
@@ -217,7 +332,7 @@ test('a pad saved from its sheet keeps its second tap when a cue is dropped on i
   });
   await openBoard(page);
   await page.locator('#btnEdit').click();
-  await pad(page, 'Gunshot').locator('.pad__pencil').click();
+  await pencil(page, 'Gunshot').click();
   await page.locator('#padTap').selectOption('overlay');
   await page.locator('#padSave').click();
   await expect(page.locator('#padEditor')).toBeHidden();
@@ -230,7 +345,7 @@ test('a pad saved from its sheet keeps its second tap when a cue is dropped on i
   await page.locator('#lib .lib__item', { hasText: 'storm' }).dragTo(pad(page, 'Gunshot'));
   await expect(pad(page, 'Gunshot').locator('.pad__time')).toHaveText('0:10');
 
-  await pad(page, 'Gunshot').locator('.pad__pencil').click();
+  await pencil(page, 'Gunshot').click();
   await expect(page.locator('#padTap')).toHaveValue('overlay');
 });
 
@@ -248,7 +363,7 @@ test('a pad set up before its sound is open keeps what was chosen once the sound
     buffer: Buffer.from(JSON.stringify(board)),
   });
   await page.locator('#btnEdit').click();
-  await pad(page, 'Door').locator('.pad__pencil').click();
+  await pencil(page, 'Door').click();
   await page.locator('#padTap').selectOption('fadeout');
   await page.locator('#padSave').click();
   await expect(page.locator('#padEditor')).toBeHidden();
@@ -262,6 +377,81 @@ test('a pad set up before its sound is open keeps what was chosen once the sound
   if (isNarrow(page)) await page.locator('#btnBrowseDone').click();
   await expect(pad(page, 'Door').locator('.pad__time')).toHaveText('0:01');
 
-  await pad(page, 'Door').locator('.pad__pencil').click();
+  await pencil(page, 'Door').click();
   await expect(page.locator('#padTap')).toHaveValue('fadeout');
+});
+
+test('a board saved to a file loads back as it was, with missing sounds struck through', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+
+  // One pad set up away from its defaults, and a board of another size.
+  await pencil(page, 'Gunshot').click();
+  await page.locator('#padName').fill('Pistol');
+  await page.locator('#padKey').fill('g');
+  await page.locator('#padFadeIn').fill('2');
+  await page.locator('#padFadeOut').fill('4');
+  await page.locator('#padGels .gel[aria-label^="Primary Red"]').click();
+  await page.locator('#padSave').click();
+  await expect(page.locator('#padEditor')).toBeHidden();
+
+  await page.locator('#btnSetup').click();
+  await page.locator('#setCols').fill('4');
+  await page.locator('#setRows').fill('2');
+  // The sheet applies its fields as it closes, so the size is in place before
+  // the board is saved (saving in the same visit is #45).
+  await page.locator('#setupDone').click();
+  await expect(page.locator('#grid .pad')).toHaveCount(8);
+
+  await page.locator('#btnSetup').click();
+  const download = page.waitForEvent('download');
+  await page.locator('#btnExport').click();
+  await expect(page.locator('#toast')).toHaveText('Board saved to your downloads.');
+  const board = JSON.parse(await readFile(await (await download).path(), 'utf8'));
+  expect(board.cols).toBe(4);
+  expect(board.rows).toBe(2);
+
+  // The file travels to a machine where one of its sounds is not open.
+  const crickets = board.pads.find((p) => p && p.file.includes('crickets'));
+  crickets.file = 'Show/thunder.wav';
+  crickets.name = 'Thunder';
+
+  // Throw this board away, size and all.
+  await page.locator('#setupDone').click();
+  await page.locator('#btnEmpty').click();
+  await page.locator('#btnEmpty').click();
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(0);
+  await page.locator('#btnSetup').click();
+  await page.locator('#setCols').fill('3');
+  await page.locator('#setRows').fill('3');
+  await page.locator('#setupDone').click();
+  await expect(page.locator('#grid .pad')).toHaveCount(9);
+
+  await page.locator('#btnSetup').click();
+  const chooser = page.waitForEvent('filechooser');
+  await page.locator('#btnImport').click();
+  await (await chooser).setFiles({
+    name: 'show.soundboard.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(board)),
+  });
+  await expect(page.locator('#toast')).toHaveText('Board loaded. 1 pad point at files this folder does not have.');
+
+  await expect(page.locator('#grid .pad')).toHaveCount(8);
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(3);
+  await expect(pad(page, 'Sexy')).not.toHaveClass(/pad--missing/);
+  await expect(pad(page, 'Thunder')).toHaveClass(/pad--missing/);
+  const pistol = pad(page, 'Pistol');
+  await expect(pistol).not.toHaveClass(/pad--missing/);
+  await expect(pistol.locator('.pad__key')).toHaveText('g');
+
+  await pencil(page, 'Pistol').click();
+  await expect(page.locator('#padFadeIn')).toHaveValue('2');
+  await expect(page.locator('#padFadeOut')).toHaveValue('4');
+  await expect(page.locator('#padGels .gel[aria-label^="Primary Red"]')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#padCancel').click();
+
+  await page.locator('#btnSetup').click();
+  await expect(page.locator('#setCols')).toHaveValue('4');
+  await expect(page.locator('#setRows')).toHaveValue('2');
 });

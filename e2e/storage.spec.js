@@ -1,6 +1,6 @@
 // What the board keeps between launches, and how it copes when it cannot.
 
-import { test, expect, openBoard, pad, showSounds } from './helpers.js';
+import { test, expect, openBoard, pad, pencil, showSounds } from './helpers.js';
 
 test('a browser that keeps nothing still opens the board, and says the next launch starts afresh', async ({ page }) => {
   await page.addInitScript(() => {
@@ -26,7 +26,7 @@ test('a change is kept when the page is hidden and then closed without beforeunl
   });
   await openBoard(page);
   await page.locator('#btnEdit').click();
-  await pad(page, 'Gunshot').locator('.pad__pencil').click();
+  await pencil(page, 'Gunshot').click();
   await page.locator('#padName').fill('Pistol');
   await page.locator('#padSave').click();
   await expect(pad(page, 'Pistol')).toBeVisible();

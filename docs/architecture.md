@@ -10,6 +10,7 @@ why things are the way they are is in [decisions.md](decisions.md).
 | File | Owns |
 | --- | --- |
 | `index.html` | The shell: the rail, the grid, the *book*, the transport, and the three `<dialog>` sheets (`#picker`, `#padEditor`, `#setup`). Every element the code or a test finds has an `id` here. |
+| `css/fonts.css`, `fonts/` | IBM Plex, served with the board (Latin and Latin Extended; licence in `fonts/OFL.txt`). |
 | `css/app.css` | All styling. BEM-ish classes (`pad--playing`, `lib__item--used`). Layout breakpoints at 900px (*narrow*: the book opens over the board) and 560px, and `pointer: coarse` for touch. |
 | `js/app.js` | The `App` class: owns the open board and the edit state, wires every event (taps, keys, drags, drops, pickers), saves, restores, keeps the screen awake. The only module that decides things. |
 | `js/engine.js` | `Engine`: Web Audio. One *channel* per pad, extra *voices* for layering and previews, fades, the per-frame `tick()`. Also `probeDuration()`. |
@@ -101,6 +102,10 @@ The library is additive: sources are added, never swapped. Each entry is
 | `dir` / `files` without handle | `<input type=file>` (with `webkitdirectory` for a folder), or a drop via `webkitGetAsEntry` | `File` | No; only through the *kept copies*. |
 | `cache` | At restore, from IndexedDB (`addCached`) | `File` made from the stored blob | Yes. |
 
+A drop is read in full before anything is awaited: Chromium empties the
+drop's items once its event is over, so every handle or entry is asked for
+first. Each dropped folder becomes a source of its own.
+
 Paths include the folder's own name (`Show/cue.wav`) so the tree shows it.
 Folders are walked to depth 6, skipping dotfiles, `__MACOSX` and
 `node_modules`; only names matching the `AUDIO` regex count.
@@ -179,6 +184,13 @@ finger after resting 400 ms. Dropping on another pad swaps them (`model.move`);
 dropping on `#book` or `#browse` takes the pad off. Sounds dragged from the tree
 use HTML5 drag and drop with the `application/x-soundboard-path` type.
 
+Everything in edit mode is a button the keyboard reaches. A tree row holds
+two: `.lib__play` (hear it) and `.lib__add` (the **+**). The pencil is a
+`.pad__pencil` button beside its pad, not inside it (a button cannot hold
+another): every pad is placed in its grid cell by hand (`grid-area`) and the
+pencil shares the cell, laid over the pad's corner. `padOf()` in `app.js`
+maps a pencil back to its pad for drags and drops.
+
 **Saving**: `queueSave()` debounces 500 ms; `saveNow()` on structural changes,
 `beforeunload`, `pagehide` and the page going hidden (a phone may close a
 hidden page with no unload event). Every storage call at launch goes through
@@ -209,10 +221,16 @@ every other board with its handles and kept copies.
 
 ## Offline (`sw.js`)
 
-Network first with `cache: 'no-cache'`, falling back to the cache, falling back
-to `index.html`. Same-origin GETs only, so the Google Fonts stylesheet is not
-cached and the board falls back to system fonts offline. The `SHELL` list is
-precached on install.
+Network first with `cache: 'no-cache'`, for same-origin GETs. The cache
+answers when the network fails, answers with an error, or has not answered
+within `PATIENCE` (3 s); after one such wait the cache answers at once for
+`SLOW_SPELL` (30 s), while the network still refreshes it behind. Only a `200`
+from the site itself is cached, so an error or a login page never replaces a
+good copy. A navigation the cache does not know gets `index.html`; any other
+miss fails as itself. The `SHELL` list (with the fonts and every icon) is
+precached on install with `cache: 'reload'`, so the HTTP cache cannot hand it
+a stale copy. The fonts are the board's own, so nothing is asked of another
+site.
 
 > [!IMPORTANT]
 > A new file the app loads (a module, a bundled sound) must be added to `SHELL`
