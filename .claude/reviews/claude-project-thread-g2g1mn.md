@@ -29,3 +29,24 @@ After this pass and without a new one, since it is text in a skill: the second
 reviewer became the architect, at the user's request (d00f1e1).
 
 Reviewed head: d00f1e16ebb0b41d5091f387615155a078c18736
+
+# Pass 3
+
+Head reviewed: 0e86ab58fa5a612b620ff72350b3dc04b4af31ac, after step 7 (auto-merge
+of bug fixes, the user's choice) was added. Reviewers: bugs and architect.
+
+- bugs: an armed auto-merge, or a merge on the CI-green event, would take
+  commits pushed after the review. Text in a skill, so not blocking by
+  `blocking.md`, but it decides what ships: fixed in d9fa447, merge pinned to
+  the reviewed commit with `expectedHeadSha`, no auto-merge armed.
+- bugs: "the harness waits" caught every PR, since each commits its review
+  file under `.claude/`. Fixed in d9fa447: the test is now the list of files a
+  shippable diff may touch.
+- bugs: `docs/deployment.md` said only the owner merges. Fixed in d9fa447.
+- bugs: the fallback needed the session to watch the PR. Fixed in d9fa447, step 7
+  says to subscribe.
+- architect: no finding.
+
+No blocking finding: the loop stops here.
+
+Reviewed head: d9fa4479771cdbb51fb54f61691983779b30063c
