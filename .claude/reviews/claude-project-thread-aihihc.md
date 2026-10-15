@@ -54,4 +54,11 @@ Head: 195ea09 (main's twelve-sound first board merged; tests adapted to it).
 - bugs: "layers a short sound over itself without being told to" passed on the Default board's own Gunshot setting, not the length rule; test dropped in d17e249.
 - architect: makeRoom written in drag.spec.js and kept.spec.js with different meanings; one helper in helpers.js, in d17e249. main's inline copies in edit.spec.js left as they predate the branch.
 
-Reviewed head: d17e249b3ef492de4dc978db3d509ab5c9239d73
+# Pass 8
+
+Head: 59fa23c (CI on 195ea09 failed on a Chromium crash in main's offline tests, #78; the service worker network switch moved into offline.spec.js, in a worker of its own).
+
+- bugs: no finding (checked in Playwright 1.56.1's sources that the file gets its own worker and the switch reaches no other spec).
+- architect: no finding.
+
+Reviewed head: 59fa23c87a111cc2d463fabbb97aba5b73d65433
