@@ -40,7 +40,7 @@ A board, as stored and as exported (`model.js`, `BOARD_VERSION = 3`):
 {
   version: 3,
   id: 'default-board',          // or a slug of the first source, for a board made with none open
-  cols: 3, rows: 3,             // 1..12 each (MAX_COLS, MAX_ROWS)
+  cols: 3, rows: 4,             // 1..12 each (MAX_COLS, MAX_ROWS)
   master: 0.8,                  // 0..1
   defaults: { fadeIn: 1, fadeOut: 1.5 },   // seconds, for new pads
   pads: [pad | null, ...],      // exactly cols * rows long; index = row * cols + col
