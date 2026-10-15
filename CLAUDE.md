@@ -131,12 +131,7 @@ GitHub refuses a review from a pull request's own author.
 
 ## Who merges
 
-The owner merges, with two exceptions, both set by the owner on 2026-10-15:
-
-- A bug fix that needs no important change to the app may be merged by Claude
-  once CI is green and the pull request has been reviewed at least once (a
-  `/code-review` subagent counts). Anything bigger waits for the owner.
-- When the owner says "validated" or "merge once green" about a thread's pull
-  requests, merge each one as soon as it is green.
+The owner merges. When the owner says "validated" or "merge once green" about
+a thread's pull requests, merge each one as soon as it is green.
 
 Merge with a squash, so the title ends with the pull request number, `… (#n)`.
