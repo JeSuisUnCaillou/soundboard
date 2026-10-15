@@ -97,19 +97,24 @@ test('Stop greys out as soon as everything is fading out', async ({ page }) => {
 test('a pad tapped while it fades out starts again, and keeps playing', async ({ page }) => {
   await openBoard(page);
   const crickets = pad(page, 'Crickets ambiance');
+  const left = async () => {
+    const [m, sec] = (await crickets.locator('.pad__time').textContent()).replace('-', '').split(':');
+    return Number(m) * 60 + Number(sec);
+  };
 
+  // Far enough in that starting again from the top shows on the clock, however
+  // slowly the steps below run.
   await crickets.click();
-  await expect(crickets).toHaveClass(/pad--playing/);
+  await expect.poll(left, { timeout: 15000 }).toBeLessThanOrEqual(21);
   await crickets.click();
   await expect(crickets).not.toHaveClass(/pad--playing/);
 
   await crickets.click();
   await expect(crickets).toHaveClass(/pad--playing/);
   await expect(page.locator('#btnStop')).toBeEnabled();
-  // Well past the end of the fade it interrupted, it is still running.
-  // Any second at or past -0:23 will do: a busy runner may poll past one.
-  await expect(crickets.locator('.pad__time')).toHaveText(/^-0:(1\d|2[0-3])$/, { timeout: 6000 });
-  await expect(crickets).toHaveClass(/pad--playing/);
+  expect(await left()).toBeGreaterThan(22);
+  // Well past the end of the 1.5 s fade it interrupted, it is still running.
+  await expectStillPlayingAfter(page, crickets, 3000);
 });
 
 test('a pad tapped after Stop, during the fade, starts again', async ({ page }) => {
