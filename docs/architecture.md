@@ -73,8 +73,10 @@ board that has not been through it.
 
 **Size is fixed.** `fitPads` pads or truncates `pads` to `cols * rows`; nothing
 grows a board. Shrinking returns how many filled pads fell off, and the app
-toasts it (and see [#17](https://github.com/JeSuisUnCaillou/soundboard/issues/17): changing columns is buggy). Changing `cols` re-wraps the same array, so pads keep their order,
-not their row and column.
+toasts it. `resize` sets columns and rows together before fitting, so a
+change of both never loses pads at a halfway size. Changing `cols` re-wraps the
+same array, so pads keep their order and their index (and so their engine
+*channel*), not their row and column.
 
 **Keys** default from the pad's position on a keyboard-shaped grid (`KEY_ROWS`:
 `1..=`, `q..]`, `a..\`, `z..#`), skipping keys already taken. Saving a key that

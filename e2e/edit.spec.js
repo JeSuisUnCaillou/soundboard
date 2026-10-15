@@ -163,3 +163,35 @@ test('a key loaded in capitals from a board file is still taken from its pad whe
   await page.locator('#padSave').click();
   await expect(page.locator('#toast')).toHaveText('Q was taken, so it moved to this pad.');
 });
+
+test('fewer columns and more rows at once keep every pad', async ({ page }) => {
+  await page.addInitScript(() => {
+    delete window.showOpenFilePicker;
+    delete window.showDirectoryPicker;
+  });
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+
+  // A fourth pad in the last place of the 3 × 3 board.
+  await page.locator('#grid .pad--empty').last().click();
+  // On a phone the waiting pad opens the sounds by itself.
+  await expect(page.locator('#book')).toBeVisible();
+  await page.locator('#btnAdd').click();
+  const chooser = page.waitForEvent('filechooser');
+  await page.locator('#btnAddFiles').click();
+  await (await chooser).setFiles({ name: 'door slam.wav', mimeType: 'audio/wav', buffer: silentWav() });
+  await page.locator('#lib .lib__item', { hasText: 'door slam' }).locator('.lib__add').click();
+  await expect(page.locator('#toast')).toContainText('is on row 3, column 3.');
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(4);
+
+  // 2 × 6 has twelve places, room for all four.
+  await page.locator('#btnSetup').click();
+  await page.locator('#setCols').fill('2');
+  await page.locator('#setRows').fill('6');
+  await page.locator('#setupDone').click();
+  await expect(page.locator('#setup')).toBeHidden();
+
+  await expect(page.locator('#grid .pad')).toHaveCount(12);
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(4);
+  await expect(page.locator('#toast')).not.toContainText('came off the board');
+});

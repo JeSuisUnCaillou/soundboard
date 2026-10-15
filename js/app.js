@@ -5,7 +5,7 @@ import { Library, CAN_PERSIST } from './library.js';
 import { Engine, probeDuration } from './engine.js';
 import { store, prefs } from './store.js';
 import {
-  newBoard, newPad, migrate, setCols, setRows, fitPads, filled, slug, move, padByKey, rowCol, padTitle,
+  newBoard, newPad, migrate, resize, fitPads, filled, slug, move, padByKey, rowCol, padTitle,
   applyLengthDefaults,
 } from './model.js';
 import { bundledPaths } from './bundled.js';
@@ -739,16 +739,13 @@ class App {
     if (!this.board) return;
     this.board.defaults = { fadeIn, fadeOut };
     // The pads keep their order and re-wrap. A smaller board has fewer places
-    // to wrap them into, and says what it could not keep.
-    let lost = 0;
-    if (cols !== this.board.cols) {
-      lost += setCols(this.board, cols);
-      store.setMeta('cols', this.board.cols).catch(() => {});
-    }
-    if (rows !== this.board.rows) {
-      lost += setRows(this.board, rows);
-      store.setMeta('rows', this.board.rows).catch(() => {});
-    }
+    // to wrap them into, and says what it could not keep. Columns and rows
+    // change together: fitted halfway, with fewer columns but the old rows,
+    // the board would drop pads its new size has room for.
+    const was = { cols: this.board.cols, rows: this.board.rows };
+    const lost = resize(this.board, cols, rows);
+    if (this.board.cols !== was.cols) store.setMeta('cols', this.board.cols).catch(() => {});
+    if (this.board.rows !== was.rows) store.setMeta('rows', this.board.rows).catch(() => {});
     if (lost) {
       this.engine.reset();
       this.primeAll();

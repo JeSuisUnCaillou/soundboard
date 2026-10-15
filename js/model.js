@@ -96,12 +96,8 @@ export function fitPads(board) {
 }
 
 /** Re-wrap the same pads into a different shape. Returns how many fell off. */
-export function setCols(board, cols) {
+export function resize(board, cols, rows) {
   board.cols = clampInt(cols, 1, MAX_COLS);
-  return fitPads(board);
-}
-
-export function setRows(board, rows) {
   board.rows = clampInt(rows, 1, MAX_ROWS);
   return fitPads(board);
 }
