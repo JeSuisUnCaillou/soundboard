@@ -13,3 +13,12 @@ Head reviewed: ca75c6c4e587d1a45a193fe7195137d40c129982
 - No finding from either reviewer.
 
 Reviewed head: ca75c6c4e587d1a45a193fe7195137d40c129982
+
+# Pass 3
+
+Head reviewed: 9476a33 (after merging main), then 97319ad9e7f8b237fca31ab6b6957fbe8ec8e54b
+
+- architect: `docs/architecture.md` and `docs/testing.md` kept conflict markers from the merge. Fixed in 97319ad, keeping both sides (main's `primeAll()` wording and `pencil` helper, the branch's `loadDefault` and twelve-title row).
+- bugs: no finding; the suite (98 tests) passes, and main's adapted tests still test what they were written for.
+
+Reviewed head: 97319ad9e7f8b237fca31ab6b6957fbe8ec8e54b
