@@ -394,18 +394,27 @@ function pickWithInput(wholeFolder) {
     input.type = 'file';
     input.multiple = true;
     if (wholeFolder) input.webkitdirectory = true;
-    else input.accept = 'audio/*';
+    // Extensions as well as the MIME family: a phone's picker greys out what it
+    // cannot type, and an .opus or .m4r is not always "audio/*" to it.
+    else input.accept = ['audio/*', ...PICKER_TYPES[0].accept['audio/*']].join(',');
     input.style.display = 'none';
-    document.body.append(input);
+    // Everything outside an open modal dialog is inert, so the input goes in
+    // the picker sheet rather than after it.
+    (document.querySelector('dialog[open]') || document.body).append(input);
+    let settled = false;
     const done = (value) => {
+      if (settled) return;
+      settled = true;
       input.remove();
       resolve(value);
     };
-    input.addEventListener('change', () => done(input.files && input.files.length ? input.files : false), { once: true });
-    // No reliable cancel event; a focus return with no files means dismissed.
-    window.addEventListener('focus', () => setTimeout(() => {
-      if (input.isConnected && (!input.files || !input.files.length)) done(false);
-    }, 400), { once: true });
+    input.addEventListener('change', () => done(input.files && input.files.length ? input.files : false));
+    input.addEventListener('cancel', () => done(false));
+    // No guessing at a dismissal from the window getting its focus back: on a
+    // phone that happens before the files are handed over — while they are
+    // still being copied out of the gallery or the cloud — and the choice was
+    // thrown away. A picker dismissed where there is no cancel event simply
+    // leaves this waiting, which costs nothing.
     input.click();
   });
 }
