@@ -101,8 +101,8 @@ is. There is no limit on how many sounds a
 board holds. **Empty the board** clears the pads without touching the sounds, and
 asks twice.
 
-**Board settings** sets how many rows and columns the board has — three by three
-to begin with. That is the whole board: nine pads hold nine sounds, and the rest
+**Board settings** sets how many rows and columns the board has — three columns by
+four rows to begin with. That is the whole board: twelve pads hold twelve sounds, and the rest
 wait in the folder until there is room. A smaller board says what it could not
 keep. It also holds the fades new pads start with — a second in, a second and a half out,
 so nothing begins or ends on a hard edge unless a pad is told to.
