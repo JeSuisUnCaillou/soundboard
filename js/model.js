@@ -1,8 +1,6 @@
 // The board: a run of pads, each pointing at a file inside the open folder.
-// It is as many rows and columns as it was set to, and grows past that when
-// there are more sounds than it has room for. Index = row * cols + col, so
-// changing the column count re-wraps the same pads in the same order and never
-// loses one.
+// It is exactly as many rows and columns as it was set to. Index = row * cols +
+// col, so changing the column count re-wraps the same pads in the same order.
 
 import { DEFAULT_GEL } from './gels.js';
 
