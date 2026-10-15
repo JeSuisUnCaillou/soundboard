@@ -10,12 +10,15 @@ finding is fixed; only a blocking one forces another pass.
 
 - a bug an operator or a session would meet;
 - a change of behaviour with no end-to-end test that fails without it;
-- code that breaks a rule of `docs/decisions.md`;
+- code that breaks a rule of `docs/decisions.md` § Product;
 - anything that would turn CI red.
 
-**Not blocking**, everything else: any error in text (a comment, a doc, a
-skill, even a false statement), a fact written twice, something missing from
-a doc, style, naming, structure.
+**Not blocking**, everything else, including code in the wrong module or an
+import against the direction `docs/architecture.md` sets, unless it is also a
+bug: it measures a debt, not a risk mid-show, and blocking on it would send
+the loop round on design. Fix it all the same. Also any error in text (a
+comment, a doc, a skill, even a false statement), a fact written twice,
+something missing from a doc, style, naming, structure.
 
 **The most mechanical fix wins**: delete rather than rephrase, link to the
 file that owns a fact rather than restate it. Every new line written to answer

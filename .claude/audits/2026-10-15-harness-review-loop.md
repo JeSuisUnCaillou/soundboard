@@ -52,7 +52,8 @@ harness runs itself.
 the reviews and comments of #26 (none) and #27 (one, unrecorded).
 **Remedy**: write — `.claude/skills/review-loop/`, adapted from oots-france
 and made lighter at the user's request ("a fast and efficient review-loop",
-2026-10-15 13:20): two fresh Sonnet reviewers (bugs, rules) on the whole diff
+2026-10-15 13:20): two fresh Sonnet reviewers (bugs, and an architect standing in for
+`layered-rails`, briefed on `docs/architecture.md`) on the whole diff
 each pass, fixes by the author, another pass only after a blocking fix, three
 passes at most, a review file per branch that carries the rejected findings to
 the next pass. Dropped from the model: the plugin agents, the reviewer set

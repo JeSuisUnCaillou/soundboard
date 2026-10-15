@@ -40,14 +40,23 @@ from a real event to the failure. Then check each change of behaviour has an
 end-to-end test in e2e/ that would fail without it.
 ```
 
-## rules
+## architect
+
+The second of the pair, standing in for oots-france's `layered-rails`
+reviewer: it judges where code lives, which a bug hunt does not.
 
 ```
-Find where the change breaks how this repository is built and written:
-docs/decisions.md § Technical (no build step or runtime dependency, ui.js
-draws and app.js decides, fades on the gain node), CLAUDE.md § End-to-end
-tests, and CLAUDE.md § One fact, one place (a doc that now disagrees with the
-code, a fact written in two files). Also code bigger than it needs to be: a
+Find where the change puts code in the wrong place or makes it bigger than it
+needs to be. Judge against docs/architecture.md § The files and the paragraph
+after it: what each file owns, and which way the imports point (app.js
+imports everything and is the only module that decides; ui.js draws and
+decides nothing; engine.js and library.js know nothing of the DOM; model.js
+is pure functions). So: a decision taken in ui.js, editor.js or engine.js; a
+module importing against that direction; a module reaching into another's
+state; one concept split across two modules, or two concepts in one function.
+Also docs/decisions.md § Technical (no build step or runtime dependency,
+fades on the gain node), CLAUDE.md § End-to-end tests, CLAUDE.md § One fact,
+one place (a doc that now disagrees with the code, a fact written twice), a
 duplicate of something the repository has, a branch no caller reaches.
 ```
 
