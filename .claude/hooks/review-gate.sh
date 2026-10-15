@@ -14,8 +14,9 @@ cd "${CLAUDE_PROJECT_DIR:-.}" 2>/dev/null || exit 0
 branch=$(git symbolic-ref --quiet --short HEAD 2>/dev/null) || exit 0
 [ "$branch" = main ] && exit 0
 [ -z "$(git status --porcelain 2>/dev/null)" ] || exit 0
-upstream=$(git rev-parse -q --verify '@{upstream}' 2>/dev/null) || exit 0
-[ "$upstream" = "$(git rev-parse HEAD)" ] || exit 0
+# Compared with origin's copy of the branch, however it was pushed.
+pushed=$(git rev-parse -q --verify "refs/remotes/origin/$branch" 2>/dev/null) || exit 0
+[ "$pushed" = "$(git rev-parse HEAD)" ] || exit 0
 base=$(git merge-base HEAD origin/main 2>/dev/null) || exit 0
 
 outside_reviews() { git diff --quiet "$1" HEAD -- . ':(exclude).claude/reviews'; }
