@@ -368,7 +368,7 @@ test('a pad’s level, fades and colour stay after a reload', async ({ page }) =
   await openBoard(page);
   await page.locator('#btnEdit').click();
 
-  await pad(page, 'Crickets ambiance').locator('.pad__pencil').click();
+  await pencil(page, 'Crickets ambiance').click();
   await page.locator('#padGain').fill('40');
   await expect(page.locator('#padGainOut')).toHaveText('40');
   await page.locator('#padFadeIn').fill('2.5');
@@ -378,7 +378,7 @@ test('a pad’s level, fades and colour stay after a reload', async ({ page }) =
   await expect(page.locator('#padEditor')).toBeHidden();
 
   await page.reload();
-  await pad(page, 'Crickets ambiance').locator('.pad__pencil').click();
+  await pencil(page, 'Crickets ambiance').click();
   await expect(page.locator('#padGain')).toHaveValue('40');
   await expect(page.locator('#padGainOut')).toHaveText('40');
   await expect(page.locator('#padFadeIn')).toHaveValue('2.5');
