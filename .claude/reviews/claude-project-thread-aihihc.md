@@ -14,4 +14,21 @@ Head: after merging main (d598041).
 - bugs: no finding.
 - Not from the reviewers: storage.spec.js's "fails once" test (from main) failed once under a full local run; filed as #76.
 
-Reviewed head: 65e8a4c20037bf0d6496291b67755870045bbd83
+
+# Pass 3
+
+Head: 9cd3e34 (main merged again, refused Reconnect and out-of-room tests added).
+
+- bugs: the out-of-room test could fill the browser before the first sound's copy was written; fixed in 6c88da1 (reload first, so the copy is known kept).
+- architect: kept.spec.js's Reconnect test and missing-pad test repeated board.spec.js's and edit.spec.js's; fixed in 6c88da1 (both dropped, the missing-pad toast moved into edit.spec.js). Stray blank line in drag.spec.js fixed there too.
+- architect: the Reconnect stubs are written in both board.spec.js and kept.spec.js; left, since they model different permission states and a shared helper would serve two callers.
+- Not from the reviewers: the browser sometimes closes between offline.spec.js and storage.spec.js, on main's tests too; filed as #78.
+
+# Pass 4
+
+Head: 6c88da1
+
+- bugs: no finding.
+- architect: no finding.
+
+Reviewed head: 6c88da121e3b3e0b9c201997681bd43a3e719519
