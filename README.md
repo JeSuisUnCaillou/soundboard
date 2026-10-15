@@ -155,26 +155,17 @@ is missing is shown struck through rather than quietly dropped.
 
 ## How it is built
 
-Static files, no dependencies, no build:
+Static files, no dependencies, no build: an HTML shell, one stylesheet, and ES
+modules for the wiring, the audio engine, the library of sounds, the board
+model, storage, the setup sheets and drawing. Each pad keeps its own `<audio>`
+element wired through a gain node, buffered ahead of time, so a tap starts the
+sound in a few milliseconds; fades are exponential ramps on that gain node, so
+a fade out can be interrupted by a fade in without a click. Boards, folder
+handles and the kept copies of the sounds live in IndexedDB.
 
-```
-index.html        the shell
-css/app.css       all of the styling
-js/app.js         wiring: state, taps, keys, redraws
-js/engine.js      Web Audio: one media element and gain node per pad
-js/library.js     reading the folder, four ways
-js/model.js       the board and its pads
-js/store.js       IndexedDB: boards, folder handles
-js/editor.js      the pad and board setup sheets
-js/ui.js          drawing
-js/gels.js        the eleven pad colours
-```
-
-Each pad keeps its own `<audio>` element wired through a gain node, created and
-buffered when the pad is set up, so a tap starts the sound in a few milliseconds
-rather than after a fetch. Fades are exponential ramps on the gain node, which is
-why a fade out can be interrupted by a fade in without a click. Boards and folder
-handles live in IndexedDB.
+The file-by-file map, the board format and the reasons behind it are in
+[docs/](docs/architecture.md) — start with [CLAUDE.md](CLAUDE.md) if you are
+going to change something.
 
 ## Testing
 
@@ -188,7 +179,8 @@ npx playwright install chromium   # once
 npm run test:e2e
 ```
 
-They run on every pull request, and the deploy to Pages runs them first.
+They run on every pull request, and the deploy to Pages runs them first. How
+to write them is in [docs/testing.md](docs/testing.md).
 
 ## What it does not do
 
