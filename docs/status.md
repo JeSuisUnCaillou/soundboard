@@ -23,8 +23,6 @@ screen wake lock.
 | Bug | Issue |
 | --- | --- |
 | Touching the master volume turns off every keyboard shortcut, Escape included | [#12](https://github.com/JeSuisUnCaillou/soundboard/issues/12) |
-| A looping pad with a stop point and a fade out plays once and stops | [#13](https://github.com/JeSuisUnCaillou/soundboard/issues/13) |
-| A looping pad with a start point but no stop point does not loop | [#14](https://github.com/JeSuisUnCaillou/soundboard/issues/14) |
 | A pad whose `play()` fails stays silent for the session while still lighting up | [#15](https://github.com/JeSuisUnCaillou/soundboard/issues/15) |
 | Stop points, loop points and fades to a stop point only work while the tab is visible | [#16](https://github.com/JeSuisUnCaillou/soundboard/issues/16) |
 | Changing columns in Board settings throws pads away or leaves sounds on the wrong pads | [#17](https://github.com/JeSuisUnCaillou/soundboard/issues/17) |
