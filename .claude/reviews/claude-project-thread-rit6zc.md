@@ -29,4 +29,9 @@ Head reviewed: 54f084a, after merging main (3 × 4 starting board, tap back on d
 - Checked: repoint/_renew with main's tap-back-on and solo paths, the resize test on the 3 × 4 board, the merged docs.
 - Noted and not counted: a stale pad tapped again inside its own fade stays on the kept copy until it next falls silent; the same sound unless the file changed on disk.
 
-Reviewed head: 54f084a329d636474d9c6dd02ab4c1d603ad1be0
+
+# Pass 5
+
+Head reviewed: 4f7bb8e, after merging main again (pad settings and board size tests, #55). No finding.
+
+Reviewed head: 4f7bb8e37a3224a9bbdeefad6c4382a4d0fa5128
