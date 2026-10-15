@@ -13,3 +13,18 @@ Head reviewed: 4934530
 No blocking finding (all text), so no second pass.
 
 Reviewed head: c814bd0e0534c53a23bd6bbcf81c7358f271fea8
+
+# Pass 2
+
+Head reviewed: 8108064 (the workflow replaced by a scheduled task, at the owner's request)
+
+- bugs 1, the session ends detached after architecture-review, so the Stop hook never asks for the harness PR's review loop: fixed in ceba6cd (step 3 runs the review loop on the harness branch before architecture-review).
+- bugs 2, the periodic issue and harness-engineer's own "Harness pass" issue make two issues for one pass: fixed in ceba6cd (the periodic issue is the pass's issue, its PR says Refs).
+- bugs 3, a run cut after opening the issue resets the count and skips the review: fixed in ceba6cd (an open issue is resumed; the count runs from the newest one closed).
+- bugs 4 and architect 1, the report is asked for twice and "in the thread if none" has no thread: fixed in ceba6cd (one report, from architecture-review, carrying the harness PR).
+- bugs 5, "after #50" could be read as issues: fixed in ceba6cd ("numbered above #50").
+- bugs 6, the recorded head is stale: this pass.
+
+All text (CLAUDE.md and a skill), none blocking, so no third pass.
+
+Reviewed head: ceba6cdd54601afe69e5205d60f5ca895f134b1d
