@@ -130,9 +130,10 @@ made once per path and revoked on `reset()`.
   of truth for "is this pad playing" — the pad's look, the Stop button, Stop and
   Space, and what a tap does all read it. A tap on a pad with nothing live
   starts it, even if a released voice is still fading out.
-- `fire(i, pad)` implements the *second tap* modes. `start()` handles `solo`,
-  seeks to `trimStart`, sets the gain to the floor or the level, plays, and
-  ramps in.
+- `fire(i, pad)` implements the *second tap* modes. `start()` handles `solo`
+  (every other voice released on its own pad's fade out), seeks to
+  `trimStart`, sets the gain to the floor or the level (or holds it where it
+  is, for a voice still fading out), plays, and ramps in.
 - Fades are `exponentialRampToValueAtTime` on the gain node towards `FLOOR`
   (0.0001), never on `el.volume`. `_stopVoice` ramps and then `settle()`s on a
   timer: pause, rewind to `trimStart`, back to `idle` (or dropped, for extras).
@@ -162,8 +163,8 @@ wire events, add the bundled sounds, then `restore()`:
    playable, the picker opens without **Reopen**.
 
 **Adding sounds** always ends in `absorb(added)`: create a board if there is
-none (id = slug of the first source), store handles, save, `primeAll()` (first 48
-pads), `measure()` (three at a time), `keepAwake()`, `keepSounds()`, toast. Added sounds go under Sounds, not
+none (id = slug of the first source), store handles, save, `primeAll()` (every
+pad), `measure()` (three at a time), `keepAwake()`, `keepSounds()`, toast. Added sounds go under Sounds, not
 on pads; only `firstBoard()` lays sounds out, through `place()`.
 
 **Editing**: `setEditing(on)` toggles `body[data-editing]` and the book. In edit
