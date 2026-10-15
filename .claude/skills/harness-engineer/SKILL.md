@@ -90,13 +90,13 @@ holds for what you would be tempted to add next to it.
    [`how-we-write.md`](how-we-write.md), other measures in
    [`measures.md`](measures.md).
 3. **Gather the evidence** of the window with [`evidence.md`](evidence.md):
-   sessions, threads, PRs, issues, CI runs, team memory. Note each fact with its
-   exact source before interpreting it.
+   sessions, threads, PRs, issues, CI runs, team memory, project instructions.
+   Note each fact with its exact source before interpreting it.
 4. **Diagnose.** The three questions, then **one** remedy: *write*, *move*,
-   *shorten*, *control*, *correct*, *merge*, *remove*, *bring home* (a memory
-   into a versioned file), *measure*. Where a fact goes is decided by
+   *shorten*, *control*, *correct*, *merge*, *remove*, *bring home* (a memory or
+   project instruction into a versioned file), *measure*. Where it goes:
    [`where-each-fact-goes.md`](where-each-fact-goes.md). **A new rule needs two
-   occurrences**, or one that cost a PR.
+   occurrences**, or one that cost a PR; one brought home needs none.
 5. **Write the audit** in `.claude/audits/YYYY-MM-DD-harness.md`
    (`-harness-<topic>.md` for a request) **as the pass's first commit**, in
    the format of [`audit-template.md`](audit-template.md); a *measure* finding
@@ -145,6 +145,6 @@ the PR; what remains after the merge is an issue, not a sentence.
   Removing a rule is proposed, with what you searched and over which period.
 - **A memory is emptied only after the merge**, once its content is on `main`,
   by editing it down to one line pointing to the versioned file, never by
-  deleting it outright.
+  deleting it outright; the project instructions, by proposing the same cut.
 - **Read sessions by filtered pages; your context holds only the evidence.**
   A session is hundreds of events; ask only for the kinds you need.

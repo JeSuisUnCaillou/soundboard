@@ -34,8 +34,8 @@ Previous: <link to the previous audit, or "first">.
 **Expected impact**: <measure> — baseline <value, date> — expected <direction or threshold> — check on <date> — if not: <fallback>
 **Applied**: yes, commit "…" | proposed, waits for an answer
 
-## Memories brought home
-| Memory | To | Empty after merge |
+## Memories and project instructions brought home
+| Source (memory file, `MEMORY.md` line, project instruction) | To, or "already in <file>" | Empty after merge |
 
 ## Proposed outside the repository
 <setup script, SessionStart hook, project instructions: the change, and where the user makes it>
