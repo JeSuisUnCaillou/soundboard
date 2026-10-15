@@ -112,7 +112,7 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 | `kept.spec.js` | Coming back to it: the kept copies of picked sounds after a reload and offline, a folder handle that comes back by itself, Reconnect refused, and a browser out of room for the copies. |
 | `offline.spec.js` | The service worker: reload with the network off, wifi that never answers, a server error, the board's own fonts. |
 | `drag.spec.js` | Moving pads in edit mode: by mouse on `desktop`, by a resting finger on `phone` (each `describe` skips the other project). Swapping, moving to an empty place, taking a pad off, and a press or a quick swipe that is not a drag. |
-| `storage.spec.js` | What is kept between launches: a browser that keeps nothing, a launch whose storage fails once, a kept folder that cannot be asked about, saving when the page is hidden, clearing an abandoned board, the wake lock, a picker dismissed without a cancel event. |
+| `storage.spec.js` | What is kept between launches: a browser that keeps nothing, a launch whose storage fails once, a kept folder that cannot be asked about, saving when the page is hidden or goes without a word, clearing an abandoned board, the wake lock, a picker dismissed without a cancel event. |
 
 What is not covered yet is listed in [status.md](status.md#test-coverage).
 

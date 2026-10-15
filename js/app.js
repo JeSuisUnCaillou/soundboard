@@ -385,7 +385,7 @@ class App {
       fitPads(this.board);
       this.engine.reset();
       this.redraw();
-      this.queueSave();
+      this.saveNow();
       this.primeAll();
       const { row, col } = rowCol(this.board, to);
       say(`Moved to row ${row + 1}, column ${col + 1}`);
@@ -756,7 +756,7 @@ class App {
     fitPads(this.board);
     this.engine.stop(i, { fade: 0 });
     this.redraw();
-    this.queueSave();
+    this.saveNow();
     if (pad) {
       this.engine.prime(i, pad);
       if (!pad.duration) this.measure();
@@ -835,7 +835,7 @@ class App {
       toast(`${lost} sound${lost === 1 ? '' : 's'} came off the board. They are still under Sounds.`);
     }
     this.redraw();
-    this.queueSave();
+    this.saveNow();
   }
 
   async exportBoard() {
@@ -1089,6 +1089,12 @@ class App {
     toast('This browser will not hold the screen awake. Set the phone not to lock before the show.');
   }
 
+  /**
+   * For changes that come in bursts: the master volume, which sends one on
+   * every step of the slider, and lengths as they are measured. Anything the
+   * operator would mind losing saves at once (`saveNow`): a save left for the
+   * page going away is not sure to land.
+   */
   queueSave() {
     clearTimeout(this.saveTimer);
     this.saveTimer = setTimeout(() => this.saveNow(), 500);
