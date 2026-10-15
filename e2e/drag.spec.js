@@ -1,6 +1,6 @@
 // Moving pads in edit mode: a mouse drags, a finger rests and then drags.
 
-import { test, expect, openBoard, pad, pencil, showSounds } from './helpers.js';
+import { test, expect, makeRoom, openBoard, pad, showSounds } from './helpers.js';
 
 /** The pad in this place on the board, counted from the top left. */
 function slot(page, i) {
@@ -8,12 +8,6 @@ function slot(page, i) {
 }
 
 /** The first board is full: take Sting off it, leaving its place, the fourth, empty. */
-async function makeRoom(page) {
-  await pencil(page, 'Sting').click();
-  await page.locator('#padClear').click();
-  await expect(slot(page, 3)).toHaveClass(/pad--empty/);
-}
-
 async function centre(locator) {
   const box = await locator.boundingBox();
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };

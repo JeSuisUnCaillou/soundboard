@@ -1,7 +1,7 @@
 // Coming back to it: the copies the board keeps of every sound, and the places
 // on disk it goes back to, with Reconnect when the browser asks again.
 
-import { test, expect, openBoard, pad, pencil, showSounds, silentWav } from './helpers.js';
+import { test, expect, makeRoom, openBoard, pad, showSounds, silentWav } from './helpers.js';
 
 /** A row of the folder's tree, by the sound's name. */
 function row(page, name) {
@@ -13,14 +13,6 @@ async function editing(page) {
   const edit = page.locator('#btnEdit');
   if ((await edit.getAttribute('aria-pressed')) !== 'true') await edit.click();
   await showSounds(page);
-}
-
-/** The first board is full: clear a pad so a sound can go on the board. */
-async function makeRoom(page) {
-  await page.locator('#btnEdit').click();
-  await pencil(page, 'Sting').click();
-  await page.locator('#padClear').click();
-  await expect(pad(page, 'Sting')).toHaveCount(0);
 }
 
 /** Open a folder in the tree, unless it is open already. */
@@ -47,6 +39,7 @@ test('sounds added from the file picker come back after a reload, and with the n
   });
   await openBoard(page);
   await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.locator('#btnEdit').click();
   await makeRoom(page);
 
   await editing(page);
@@ -111,6 +104,7 @@ test.describe('a folder opened with a handle', () => {
 
   test('comes back by itself while the browser still allows it', async ({ page }) => {
     await openBoard(page);
+    await page.locator('#btnEdit').click();
     await makeRoom(page);
     await onDisk(page, 'rain.wav', silentWav(30));
     await editing(page);
@@ -132,6 +126,7 @@ test.describe('a folder opened with a handle', () => {
 
   test('stays on its copies, and keeps offering Reconnect, when permission is refused', async ({ page }) => {
     await openBoard(page);
+    await page.locator('#btnEdit').click();
     await makeRoom(page);
     await onDisk(page, 'rain.wav', silentWav(30));
     await editing(page);
@@ -170,6 +165,7 @@ test('a browser out of room says so, and what it kept still comes back', async (
     };
   });
   await openBoard(page);
+  await page.locator('#btnEdit').click();
   await makeRoom(page);
   const add = async (name) => {
     await editing(page);

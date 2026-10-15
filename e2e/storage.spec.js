@@ -1,6 +1,6 @@
 // What the board keeps between launches, and how it copes when it cannot.
 
-import { test, expect, openBoard, pad, pencil, showSounds } from './helpers.js';
+import { test, expect, makeRoom, openBoard, pad, pencil, showSounds } from './helpers.js';
 
 test('a browser that keeps nothing still opens the board, and says nothing done now will be kept', async ({ page }) => {
   await page.addInitScript(() => {
@@ -107,10 +107,8 @@ test('a pad put on the board, and a new size, are kept even if the page then goe
   });
   await openBoard(page);
   await page.locator('#btnEdit').click();
-  // The first board is full; make room, and let that be saved first.
-  await pencil(page, 'Sting').click();
-  await page.locator('#padClear').click();
-  await expect(pad(page, 'Sting')).toHaveCount(0);
+  // Room for a sound, saved before the change that is tested.
+  await makeRoom(page);
   await page.reload();
   await expect(pad(page, 'Sting')).toHaveCount(0);
 

@@ -24,7 +24,7 @@ None open.
 
 ## Test coverage
 
-86 tests, all green: each runs at desktop and phone size, except the 9 drag
+85 tests, all green: each runs at desktop and phone size, except the 9 drag
 tests, which run by mouse on desktop or by finger on phone. Covered: the first
 launch and its improv board, the default board loaded back onto an empty board,
 a board file with the crickets' old name, tapping, Stop, Escape, the master

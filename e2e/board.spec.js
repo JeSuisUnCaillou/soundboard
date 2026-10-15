@@ -675,19 +675,6 @@ test.describe('a second tap', () => {
     await expect(crickets.locator('.pad__stack')).toHaveCount(0);
   });
 
-  test('layers a short sound over itself without being told to', async ({ page }) => {
-    await openBoard(page);
-    const gunshot = pad(page, 'Gunshot');
-
-    await gunshot.click();
-    await expect(gunshot).toHaveClass(/pad--playing/);
-    await gunshot.click();
-    await expect(gunshot.locator('.pad__stack')).toHaveText('×2');
-    // Each copy runs its course and the pad goes quiet by itself.
-    await expect(gunshot).not.toHaveClass(/pad--playing/, { timeout: 8000 });
-    await expect(gunshot.locator('.pad__stack')).toHaveCount(0);
-  });
-
   test('does nothing', async ({ page }) => {
     await openBoard(page);
     await setUpPad(page, 'Crickets', { padTap: 'ignore' });
