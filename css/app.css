@@ -693,6 +693,8 @@ select.field option:checked { background: var(--warn); color: #241a07; }
   background: var(--pad);
   font-size: 14px;
   z-index: 6;
+  /* It has nothing to press, and the pad under it may be the next cue. */
+  pointer-events: none;
 }
 .toast[hidden] { display: none; }
 

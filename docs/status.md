@@ -22,37 +22,36 @@ screen wake lock.
 
 | Bug | Issue |
 | --- | --- |
-| Touching the master volume turns off every keyboard shortcut, Escape included | [#12](https://github.com/JeSuisUnCaillou/soundboard/issues/12) |
 | Stop points, loop points and fades to a stop point only work while the tab is visible | [#16](https://github.com/JeSuisUnCaillou/soundboard/issues/16) |
 | Changing columns in Board settings throws pads away or leaves sounds on the wrong pads | [#17](https://github.com/JeSuisUnCaillou/soundboard/issues/17) |
 | Pressing Reconnect during a show cuts every sound dead | [#18](https://github.com/JeSuisUnCaillou/soundboard/issues/18) |
 | Keeping copies of sounds can silently skip some | [#19](https://github.com/JeSuisUnCaillou/soundboard/issues/19) |
 | Save board file ignores what was just typed in Board settings | [#45](https://github.com/JeSuisUnCaillou/soundboard/issues/45) |
-| The toast catches taps and drops meant for the pads beneath it | [#51](https://github.com/JeSuisUnCaillou/soundboard/issues/51) |
 | Smaller fixes from the code review | [#23](https://github.com/JeSuisUnCaillou/soundboard/issues/23) |
 
 ## Test coverage
 
-57 tests, all green: each runs at desktop and phone size, except the 11 drag
-tests, which run by mouse on desktop or by finger on phone. Covered: the first
-launch, tapping, Stop, Escape, the master volume, fade and second-tap edge
-cases, every second-tap mode, start and stop points, solo, a pad stopped
-while it is still starting, held keys and a pad's own key, a cross-origin
-sound, edit mode, renaming a pad and its level, fades and gel (with reload),
-Board settings rows and columns, shrinking the board, the waiting pad,
-emptying the board, adding sounds through the file input, saving a board
-file and loading it back (missing sounds struck through), dropping several
-sounds or folders at once, moving pads and taking them off by mouse and by finger, coming back offline, opening on weak wifi,
-keeping a good copy over a server error, asking no other site for anything,
-and setting up a pad, hearing a sound and putting it on a pad from the
-keyboard.
+58 tests, all green: each runs at desktop and phone size, except the 11 drag
+tests, which run by mouse on desktop or by finger on phone. Covered: the
+first launch, tapping, Stop, Escape, the master volume, fade and second-tap
+edge cases, every second-tap mode, start and stop points, solo, a pad
+stopped while it is still starting, held keys and a pad's own key, a
+cross-origin sound, edit mode, renaming a pad and its level, fades and gel
+(with reload), Board settings rows and columns, shrinking the board, the
+waiting pad, emptying the board, adding sounds through the file input,
+saving a board file and loading it back (missing sounds struck through),
+dropping several sounds or folders at once, moving pads and taking them off
+by mouse and by finger, a tap on a pad under a toast, coming back offline,
+opening on weak wifi, keeping a good copy over a server error, asking no
+other site for anything, and setting up a pad, hearing a sound and putting
+it on a pad from the keyboard.
 
 Not covered yet:
 
 | Gap | Issue |
 | --- | --- |
 | Playback modes, Reconnect and the kept copies | [#24](https://github.com/JeSuisUnCaillou/soundboard/issues/24) |
-| Dropping a folder on the window, the library filter | none |
+| The library filter | [#71](https://github.com/JeSuisUnCaillou/soundboard/issues/71) |
 
 ## Known loose ends
 

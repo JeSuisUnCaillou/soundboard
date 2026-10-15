@@ -147,9 +147,6 @@ test.describe('with a finger', () => {
   test('a pad dragged by a finger to an empty place moves there, and stays after a reload', async ({ page }) => {
     await openBoard(page);
     await page.locator('#btnEdit').click();
-    // On a phone the first launch's toast covers that place, and catches the
-    // drop until it goes (#51).
-    await expect(page.locator('#toast')).toBeHidden();
 
     await fingerDrag(page, pad(page, 'Gunshot'), slot(page, 4));
     await expectLayout(page, ['', 'Crickets ambiance', 'Sexy', '', 'Gunshot']);
