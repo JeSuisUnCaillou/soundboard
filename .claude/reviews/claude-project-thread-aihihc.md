@@ -31,4 +31,19 @@ Head: 6c88da1
 - bugs: no finding.
 - architect: no finding.
 
-Reviewed head: 6c88da121e3b3e0b9c201997681bd43a3e719519
+
+# Pass 5
+
+Head: eaa5dad (CI on 6c88da1 failed main's Reconnect test as flaky: a pad set just before a reload was lost; filed #79, fixed by saving at once on put, move and resize).
+
+- bugs: the move path had no test that fails without the fix; fixed in d434a03 (drag.spec.js, seen red with queueSave and green with saveNow).
+- architect: no finding.
+
+# Pass 6
+
+Head: d434a03
+
+- bugs: no finding (left out as low-confidence: on a very slow runner the debounce could fire before the reload, so the new tests could pass without the fix; they cannot fail with it).
+- architect: no finding.
+
+Reviewed head: d434a031f230b54bf98539099bea7366577ffa72
