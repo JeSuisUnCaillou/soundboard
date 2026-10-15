@@ -34,7 +34,6 @@ screen wake lock.
 | The service worker is slow on weak wifi and can cache error pages | [#21](https://github.com/JeSuisUnCaillou/soundboard/issues/21) |
 | Sounds in the tree and pad settings cannot be reached from the keyboard | [#22](https://github.com/JeSuisUnCaillou/soundboard/issues/22) |
 | Smaller fixes from the code review | [#23](https://github.com/JeSuisUnCaillou/soundboard/issues/23) |
-| Sounds added after Empty the board still lay themselves out on the pads (fix in #26) | [#25](https://github.com/JeSuisUnCaillou/soundboard/issues/25) |
 
 ## Test coverage
 
