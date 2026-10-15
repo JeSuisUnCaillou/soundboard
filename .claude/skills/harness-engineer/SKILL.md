@@ -105,10 +105,10 @@ holds for what you would be tempted to add next to it.
 6. **Apply** on the session's branch, one commit per finding, following
    [`how-we-write.md`](how-we-write.md); to split a file,
    [`splitting-a-file.md`](splitting-a-file.md). Applied without asking:
-   entropy, moves, cuts, memories brought home into a skill (into `CLAUDE.md`
-   only if the commit takes as much out). Proposed, not written: removing a
-   rule, `.claude/settings.json`, a SessionStart hook, the setup script, the
-   project instructions.
+   entropy, moves, cuts, and **every memory and project instruction the
+   repository does not already say**, brought home into a skill or `CLAUDE.md`.
+   Proposed, not written: removing a rule, `.claude/settings.json`, a
+   SessionStart hook, the setup script, a change to the project instructions.
 7. **Check.** Replay the failure: at the turn where the defect happened, would
    the changed file have been loaded, with the rule high enough to be read? Run
    every command written or changed in the harness both ways, condition true and
