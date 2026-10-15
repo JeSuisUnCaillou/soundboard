@@ -23,7 +23,6 @@ screen wake lock.
 | Bug | Issue |
 | --- | --- |
 | Touching the master volume turns off every keyboard shortcut, Escape included | [#12](https://github.com/JeSuisUnCaillou/soundboard/issues/12) |
-| Pressing Reconnect during a show cuts every sound dead | [#18](https://github.com/JeSuisUnCaillou/soundboard/issues/18) |
 | Keeping copies of sounds can silently skip some | [#19](https://github.com/JeSuisUnCaillou/soundboard/issues/19) |
 | Dropping several files or folders at once in Chromium adds only the first | [#20](https://github.com/JeSuisUnCaillou/soundboard/issues/20) |
 | The service worker is slow on weak wifi and can cache error pages | [#21](https://github.com/JeSuisUnCaillou/soundboard/issues/21) |

@@ -145,7 +145,10 @@ made once per path and revoked on `reset()`.
   run by hand (`el.loop` is off); when the file itself ends, the `ended`
   handler sends it back to `trimStart` (`_goRound`).
 - `reset()` tears down every element. The app calls it whenever paths may now
-  point at different blobs (reconnect, moves, resizing that drops pads, import, empty).
+  point at different blobs (moves, resizing that drops pads, import, empty).
+- `repoint()` is the gentle reset, for **Reconnect**: idle channels are dropped
+  and primed again from the real files, while a voice still sounding keeps its
+  element, is marked `stale`, and is rebuilt (`_renew`) once it falls silent.
 - iOS: `wake()` on the first gesture nudges every primed element to play and
   pause at silence, so each answers its first tap.
 - `voiceElement()` sets `crossOrigin = 'anonymous'`: a media element from

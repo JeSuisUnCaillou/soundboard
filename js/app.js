@@ -605,7 +605,7 @@ class App {
       this.pendingHandles = null;
       refs.btnReconnect.hidden = true;
       refs.btnReopen.hidden = true;
-      this.engine.reset();                   // drop anything primed from a copy
+      this.engine.repoint();                 // off the copies, without cutting a cue
       await this.absorb([]);
     } catch (err) {
       toast(err.name === 'NotAllowedError'

@@ -91,7 +91,7 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 
 | Spec | Covers |
 | --- | --- |
-| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades and second taps, stop points (also in a hidden tab), a pad stopped while starting, keys, cross-origin sound. |
+| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades and second taps, stop points (also in a hidden tab), a pad stopped while starting, keys, cross-origin sound, Reconnect during a cue. |
 | `edit.spec.js` | Building a board: edit mode, the pad sheet, Board settings (resizing too), loading a board file, emptying, adding sounds, a sound that cannot be kept. |
 | `offline.spec.js` | The service worker: reload with the network off. |
 
@@ -102,5 +102,9 @@ What is not covered yet is listed in [status.md](status.md#test-coverage).
 - Chromium only: Safari and Firefox behaviour (iOS gesture rules, no folder
   picker) is not exercised. Check it by hand on a device when a change touches
   `engine.wake`, pickers or touch handling.
-- The File System Access API (handles, Reconnect) cannot be driven from a test.
+- The File System Access pickers cannot be answered from a test. A handle
+  can still be had from the browser's private storage
+  (`navigator.storage.getDirectory()`): the Reconnect test in `board.spec.js`
+  returns one from a stubbed `showDirectoryPicker` and stubs
+  `queryPermission` / `requestPermission` to make the board ask again.
 - Audio is not listened to: "playing" means the pad shows `pad--playing`.

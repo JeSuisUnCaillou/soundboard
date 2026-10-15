@@ -1,6 +1,6 @@
 // Running the show: the first board, firing pads, stopping them.
 
-import { test, expect, BUNDLED_TITLES, openBoard, pad } from './helpers.js';
+import { test, expect, BUNDLED_TITLES, isNarrow, openBoard, pad, showSounds, silentWav } from './helpers.js';
 
 test('the first launch lays out the sounds that ship with the board', async ({ page }) => {
   await openBoard(page);
@@ -338,4 +338,66 @@ test.describe('a pad stopped while its sound is still starting', () => {
     await expect.poll(level, { timeout: 5000 }).toBeGreaterThan(0.001);
     await expect(page.locator('#toast')).not.toContainText('would not play');
   });
+});
+
+test('Reconnect in the middle of a cue cuts nothing', async ({ page }) => {
+  // A real folder handle, from the browser's own private storage, stands in
+  // for the operator's folder. Each page load starts without permission to
+  // read it, as browsers do, so the board offers Reconnect.
+  await page.addInitScript(() => {
+    let granted = false;
+    FileSystemHandle.prototype.queryPermission = async () => (granted ? 'granted' : 'prompt');
+    FileSystemHandle.prototype.requestPermission = async () => {
+      granted = true;
+      return 'granted';
+    };
+    window.showDirectoryPicker = async () => {
+      const root = await navigator.storage.getDirectory();
+      return root.getDirectoryHandle('Show');
+    };
+  });
+  await openBoard(page);
+  const wav = [...silentWav(30)];
+  await page.evaluate(async (bytes) => {
+    const root = await navigator.storage.getDirectory();
+    const show = await root.getDirectoryHandle('Show', { create: true });
+    const file = await show.getFileHandle('rain.wav', { create: true });
+    const out = await file.createWritable();
+    await out.write(new Uint8Array(bytes));
+    await out.close();
+  }, wav);
+
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+  await page.locator('#btnAdd').click();
+  await page.locator('#btnAddFolder').click();
+  await page.locator('#lib .tree__name', { hasText: 'Show' }).click();
+  await page.locator('#lib .lib__item', { hasText: 'rain' }).locator('.lib__add').click();
+  await expect(pad(page, 'Rain')).toHaveCount(1);
+  await expect(page.locator('#toast')).toContainText('is on row');
+  if (isNarrow(page)) await expect(page.locator('#book')).toBeHidden();
+  await page.locator('#btnEdit').click();
+
+  await page.reload();
+  const reconnect = page.locator('#btnReconnect');
+  await expect(reconnect).toHaveText('Reconnect “Show”');
+
+  // Both pads play from what the board kept: a sound that ships with it, and
+  // the copy of the folder's.
+  const crickets = pad(page, 'Crickets ambiance');
+  const rain = pad(page, 'Rain');
+  await crickets.click();
+  await rain.click();
+  await expect(page.locator('#grid .pad--playing')).toHaveCount(2);
+
+  await reconnect.click();
+  await expect(reconnect).toBeHidden();
+  await expectStillPlayingAfter(page, rain, 1500);
+  await expect(crickets).toHaveClass(/pad--playing/);
+
+  // Once stopped, the pad plays again, now from the folder.
+  await rain.click();
+  await expect(rain).not.toHaveClass(/pad--playing/);
+  await rain.click();
+  await expect(rain).toHaveClass(/pad--playing/);
 });

@@ -283,6 +283,21 @@ export class Engine {
     }
   }
 
+  /**
+   * The same sounds now come from somewhere else — the real files in place of
+   * the kept copies. Silent pads are rebuilt from the new files; a pad still
+   * sounding keeps the element it is playing from, so pressing Reconnect in
+   * the middle of a cue cuts nothing, and is rebuilt once it falls silent.
+   */
+  repoint() {
+    for (const ch of [...this.channels.values()]) {
+      if (ch.state === 'idle') this._drop(ch);
+      else ch.stale = true;
+    }
+    for (const v of [...this.extras]) if (v.state === 'idle') this._drop(v);
+    this.onchange();
+  }
+
   /** Drop every element: the folder, and so every blob URL, has changed. */
   reset() {
     for (const ch of this.channels.values()) this._teardown(ch);
@@ -307,6 +322,7 @@ export class Engine {
       ch.onEnded = () => {
         if (ch.el.loop || this._goRound(ch)) return;
         ch.state = 'idle';
+        this._renew(ch);
         this.onchange();
       };
       el.addEventListener('ended', ch.onEnded);
@@ -388,6 +404,7 @@ export class Engine {
         } catch {
           /* seeking a not-yet-loaded element is harmless to skip */
         }
+        this._renew(voice);
       }
       this.onchange();
     };
@@ -400,6 +417,13 @@ export class Engine {
       this._set(voice.gain, FLOOR);
       settle();
     }
+  }
+
+  /** A channel left playing through a repoint() is rebuilt once it is silent. */
+  _renew(ch) {
+    if (!ch.stale) return;
+    this._drop(ch);
+    this.prime(ch.i, ch.pad);
   }
 
   _drop(voice) {
