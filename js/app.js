@@ -242,8 +242,8 @@ class App {
    *
    * With a mouse the whole pad is a handle: press anywhere but the pencil and
    * move, and the pad comes with you; press and release without moving and it
-   * simply plays. A touch that starts on a pad is left to scroll the board — a
-   * pad is moved under a finger by typing its row and column in its settings.
+   * simply plays. A touch that moves straight away is left to scroll the board;
+   * a finger that rests on a pad for a moment picks it up.
    */
   wirePadDragging() {
     let drag = null;
