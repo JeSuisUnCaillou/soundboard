@@ -24,6 +24,13 @@ test('the first board comes set up for an improv show', async ({ page }) => {
   await page.locator('#padCancel').click();
   await expect(sheet).toBeHidden();
 
+  // Phone runs past five seconds and is still an effect, in the effects' blue.
+  await pencil(page, 'Phone').click();
+  await expect(page.locator('#padTap')).toHaveValue('fadeout');
+  await expect(gel('Daylight Blue')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#padCancel').click();
+  await expect(sheet).toBeHidden();
+
   // A place loops under the scene, quieter, and fades in and out.
   await pencil(page, 'Storm').click();
   await expect(page.locator('#padLoop')).toBeChecked();
