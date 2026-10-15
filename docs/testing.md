@@ -63,6 +63,9 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 - `page.route` cannot see requests the service worker answers: a test that
   routes requests needs `test.use({ serviceWorkers: 'block' })`, as the
   cross-origin test in `board.spec.js` does.
+- Headless Chromium keeps every tab visible. A test of the board in a hidden
+  tab overrides `document.hidden` and `visibilityState` in an init script and
+  dispatches `visibilitychange`, as the stop-point test in `board.spec.js` does.
 - Persistence is tested by `page.reload()` and asserting the board came back.
 - Adding sounds, with the pickers deleted as CLAUDE.md says:
 
@@ -88,7 +91,7 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 
 | Spec | Covers |
 | --- | --- |
-| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades and second taps, stop points, a pad stopped while starting, keys, cross-origin sound. |
+| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades and second taps, stop points (also in a hidden tab), a pad stopped while starting, keys, cross-origin sound. |
 | `edit.spec.js` | Building a board: edit mode, the pad sheet, Board settings, loading a board file, emptying, adding sounds. |
 | `offline.spec.js` | The service worker: reload with the network off. |
 

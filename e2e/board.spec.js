@@ -195,6 +195,36 @@ test('a looping pad with a start point goes round when its file ends', async ({ 
   await expect(gunshot).not.toHaveClass(/pad--playing/);
 });
 
+test('a stop point is honoured while the board is in another tab', async ({ page }) => {
+  // Headless Chromium keeps every tab visible, so switching away is played
+  // out here the way the browser announces it.
+  await page.addInitScript(() => {
+    let away = false;
+    Object.defineProperty(Document.prototype, 'hidden', { get: () => away, configurable: true });
+    Object.defineProperty(Document.prototype, 'visibilityState', {
+      get: () => (away ? 'hidden' : 'visible'),
+      configurable: true,
+    });
+    window.switchTab = (gone) => {
+      away = gone;
+      document.dispatchEvent(new Event('visibilitychange'));
+    };
+  });
+  await openBoard(page);
+  await setUpPad(page, 'Crickets ambiance', { padEnd: '2', padFadeOut: '0' });
+  const crickets = pad(page, 'Crickets ambiance');
+
+  await crickets.click();
+  await expect(crickets).toHaveClass(/pad--playing/);
+  await page.evaluate(() => window.switchTab(true));
+
+  // The operator is reading the script elsewhere; the cue still ends on time.
+  await expect(crickets).not.toHaveClass(/pad--playing/, { timeout: 5000 });
+  await expect(page.locator('#btnStop')).toBeDisabled();
+  await page.evaluate(() => window.switchTab(false));
+  await expect(crickets).not.toHaveClass(/pad--playing/);
+});
+
 test('holding a pad’s key is one tap', async ({ page }) => {
   await openBoard(page);
   const crickets = pad(page, 'Crickets ambiance');

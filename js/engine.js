@@ -258,7 +258,7 @@ export class Engine {
     return this.active().length > 0;
   }
 
-  /** Called once per frame: honours stop points, loop points and fade tails. */
+  /** Called every frame (on a timer while the tab is hidden): honours stop points, loop points and fade tails. */
   tick() {
     for (const { pad, voice } of this.active()) {
       if (voice.state !== 'playing') continue;

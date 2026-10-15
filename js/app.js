@@ -922,7 +922,21 @@ class App {
   }
 
   run() {
-    if (this.raf || document.hidden || !this.engine.anyPlaying) return;
+    if (!this.engine.anyPlaying) return;
+    if (document.hidden) {
+      // A hidden tab gets no animation frames, but a stop point still has to
+      // land while the operator reads the script in another window: keep the
+      // engine ticking on a timer until the board is in view again.
+      this.hiddenTick ||= setInterval(() => {
+        this.engine.tick();
+        if (document.hidden && this.engine.anyPlaying) return;
+        clearInterval(this.hiddenTick);
+        this.hiddenTick = null;
+        this.run();
+      }, 50);
+      return;
+    }
+    if (this.raf) return;
     this.raf = requestAnimationFrame(() => {
       this.raf = null;
       this.engine.tick();
