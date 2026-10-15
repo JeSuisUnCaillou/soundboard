@@ -152,6 +152,7 @@ export class Engine {
     voice.fading = false;
     voice.released = false;
     voice.state = 'starting'; // claimed, so a silent wake nudge cannot pause it
+    const claim = (voice.claim = (voice.claim || 0) + 1);
 
     const level = clamp01(pad.gain ?? 1);
     const fade = Math.max(0, fadeIn ?? pad.fadeIn ?? 0);
@@ -162,7 +163,11 @@ export class Engine {
     try {
       await voice.el.play();
     } catch (err) {
-      voice.state = 'idle';
+      // Stopped, or started afresh, while play() was still pending: the
+      // pause() that did it rejects the promise, and that is no failure.
+      if (voice.claim !== claim || voice.state !== 'starting') return null;
+      // Anything else leaves the element unusable. Let it go, so that the
+      // next tap builds the pad a new one instead of lighting up in silence.
       this._drop(voice);
       throw err;
     }
@@ -389,6 +394,7 @@ export class Engine {
   _drop(voice) {
     this._teardown(voice);
     this.extras.delete(voice);
+    if (this.channels.get(voice.i) === voice) this.channels.delete(voice.i);
   }
 
   _teardown(voice) {
