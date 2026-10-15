@@ -50,3 +50,17 @@ of bug fixes, the user's choice) was added. Reviewers: bugs and architect.
 No blocking finding: the loop stops here.
 
 Reviewed head: d9fa4479771cdbb51fb54f61691983779b30063c
+
+# PR #65, pass 1
+
+Head reviewed: b733d05, the merge rule widened to everything but medium-to-big
+features. Reviewers: bugs and architect.
+
+- Both: `CLAUDE.md` § Periodic review still said the harness PR waits for the
+  owner. Text, not blocking; fixed in 70b5f34.
+- architect: `CLAUDE.md` § Who merges restated step 7 without its conditions.
+  Text, not blocking; fixed in 70b5f34, it now only points to step 7.
+
+No blocking finding: the loop stops here.
+
+Reviewed head: 70b5f3442e5679a23034f2651a9c84969cb30edc

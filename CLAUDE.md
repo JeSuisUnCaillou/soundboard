@@ -135,9 +135,8 @@ The owner merges. When the owner says "validated" or "merge once green" about
 a thread's pull requests, merge each one as soon as it is green.
 
 Once the work is pushed, review it with `Skill(skill: "review-loop")` before
-handing it over; a Stop hook starts it otherwise. The skill says which pull
-requests Claude merges by itself once it converges (small bug fixes) and
-which wait for the owner.
+handing it over; a Stop hook starts it otherwise. Its step 7 says which pull
+requests Claude then merges and which wait for the owner.
 
 Merge with a squash, so the title ends with the pull request number, `… (#n)`.
 
@@ -157,4 +156,3 @@ that follows this section:
 3. Run `Skill(skill: "harness-engineer")` and the review loop on its branch,
    then `Skill(skill: "architecture-review")`.
 4. Close the issue once the architecture review has posted its report on it.
-   The harness PR waits for the owner.

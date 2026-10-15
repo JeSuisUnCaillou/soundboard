@@ -1,6 +1,6 @@
 ---
 name: harness-engineer
-description: Improves the soundboard's harness (CLAUDE.md, skills, team memory, project instructions) from what recent cloud sessions showed, measures the shape of its files and schedules a check of each change. Writes an audit, applies it on a branch, opens the PR, never merges. Triggers on "harness-engineer", "improve the harness", "review how Claude works on this repo", "move memories into the repo".
+description: Improves the soundboard's harness (CLAUDE.md, skills, team memory, project instructions) from what recent cloud sessions showed, measures the shape of its files and schedules a check of each change. Writes an audit, applies it on a branch, opens the PR. Triggers on "harness-engineer", "improve the harness", "review how Claude works on this repo", "move memories into the repo".
 ---
 
 # harness-engineer
@@ -116,8 +116,8 @@ holds for what you would be tempted to add next to it.
    e2e suite if the pass touched `e2e/`.
 8. **Push and open the PR** against `main` with the GitHub MCP tools, closing
    the pass's issue (`Closes #n`). Its description has one line per finding,
-   with its evidence and its commit, so each can be judged from the phone. The
-   merge waits for the user.
+   with its evidence and its commit, so each can be judged from the phone.
+   The review loop then reviews and merges it, as for any PR.
 9. **File what can only be done later** as `harness` issues: **one
    `Check: <topic>` issue per applied finding**, with the query that gives the
    measure, the baseline, the threshold, the check date (a week after the pass
