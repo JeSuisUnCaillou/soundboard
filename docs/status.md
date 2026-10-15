@@ -25,7 +25,6 @@ screen wake lock.
 | Touching the master volume turns off every keyboard shortcut, Escape included | [#12](https://github.com/JeSuisUnCaillou/soundboard/issues/12) |
 | A looping pad with a stop point and a fade out plays once and stops | [#13](https://github.com/JeSuisUnCaillou/soundboard/issues/13) |
 | A looping pad with a start point but no stop point does not loop | [#14](https://github.com/JeSuisUnCaillou/soundboard/issues/14) |
-| A pad whose `play()` fails stays silent for the session while still lighting up | [#15](https://github.com/JeSuisUnCaillou/soundboard/issues/15) |
 | Stop points, loop points and fades to a stop point only work while the tab is visible | [#16](https://github.com/JeSuisUnCaillou/soundboard/issues/16) |
 | Changing columns in Board settings throws pads away or leaves sounds on the wrong pads | [#17](https://github.com/JeSuisUnCaillou/soundboard/issues/17) |
 | Pressing Reconnect during a show cuts every sound dead | [#18](https://github.com/JeSuisUnCaillou/soundboard/issues/18) |
@@ -37,9 +36,9 @@ screen wake lock.
 
 ## Test coverage
 
-16 tests, each run at desktop and phone size, all green. Covered: the first
+18 tests, each run at desktop and phone size, all green. Covered: the first
 launch, tapping, Stop, Escape, the master volume, fade and second-tap edge
-cases, stop points, held keys, a cross-origin sound, edit mode, renaming a pad
+cases, stop points, a pad stopped while it is still starting, held keys, a cross-origin sound, edit mode, renaming a pad
 (with reload), emptying the board, adding sounds through the file input, and
 coming back offline.
 
