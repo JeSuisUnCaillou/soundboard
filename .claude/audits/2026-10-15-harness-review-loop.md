@@ -100,6 +100,24 @@ existed) — expected 0 — check on 2026-10-22 — if not: rely on the hook alo
 and take the sentence out.
 **Applied**: yes, commit "CLAUDE.md: review a branch before handing it over".
 
+### 4. "Reviewed at least once" names a review nothing performs
+
+**Pillar**: context
+**Evidence**: the project instructions and team memory let Claude merge a
+small bug fix "once CI is green and the PR has been reviewed at least once
+(e.g. a /review sub-agent)"; #27's review was written by the merging session
+five seconds before the merge. The user chose on 2026-10-15 13:28 that the
+loop merges bug fixes by itself and nothing else ("Bug fixes only").
+**Remedy**: write — step 7 of the skill: a converged bug fix merges with
+GitHub's squash auto-merge on green CI; features, harness changes and anything
+left to the user wait. `CLAUDE.md` points to it; the merge rule draft PR #44
+brings in from memory gives way to this pointer.
+**Expected impact**: bug-fix PRs merged by Claude without a converged review
+file, and feature PRs merged by Claude — baseline 1 merged with a one-off
+review (#27), 2026-10-15 — expected 0 and 0 — check on 2026-10-22 (#42) — if
+not: move the rule into the hook's reason, which every handing-over turn reads.
+**Applied**: yes, commit "review-loop: ship a converged bug fix by itself, hand over the rest".
+
 ## Memories brought home
 
 | Memory | To | Empty after merge |
@@ -111,8 +129,9 @@ None.
 
 The project instructions say a small fix may be merged "once the PR has been
 reviewed at least once (e.g. a /review sub-agent)". Once this is merged, that
-example could read "(the review loop has converged on it)". The user edits it
-in the project's settings.
+example could read "(the review loop has converged on it)", or the sentence
+could point to `.claude/skills/review-loop/`. The user edits it in the
+project's settings.
 
 ## What I could not check
 

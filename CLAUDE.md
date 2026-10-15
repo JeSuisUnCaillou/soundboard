@@ -121,4 +121,6 @@ say what changed and why, and include the raw.githack link above so the
 reviewer can try it.
 
 Once the work is pushed, review it with `Skill(skill: "review-loop")` before
-handing it over; a Stop hook starts it otherwise.
+handing it over; a Stop hook starts it otherwise. The skill says which PRs
+merge by themselves once it converges (small bug fixes) and which wait for the
+user.
