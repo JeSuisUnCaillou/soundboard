@@ -92,10 +92,9 @@ export function paintPads(board, engine) {
     // The pad was filled after this element was drawn empty; the redraw that
     // gives it a lamp and a clock is already on its way.
     if (!el.classList.contains('pad--filled')) continue;
-    const st = engine.state(i);
     // A pad that has been told to stop looks stopped at once, even though the
     // sound takes its fade to go: the operator has already moved on.
-    const live = st && !st.fading ? st : null;
+    const live = engine.state(i);
     const playing = !!live && live.state === 'playing';
     const paused = !!live && live.state === 'paused';
 
@@ -119,7 +118,7 @@ export function paintPads(board, engine) {
         stack = span('pad__stack', '');
         el.append(stack);
       }
-      stack.textContent = `×${st.stack}`;
+      stack.textContent = `×${live.stack}`;
     } else if (stack) {
       stack.remove();
     }
@@ -218,9 +217,12 @@ function soundRow(entry, used, showPath) {
 
 // ── transport ─────────────────────────────────────────────────────────────
 
-/** Stop is only a button when there is something to stop. */
+/**
+ * Stop is only a button when there is something to stop. A sound already
+ * told to stop only takes its fade with it.
+ */
 export function drawStop(engine) {
-  const live = engine.active().length;
+  const live = engine.live().length;
   refs.btnStop.disabled = live === 0;
   refs.btnStop.setAttribute(
     'aria-label',

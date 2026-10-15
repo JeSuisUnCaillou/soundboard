@@ -122,8 +122,9 @@ export class Engine {
   /** What tapping the pad does, given what it is doing now. */
   async fire(i, pad) {
     const ch = this.channels.get(i);
-    const live = (ch && ch.state !== 'idle') || this._extrasFor(i).length > 0;
-    if (!live) return this.start(i, pad);
+    // A sound already told to stop is on its way out: tapping it again starts
+    // it afresh rather than stopping it a second time.
+    if (!this.live(i).length) return this.start(i, pad);
 
     switch (pad.tap) {
       case 'restart':
@@ -149,6 +150,7 @@ export class Engine {
     voice.stopTimer = null;
     voice.pad = pad;
     voice.fading = false;
+    voice.released = false;
     voice.state = 'starting'; // claimed, so a silent wake nudge cannot pause it
 
     const level = clamp01(pad.gain ?? 1);
@@ -173,17 +175,17 @@ export class Engine {
 
   stop(i, { fade = 0 } = {}) {
     const voices = [this.channels.get(i), ...this._extrasFor(i)].filter(Boolean);
-    for (const v of voices) this._stopVoice(v, fade);
+    for (const v of voices) this._release(v, fade);
     this.onchange();
   }
 
   async stopAll({ fade = 0, except = null } = {}) {
     if (except !== PREVIEW) this.previewPath = null;
     for (const [i, ch] of this.channels) {
-      if (i !== except) this._stopVoice(ch, fade);
+      if (i !== except) this._release(ch, fade);
     }
     for (const v of this.extras) {
-      if (v.i !== except) this._stopVoice(v, fade);
+      if (v.i !== except) this._release(v, fade);
     }
     this.onchange();
   }
@@ -214,25 +216,37 @@ export class Engine {
     }
   }
 
+  /**
+   * What a pad shows: the voices nobody has told to stop. One that has been
+   * told is still fading out, but the operator has already moved on.
+   */
   state(i) {
-    const ch = this.channels.get(i);
-    const extras = this._extrasFor(i);
-    const live = ch && ch.state !== 'idle' ? ch : extras[0];
-    if (!live) return null;
+    const live = this.live(i);
+    if (!live.length) return null;
+    const { voice } = live[0];
     return {
-      state: live.state,
-      position: live.el.currentTime,
-      duration: Number.isFinite(live.el.duration) ? live.el.duration : 0,
-      stack: (ch && ch.state !== 'idle' ? 1 : 0) + extras.length,
-      fading: live.fading,
+      state: voice.state,
+      position: voice.el.currentTime,
+      duration: Number.isFinite(voice.el.duration) ? voice.el.duration : 0,
+      stack: live.length,
     };
   }
 
+  /** Every voice still sounding, fading out or not; the channel first. */
   active() {
     const out = [];
     for (const [i, ch] of this.channels) if (ch.state !== 'idle') out.push({ i, pad: ch.pad, voice: ch });
     for (const v of this.extras) out.push({ i: v.i, pad: v.pad, voice: v });
     return out;
+  }
+
+  /**
+   * The voices still sounding that nobody has told to stop — of one pad, or
+   * of the whole board. A fade towards a pad's own stop point does not count
+   * as being told: the pad is still playing out, and answers a tap as usual.
+   */
+  live(i = null) {
+    return this.active().filter(({ i: j, voice }) => !voice.released && (i == null || j === i));
   }
 
   get anyPlaying() {
@@ -281,8 +295,7 @@ export class Engine {
     let ch = this.channels.get(i);
     if (!ch) {
       await this.unlock(false);
-      const el = new Audio();
-      el.preload = 'auto';
+      const el = voiceElement();
       const src = this.ctx.createMediaElementSource(el);
       const gain = this.ctx.createGain();
       gain.gain.value = FLOOR;
@@ -308,8 +321,7 @@ export class Engine {
 
   async _extra(i, pad) {
     await this.unlock(false);
-    const el = new Audio();
-    el.preload = 'auto';
+    const el = voiceElement();
     el.src = await this.lib.url(pad.file);
     const src = this.ctx.createMediaElementSource(el);
     const gain = this.ctx.createGain();
@@ -330,6 +342,17 @@ export class Engine {
     return [...this.extras].filter((v) => v.i === i);
   }
 
+  /**
+   * Stop a voice because someone asked to. One already on its way out keeps
+   * the fade it has, unless this is a hard cut.
+   */
+  _release(voice, fade) {
+    if (!voice || voice.state === 'idle') return;
+    if (voice.released && fade > 0) return;
+    voice.released = true;
+    this._stopVoice(voice, fade);
+  }
+
   _stopVoice(voice, fade) {
     if (!voice || voice.state === 'idle') return;
     const seconds = Math.max(0, fade || 0);
@@ -338,6 +361,7 @@ export class Engine {
     const settle = () => {
       voice.el.pause();
       voice.fading = false;
+      voice.released = false;
       voice.stopTimer = null;
       if (voice.transient) {
         this._drop(voice);
@@ -399,6 +423,20 @@ export class Engine {
 
 function clamp01(v) {
   return Math.min(1, Math.max(0, Number(v) || 0));
+}
+
+/**
+ * A media element for the gain chain. It asks for its file with CORS: a host
+ * may hand a file over from another origin (a proxy redirecting to where the
+ * repository keeps its files, a CDN), and the audio graph plays a media
+ * element from another origin as silence unless it was fetched that way.
+ * Files from the board's own origin, or from disk, are not affected.
+ */
+function voiceElement() {
+  const el = new Audio();
+  el.crossOrigin = 'anonymous';
+  el.preload = 'auto';
+  return el;
 }
 
 function seek(el, time) {

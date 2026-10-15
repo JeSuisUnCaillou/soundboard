@@ -4,6 +4,12 @@ A static web app: `index.html`, `css/`, `js/` (ES modules), `sw.js`. No build
 step and no runtime dependencies — keep it that way. `package.json` exists only
 for the test tooling. The README's "How it is built" section maps the files.
 
+## English only
+
+Everything in the repository is written in English: code, comments, docs,
+commit messages, and this file — even when the conversation is in another
+language.
+
 ## End-to-end tests
 
 The board is covered by Playwright tests in `e2e/`, run against the site as it
@@ -42,3 +48,16 @@ How the tests are written:
 
 CI runs the suite on every pull request (`.github/workflows/e2e.yml`), and
 the Pages deploy runs it first and does not publish if it fails.
+
+Checking syntax is never enough: a change is not done until it has been seen
+working in the running app, through the suite or a test driven the same way.
+
+## Hand over a link to try it
+
+When a feature or fix is finished and pushed, give the user the raw.githack
+link to the branch so they can try it themselves:
+
+    https://raw.githack.com/JeSuisUnCaillou/soundboard/<branch>/index.html
+
+Remind them to reload if the old version shows up: the service worker keeps a
+copy of the app.

@@ -402,7 +402,8 @@ class App {
       say('Everything cut');
       return;
     }
-    if (e.key.length === 1) {
+    // A held key is one tap, not a pad flicking on and off with the repeat.
+    if (e.key.length === 1 && !e.repeat) {
       const hit = padByKey(this.board, e.key);
       if (hit) {
         e.preventDefault();
@@ -844,12 +845,14 @@ class App {
 
   /** Stop what is playing, each pad taking its own fade out with it. */
   stop() {
-    const live = this.engine.active();
-    if (!live.length) return;
-    for (const { i, pad } of live) {
+    // Once per pad, however many of its voices are sounding.
+    const pads = new Map(this.engine.live().map(({ i, pad }) => [i, pad]));
+    if (!pads.size) return;
+    for (const [i, pad] of pads) {
       this.engine.stop(i, { fade: pad.fadeOut ?? this.fadeTime() });
     }
-    say(live.length === 1 ? `Stopping ${padTitle(live[0].pad)}` : `Stopping ${live.length} sounds`);
+    const [first] = pads.values();
+    say(pads.size === 1 ? `Stopping ${padTitle(first)}` : `Stopping ${pads.size} sounds`);
   }
 
   /**
