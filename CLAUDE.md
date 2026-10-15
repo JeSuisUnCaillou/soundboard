@@ -32,3 +32,13 @@ How:
 
 Keep test scripts in the scratchpad, not in the repo, and say in the report what
 was tested and what was not.
+
+## Hand over a link to try it
+
+When a feature or fix is finished and pushed, give the user the raw.githack
+link to the branch so they can try it themselves:
+
+    https://raw.githack.com/JeSuisUnCaillou/soundboard/<branch>/index.html
+
+Remind them to reload if the old version shows up: the service worker keeps a
+copy of the app.
