@@ -73,8 +73,11 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
   routes the page's requests needs `test.use({ serviceWorkers: 'block' })`, as
   the cross-origin test in `board.spec.js` does. To route the worker's own
   requests (weak wifi, a server error), use `context.route`:
-  `playwright.config.js` sets `PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS`
-  so that it sees them.
+  `offline.spec.js` sets `PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS` so
+  that it sees them, and runs in a worker of its own: a service worker watched
+  this way crashes Chromium now and then after its context closes, which took
+  down the next test in the same browser (#78). Keep the switch out of
+  `playwright.config.js`.
 - Headless Chromium keeps every tab visible. A test of the board in a hidden
   tab overrides `document.hidden` and `visibilityState` in an init script and
   dispatches `visibilitychange`, as the stop-point test in `board.spec.js` does.

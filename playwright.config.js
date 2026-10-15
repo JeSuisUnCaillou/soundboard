@@ -5,10 +5,6 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 4173;
 
-// Let tests see and route the service worker's own requests, as they do the
-// page's: that is how offline.spec.js makes the wifi weak.
-process.env.PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS = '1';
-
 export default defineConfig({
   testDir: 'e2e',
   fullyParallel: true,
