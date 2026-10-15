@@ -54,16 +54,18 @@ every `/` of the branch name turned into `-`; each pass appends to it.
    reads that line; a branch unchanged since it outside `.claude/reviews/`
    needs no new pass.
 
-7. **Ship a bug fix, hand over the rest.** A PR ships by itself when all of
-   these hold: it fixes a bug the user or an issue named; its diff touches
-   only `index.html`, `css/`, `js/`, `sw.js`, `e2e/` and its review file; the
-   loop converged with nothing left to the user. Watch the PR
+7. **Ship everything but a feature.** A PR ships by itself once the loop
+   converged with nothing left to the user, unless it is a medium-to-big
+   feature: one that gives the operator something new to do or see (a
+   control, a setting, a mode, a screen), changes the stored format, or
+   changes a rule of `docs/decisions.md`. Bug fixes, tests, docs, the
+   harness and small touches to an existing feature (a word, a default, a
+   colour) ship. In doubt, it is a feature and waits. To ship, watch the PR
    (`subscribe_pr_activity`), and on its CI-green event merge it with
    `merge_pull_request`, squash, and `expectedHeadSha` set to the commit that
    closed the review file, so a commit pushed after the review is never
-   merged unreviewed. Everything else waits for the user: a feature, a
-   behaviour change beyond the bug, any other file, a loop that did not
-   converge. Chosen by the user on 2026-10-15.
+   merged unreviewed. Chosen by the user on 2026-10-15: "The only thing I
+   want to review are medium-big features."
 
 ## What you return
 

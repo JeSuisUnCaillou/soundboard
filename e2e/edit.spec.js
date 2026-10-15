@@ -364,46 +364,68 @@ test('a board saved to a file loads back as it was, with missing sounds struck t
   await expect(page.locator('#setRows')).toHaveValue('2');
 });
 
-test('picking a pad up shows where it can be dropped off the board, before it gets there', async ({ page, hasTouch }) => {
+test('a pad’s level, fades and colour stay after a reload', async ({ page }) => {
   await openBoard(page);
   await page.locator('#btnEdit').click();
-  // The folder beside the board on a wide screen, the bar beneath it on a narrow one.
-  const zone = page.locator(hasTouch ? '#browse' : '#book');
-  const sexy = pad(page, 'Sexy');
-  const box = await sexy.boundingBox();
-  const at = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-  const off = await page.locator(hasTouch ? '#btnBrowse' : '#lib').boundingBox();
-  const there = { x: off.x + off.width / 2, y: off.y + off.height / 2 };
 
-  // A mouse moves the pad a little; a finger rests on it.
-  let hand;
-  if (hasTouch) {
-    const cdp = await page.context().newCDPSession(page);
-    const touch = (type, p) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: p ? [p] : [] });
-    hand = { move: (p) => touch('touchMove', p), up: () => touch('touchEnd') };
-    await touch('touchStart', at);
-  } else {
-    hand = { move: (p) => page.mouse.move(p.x, p.y), up: () => page.mouse.up() };
-    await page.mouse.move(at.x, at.y);
-    await page.mouse.down();
-    await hand.move({ x: at.x + 10, y: at.y });
-  }
-  await expect(sexy).toHaveClass(/pad--dragging/);
-  await expect(zone).toHaveClass(/drop--ready/);
-  await expect(zone).not.toHaveClass(/drop--off/);
-  await expect.poll(() => zone.evaluate((el) => getComputedStyle(el, '::after').content))
-    .toBe('"Drop to take it off the board"');
+  await pencil(page, 'Crickets ambiance').click();
+  await page.locator('#padGain').fill('40');
+  await expect(page.locator('#padGainOut')).toHaveText('40');
+  await page.locator('#padFadeIn').fill('2.5');
+  await page.locator('#padFadeOut').fill('6');
+  await page.locator('#padGels .gel[aria-label^="Fire"]').click();
+  await page.locator('#padSave').click();
+  await expect(page.locator('#padEditor')).toBeHidden();
 
-  // Over it, it lights up; back over the board, it is only marked again.
-  await hand.move(there);
-  await expect(zone).toHaveClass(/drop--off/);
-  await hand.move(at);
-  await expect(zone).not.toHaveClass(/drop--off/);
-  await expect(zone).toHaveClass(/drop--ready/);
+  await page.reload();
+  await pencil(page, 'Crickets ambiance').click();
+  await expect(page.locator('#padGain')).toHaveValue('40');
+  await expect(page.locator('#padGainOut')).toHaveText('40');
+  await expect(page.locator('#padFadeIn')).toHaveValue('2.5');
+  await expect(page.locator('#padFadeOut')).toHaveValue('6');
+  await expect(page.locator('#padGels .gel[aria-label^="Fire"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#padGels .gel[aria-pressed="true"]')).toHaveCount(1);
+});
 
-  // Let go on the board, and the pad stays and the zone goes back to normal.
-  await hand.up();
-  await expect(sexy).not.toHaveClass(/pad--dragging/);
-  await expect(zone).not.toHaveClass(/drop--ready/);
-  await expect(page.locator('#grid .pad--filled')).toHaveCount(3);
+test('Board settings sets the number of rows and columns', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await expect(page.locator('#grid .pad')).toHaveCount(12);
+
+  await page.locator('#btnSetup').click();
+  await page.locator('#setCols').fill('4');
+  await page.locator('#setRows').fill('5');
+  await page.locator('#setupDone').click();
+  await expect(page.locator('#setup')).toBeHidden();
+  await expect(page.locator('#grid .pad')).toHaveCount(20);
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(BUNDLED_TITLES.length);
+  await expect(page.locator('#grid .pad').nth(19)).toHaveAttribute('aria-label', /row 5 column 4/);
+
+  await page.reload();
+  await expect(page.locator('#grid .pad')).toHaveCount(20);
+});
+
+test('a smaller board says which sounds it could not keep', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+
+  // A sound on the last row, which a board one row shorter has no room for.
+  await page.locator('#grid .pad').nth(8).click();
+  await expect(page.locator('#grid .pad').nth(8)).toHaveClass(/pad--waiting/);
+  await showSounds(page);   // a phone opens them by itself for a waiting pad
+  await page.locator('#lib .tree__name', { hasText: 'default' }).click();
+  await page.locator('#lib .lib__item', { hasText: 'gunshot' }).locator('.lib__add').click();
+  await expect(page.locator('#toast')).toHaveText(/^gunshot is on row 3, column 3\.$/i);
+  await expect(pad(page, 'Gunshot')).toHaveCount(2);
+
+  await page.locator('#btnSetup').click();
+  await page.locator('#setRows').fill('2');
+  await page.locator('#setupDone').click();
+  await expect(page.locator('#toast')).toHaveText('1 sound came off the board. They are still under Sounds.');
+  await expect(page.locator('#grid .pad')).toHaveCount(6);
+  await expect(pad(page, 'Gunshot')).toHaveCount(1);
+  for (const title of BUNDLED_TITLES) await expect(pad(page, title)).toBeVisible();
+
+  await showSounds(page);
+  await expect(page.locator('#lib .lib__item', { hasText: 'gunshot' })).toBeVisible();
 });

@@ -53,9 +53,9 @@ export function isNarrow(page) {
   return page.viewportSize().width <= 900;
 }
 
-/** Show the folder's tree, wherever this layout keeps it. */
+/** Show the folder's tree, wherever this layout keeps it, if it is not open already. */
 export async function showSounds(page) {
-  if (isNarrow(page)) await page.locator('#btnBrowse').click();
+  if (isNarrow(page) && !(await page.locator('#book').isVisible())) await page.locator('#btnBrowse').click();
   await expect(page.locator('#book')).toBeVisible();
 }
 

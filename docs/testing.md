@@ -44,7 +44,7 @@ how `board.spec.js` tests a sound served cross-origin.
 | `pad(page, title)` | A filled pad by the name it shows. |
 | `pencil(page, title)` | The button that opens that pad's settings in edit mode, by its label. |
 | `BUNDLED_TITLES` | `['Gunshot', 'Crickets ambiance', 'Sexy']`. Gunshot (3 s) is a hit; Crickets ambiance (26 s) and Sexy (2 min 54) are cues. |
-| `showSounds(page)` | Open the book wherever the layout keeps it (**Browse files** on phone). |
+| `showSounds(page)` | Open the book wherever the layout keeps it (**Browse files** on phone), unless it is open already. |
 | `isNarrow(page)` | Viewport ≤ 900px. |
 | `silentWav(seconds, rate)` | A WAV buffer made in the test, for adding sounds. Never commit test audio. |
 
@@ -85,6 +85,11 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
   ```
 
   See `edit.spec.js` for the full example.
+- A finger is driven through the browser's own touch input, which Playwright
+  has no API for: `drag.spec.js` sends `Input.dispatchTouchEvent` over a CDP
+  session (`page.context().newCDPSession(page)`), and Chromium turns it into
+  the pointer events the board listens to. A mouse drag is `page.mouse` with
+  `steps`.
 - Downloads (the board file) are caught with `page.waitForEvent('download')`;
   uploads to a hidden input with `setInputFiles` on `#importFile`.
 
@@ -92,9 +97,10 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 
 | Spec | Covers |
 | --- | --- |
-| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades and second taps, tapping back on during a fade out, solo, priming a big board, stop points, a pad stopped while starting, keys, cross-origin sound. |
-| `edit.spec.js` | Building a board: edit mode, the pad sheet, Board settings, saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), the keyboard in edit mode. |
+| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades, each second-tap mode, tapping back on during a fade out, solo, priming a big board, start and stop points, a pad stopped while starting, keys (held, and a pad's own), cross-origin sound. |
+| `edit.spec.js` | Building a board: edit mode, the pad sheet (name, level, fades, gel, kept after a reload), Board settings (rows and columns, growing and shrinking), saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), the keyboard in edit mode. |
 | `offline.spec.js` | The service worker: reload with the network off, wifi that never answers, a server error, the board's own fonts. |
+| `drag.spec.js` | Moving pads in edit mode: by mouse on `desktop`, by a resting finger on `phone` (each `describe` skips the other project). Swapping, moving to an empty place, taking a pad off, the drop-off place marked from pick-up, and a press or a quick swipe that is not a drag. |
 
 What is not covered yet is listed in [status.md](status.md#test-coverage).
 

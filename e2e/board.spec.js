@@ -71,6 +71,7 @@ async function setUpPad(page, title, fields) {
   for (const [id, value] of Object.entries(fields)) {
     const field = page.locator(`#${id}`);
     if (typeof value === 'boolean') await field.setChecked(value);
+    else if (await field.evaluate((el) => el.tagName === 'SELECT')) await field.selectOption(value);
     else await field.fill(value);
   }
   await page.locator('#padSave').click();
@@ -411,3 +412,102 @@ test.describe('a pad stopped while its sound is still starting', () => {
     await expect(page.locator('#toast')).not.toContainText('would not play');
   });
 });
+
+test('a pad’s own key fires it', async ({ page }) => {
+  await openBoard(page);
+  await setUpPad(page, 'Crickets ambiance', { padKey: 'm' });
+  const crickets = pad(page, 'Crickets ambiance');
+  await expect(crickets.locator('.pad__key')).toHaveText('m');
+
+  await page.keyboard.press('m');
+  await expect(crickets).toHaveClass(/pad--playing/);
+  await page.keyboard.press('m');
+  await expect(crickets).not.toHaveClass(/pad--playing/);
+});
+
+test.describe('a second tap', () => {
+  test('fades out, by default', async ({ page }) => {
+    await openBoard(page);
+    const crickets = pad(page, 'Crickets ambiance');
+    await crickets.click();
+    await expect(crickets).toHaveClass(/pad--playing/);
+    await crickets.click();
+    await expect(crickets).not.toHaveClass(/pad--playing/);
+    await expect(page.locator('#btnStop')).toBeDisabled();
+  });
+
+  test('starts over', async ({ page }) => {
+    await openBoard(page);
+    await setUpPad(page, 'Crickets ambiance', { padTap: 'restart' });
+    const crickets = pad(page, 'Crickets ambiance');
+    const time = crickets.locator('.pad__time');
+
+    await crickets.click();
+    await expect(time).toHaveText('-0:23', { timeout: 6000 });
+    await crickets.click();
+    await expect(time).toHaveText(/-0:2[56]/);
+    await expect(crickets).toHaveClass(/pad--playing/);
+  });
+
+  test('pauses, and the next one carries on', async ({ page }) => {
+    await openBoard(page);
+    await setUpPad(page, 'Crickets ambiance', { padTap: 'pause' });
+    const crickets = pad(page, 'Crickets ambiance');
+    const time = crickets.locator('.pad__time');
+
+    await crickets.click();
+    await expect(time).toHaveText('-0:24', { timeout: 5000 });
+    await crickets.click();
+    await expect(crickets).toHaveClass(/pad--paused/);
+    await expect(crickets).not.toHaveClass(/pad--playing/);
+    const held = await time.textContent();
+    expect(held).toMatch(/-0:2[34]/);
+
+    await crickets.click();
+    await expect(crickets).toHaveClass(/pad--playing/);
+    await expect(crickets).not.toHaveClass(/pad--paused/);
+    await expect(time).toHaveText(/-0:2[234]/);
+  });
+
+  test('layers the sound over itself', async ({ page }) => {
+    await openBoard(page);
+    await setUpPad(page, 'Crickets ambiance', { padTap: 'overlay' });
+    const crickets = pad(page, 'Crickets ambiance');
+
+    await crickets.click();
+    await expect(crickets).toHaveClass(/pad--playing/);
+    await crickets.click();
+    await expect(crickets).toHaveClass(/pad--playing/);
+    await expect(crickets.locator('.pad__stack')).toHaveText('×2');
+
+    await page.locator('#btnStop').click();
+    await expect(crickets).not.toHaveClass(/pad--playing/);
+    await expect(crickets.locator('.pad__stack')).toHaveCount(0);
+  });
+
+  test('does nothing', async ({ page }) => {
+    await openBoard(page);
+    await setUpPad(page, 'Crickets ambiance', { padTap: 'ignore' });
+    const crickets = pad(page, 'Crickets ambiance');
+    const time = crickets.locator('.pad__time');
+
+    await crickets.click();
+    await expect(time).toHaveText('-0:24', { timeout: 5000 });
+    await crickets.click();
+    await expect(crickets).toHaveClass(/pad--playing/);
+    await expect(crickets.locator('.pad__stack')).toHaveCount(0);
+    // It runs on from where it was rather than starting over.
+    await expect(time).toHaveText('-0:22', { timeout: 4000 });
+  });
+});
+
+test('a pad with a start point plays from there', async ({ page }) => {
+  await openBoard(page);
+  await setUpPad(page, 'Crickets ambiance', { padStart: '20' });
+  const crickets = pad(page, 'Crickets ambiance');
+
+  await crickets.click();
+  await expect(crickets).toHaveClass(/pad--playing/);
+  await expect(crickets.locator('.pad__time')).toHaveText(/-0:0[56]/);
+});
+
