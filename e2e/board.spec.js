@@ -9,9 +9,41 @@ test('the first launch lays out the sounds that ship with the board', async ({ p
   await expect(page.locator('#btnStop')).toBeDisabled();
 });
 
+test('the first board comes set up for an improv show', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  const sheet = page.locator('#padEditor');
+  const gel = (name) => page.locator(`#padGels .gel[aria-label^="${name}"]`);
+
+  // An effect fires at once and layers on a second tap.
+  await pad(page, 'Gunshot').locator('.pad__pencil').click();
+  await expect(page.locator('#padFadeIn')).toHaveValue('0');
+  await expect(page.locator('#padTap')).toHaveValue('overlay');
+  await expect(page.locator('#padLoop')).not.toBeChecked();
+  await expect(gel('Daylight Blue')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#padCancel').click();
+  await expect(sheet).toBeHidden();
+
+  // A place loops under the scene, quieter, and fades in and out.
+  await pad(page, 'Storm').locator('.pad__pencil').click();
+  await expect(page.locator('#padLoop')).toBeChecked();
+  await expect(page.locator('#padFadeIn')).toHaveValue('2');
+  await expect(page.locator('#padFadeOut')).toHaveValue('3');
+  await expect(page.locator('#padGainOut')).toHaveText('50');
+  await expect(gel('Moss Green')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#padCancel').click();
+  await expect(sheet).toBeHidden();
+
+  // Music loops too, in a colour of its own.
+  await pad(page, 'Happy').locator('.pad__pencil').click();
+  await expect(page.locator('#padLoop')).toBeChecked();
+  await expect(page.locator('#padGainOut')).toHaveText('45');
+  await expect(gel('Lavender')).toHaveAttribute('aria-pressed', 'true');
+});
+
 test('tapping a pad plays it, and Stop takes it out', async ({ page }) => {
   await openBoard(page);
-  const crickets = pad(page, 'Crickets ambiance');
+  const crickets = pad(page, 'Crickets');
 
   await crickets.click();
   await expect(crickets).toHaveClass(/pad--playing/);
@@ -24,13 +56,13 @@ test('tapping a pad plays it, and Stop takes it out', async ({ page }) => {
 
 test('Escape cuts everything dead', async ({ page }) => {
   await openBoard(page);
-  const crickets = pad(page, 'Crickets ambiance');
-  const sexy = pad(page, 'Sexy');
+  const crickets = pad(page, 'Crickets');
+  const romance = pad(page, 'Romance');
 
   await crickets.click();
-  await sexy.click();
+  await romance.click();
   await expect(crickets).toHaveClass(/pad--playing/);
-  await expect(sexy).toHaveClass(/pad--playing/);
+  await expect(romance).toHaveClass(/pad--playing/);
 
   await page.keyboard.press('Escape');
   await expect(page.locator('#grid .pad--playing')).toHaveCount(0);
@@ -45,7 +77,7 @@ test('the master volume follows its slider', async ({ page }) => {
 
 test('the keys still work after the master volume is touched', async ({ page }) => {
   await openBoard(page);
-  const crickets = pad(page, 'Crickets ambiance');
+  const crickets = pad(page, 'Crickets');
   const key = (await crickets.locator('.pad__key').textContent()).trim();
 
   // Grabbing the slider leaves the focus on it, as a hand on a mouse does.
@@ -81,10 +113,10 @@ async function setUpPad(page, title, fields) {
 
 test('Stop greys out as soon as everything is fading out', async ({ page }) => {
   await openBoard(page);
-  const crickets = pad(page, 'Crickets ambiance');
-  const sexy = pad(page, 'Sexy');
+  const crickets = pad(page, 'Crickets');
+  const romance = pad(page, 'Romance');
   await crickets.click();
-  await sexy.click();
+  await romance.click();
   await expect(page.locator('#grid .pad--playing')).toHaveCount(2);
 
   // The fade out takes 1.5 s; the button must not wait for it.
@@ -95,7 +127,7 @@ test('Stop greys out as soon as everything is fading out', async ({ page }) => {
 
 test('a pad tapped while it fades out starts again, and keeps playing', async ({ page }) => {
   await openBoard(page);
-  const crickets = pad(page, 'Crickets ambiance');
+  const crickets = pad(page, 'Crickets');
 
   await crickets.click();
   await expect(crickets).toHaveClass(/pad--playing/);
@@ -112,7 +144,7 @@ test('a pad tapped while it fades out starts again, and keeps playing', async ({
 
 test('a pad tapped after Stop, during the fade, starts again', async ({ page }) => {
   await openBoard(page);
-  const crickets = pad(page, 'Crickets ambiance');
+  const crickets = pad(page, 'Crickets');
 
   await crickets.click();
   await expect(crickets).toHaveClass(/pad--playing/);
@@ -125,8 +157,8 @@ test('a pad tapped after Stop, during the fade, starts again', async ({ page }) 
 
 test('a pad tapped while it fades in stops', async ({ page }) => {
   await openBoard(page);
-  await setUpPad(page, 'Crickets ambiance', { padFadeIn: '3' });
-  const crickets = pad(page, 'Crickets ambiance');
+  await setUpPad(page, 'Crickets', { padFadeIn: '3' });
+  const crickets = pad(page, 'Crickets');
 
   await crickets.click();
   await expect(crickets).toHaveClass(/pad--playing/);
@@ -138,8 +170,8 @@ test('a pad tapped while it fades in stops', async ({ page }) => {
 test('a pad fading towards its stop point still answers a tap by stopping', async ({ page }) => {
   await openBoard(page);
   // Stop at 4 s with a 3 s fade: the pad starts fading on its own after 1 s.
-  await setUpPad(page, 'Crickets ambiance', { padEnd: '4', padFadeOut: '3' });
-  const crickets = pad(page, 'Crickets ambiance');
+  await setUpPad(page, 'Crickets', { padEnd: '4', padFadeOut: '3' });
+  const crickets = pad(page, 'Crickets');
 
   await crickets.click();
   await expect(crickets.locator('.pad__time')).toHaveText('-0:02', { timeout: 4000 });
@@ -169,8 +201,8 @@ async function expectStillPlayingAfter(page, padEl, ms) {
 test('a looping pad with a stop point and a fade out goes round, not out', async ({ page }) => {
   await openBoard(page);
   // Stop at 2 s with a 1 s fade: without the loop it would be over after 2 s.
-  await setUpPad(page, 'Crickets ambiance', { padEnd: '2', padFadeOut: '1', padLoop: true });
-  const crickets = pad(page, 'Crickets ambiance');
+  await setUpPad(page, 'Crickets', { padEnd: '2', padFadeOut: '1', padLoop: true });
+  const crickets = pad(page, 'Crickets');
 
   await crickets.click();
   await expect(crickets).toHaveClass(/pad--playing/);
@@ -197,7 +229,7 @@ test('a looping pad with a start point goes round when its file ends', async ({ 
 
 test('holding a pad’s key is one tap', async ({ page }) => {
   await openBoard(page);
-  const crickets = pad(page, 'Crickets ambiance');
+  const crickets = pad(page, 'Crickets');
   const key = (await crickets.locator('.pad__key').textContent()).trim();
 
   // Every keydown after the first is a key repeat.
@@ -231,9 +263,10 @@ test.describe('a sound served from another origin', () => {
       route.fulfill({ status: 302, headers: { Location: route.request().url().replace('//localhost:', '//127.0.0.1:') } }));
 
     await openBoard(page);
-    const crickets = pad(page, 'Crickets ambiance');
-    await crickets.click();
-    await expect(crickets).toHaveClass(/pad--playing/);
+    // A hit, so it is at full level the moment it starts.
+    const gunshot = pad(page, 'Gunshot');
+    await gunshot.click();
+    await expect(gunshot).toHaveClass(/pad--playing/);
 
     await expect.poll(() => page.evaluate(() => {
       const data = new Float32Array(window.__meter.fftSize);
@@ -288,7 +321,7 @@ test.describe('a pad stopped while its sound is still starting', () => {
     });
 
     await openBoard(page);
-    const crickets = pad(page, 'Crickets ambiance');
+    const crickets = pad(page, 'Crickets');
 
     // A first tap wakes the board's sound; it starts as it always does.
     await crickets.click();

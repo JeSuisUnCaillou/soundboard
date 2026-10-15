@@ -8,7 +8,7 @@ import {
   newBoard, newPad, migrate, setCols, setRows, fitPads, filled, slug, move, padByKey, rowCol, padTitle,
   applyLengthDefaults,
 } from './model.js';
-import { bundledPaths } from './bundled.js';
+import { bundledPaths, bundledSetup } from './bundled.js';
 import { PadEditor, SetupSheet } from './editor.js';
 import {
   refs, bindRefs, drawGrid, paintPads, drawLibrary,
@@ -590,6 +590,8 @@ class App {
     }));
     await store.setMeta('last', this.board.id);
     await this.place(bundledPaths());
+    // Set up as a show would use them, not only by their length.
+    for (const { pad } of filled(this.board)) Object.assign(pad, bundledSetup(pad.file));
     this.redraw();
     this.saveNow();
     this.primeAll();

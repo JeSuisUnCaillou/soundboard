@@ -57,6 +57,10 @@ test('sounds added from the file picker land in the folder and can go on a pad',
   });
   await openBoard(page);
   await page.locator('#btnEdit').click();
+  // The first board is full; make room for the new sound.
+  await pad(page, 'Sting').locator('.pad__pencil').click();
+  await page.locator('#padClear').click();
+  await expect(pad(page, 'Sting')).toHaveCount(0);
   await showSounds(page);
 
   await page.locator('#btnAdd').click();
@@ -156,7 +160,7 @@ test('a key loaded in capitals from a board file is still taken from its pad whe
     rows: 3,
     pads: [
       { file: 'default/gunshot.mp3', name: 'Shot', key: 'Q' },
-      { file: 'default/sexy.mp3', name: 'Song', key: 'w' },
+      { file: 'default/romance.mp3', name: 'Song', key: 'w' },
     ],
   };
   await page.locator('#importFile').setInputFiles({

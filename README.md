@@ -69,8 +69,12 @@ and on Safari also AIFF.
 
 ## Using it
 
-**The first launch** opens a **Default board** with the three sounds that come
-with the app — a gunshot, crickets, something slinky. They sit under `default`
+**The first launch** opens a **Default board** set up for an improv show, with
+the twelve sounds that come with the app: four effects that fire at once
+(gunshot, explosion, phone, a dramatic sting, in blue), three places that loop
+under a scene (storm, crickets, birds, in green) and five moods of music that
+loop too (suspense, romance, sad, hero, happy, in lavender). Their levels are
+evened out so none of them jumps out of the speakers. They sit under `default`
 in the tree and stay there whatever else you open: they are served with the
 board, so they need no folder, no permission and no copy. Press them, move them,
 or empty the board and build your own.

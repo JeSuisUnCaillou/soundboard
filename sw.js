@@ -2,7 +2,7 @@
 // dependency worth having. Network first, so a deploy is picked up on the next
 // load; the cache answers only when the network does not.
 
-const CACHE = 'soundboard-v2';
+const CACHE = 'soundboard-v3';
 
 const SHELL = [
   './',
@@ -18,8 +18,17 @@ const SHELL = [
   './js/gels.js',
   './js/bundled.js',
   './sounds/gunshot.mp3',
-  './sounds/crickets ambiance.wav',
-  './sounds/sexy.mp3',
+  './sounds/explosion.mp3',
+  './sounds/phone.mp3',
+  './sounds/sting.mp3',
+  './sounds/storm.mp3',
+  './sounds/crickets.mp3',
+  './sounds/birds.mp3',
+  './sounds/suspense.mp3',
+  './sounds/romance.mp3',
+  './sounds/sad.mp3',
+  './sounds/hero.mp3',
+  './sounds/happy.mp3',
   './icon.svg',
   './manifest.webmanifest',
 ];
