@@ -30,7 +30,7 @@ const TYPED = 'textarea, select, '
 /** The pad under a node: the pad itself, or the pad whose pencil it is. */
 function padOf(node) {
   const pen = node.closest('.pad__pencil');
-  if (pen) return pen.previousElementSibling;
+  if (pen) return refs.grid.querySelector(`.pad[data-i="${pen.dataset.i}"]`);
   return node.closest('.pad');
 }
 

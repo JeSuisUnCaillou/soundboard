@@ -64,7 +64,8 @@ is in [architecture.md](architecture.md).
 - **The service worker is network first**, with `cache: 'no-cache'`, and is
   registered with `updateViaCache: 'none'`: a deploy is picked up on the next
   load, and a stale module never runs next to a fresh one. It waits on the
-  network for 3 s at most: weak wifi must not hold up a board it already has.
+  network a short while at most ([architecture.md](architecture.md#offline-swjs)):
+  weak wifi must not hold up a board it already has.
 - **The fonts ship with the board.** Nothing is fetched from another site,
   so the board looks the same offline and never waits on a font server.
 - **Text from filenames is set as text, never markup** (`ui.js`). The names
