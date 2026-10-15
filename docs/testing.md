@@ -88,7 +88,7 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 
 | Spec | Covers |
 | --- | --- |
-| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades and second taps, stop points, keys, cross-origin sound. |
+| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades and second taps, stop points, a pad stopped while starting, keys, cross-origin sound. |
 | `edit.spec.js` | Building a board: edit mode, the pad sheet, emptying, adding sounds. |
 | `offline.spec.js` | The service worker: reload with the network off. |
 
