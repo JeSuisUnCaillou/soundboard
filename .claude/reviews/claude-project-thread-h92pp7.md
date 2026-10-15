@@ -21,4 +21,8 @@ Head reviewed: 69bcacd.
 
 Head: 28732c9, a merge of main (#49) with only a docs/testing.md conflict, resolved by keeping both sides' rows. No reviewers run: the branch's own code is unchanged since pass 2, and the whole suite passes on the merge (35 tests, 70 runs).
 
-Reviewed head: 28732c9dc84cfa6bb8b233ed18f0da3ae91743ad
+# Pass 4
+
+Head: 6a7822f, a merge of main (#47): conflicts in docs and in the imports of e2e/edit.spec.js, and #47's new test reached the pencil inside its pad, now through `pencil()`. No reviewers run: the branch's own code is unchanged since pass 2, and the whole suite passes on the merge (36 tests, 72 runs).
+
+Reviewed head: 6a7822f62e658d581f5de8cbc9ab34f68d5b6b6c
