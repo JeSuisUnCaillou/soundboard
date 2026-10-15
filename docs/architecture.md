@@ -15,7 +15,7 @@ why things are the way they are is in [decisions.md](decisions.md).
 | `js/app.js` | The `App` class: owns the open board and the edit state, wires every event (taps, keys, drags, drops, pickers), saves, restores, keeps the screen awake. The only module that decides things. |
 | `js/engine.js` | `Engine`: Web Audio. One *channel* per pad, extra *voices* for layering and previews, fades, the per-frame `tick()`. Also `probeDuration()`. |
 | `js/library.js` | `Library`: every sound the board can reach, from every *source*, keyed by path. Folder walking, pickers, drops, dedup, blob URLs. |
-| `js/model.js` | The board and pad data: `newBoard`, `newPad`, `migrate`, resizing, keys, `applyLengthDefaults`, formatting helpers. Pure functions, no DOM. |
+| `js/model.js` | The board and pad data: `newBoard`, `newPad`, `migrate`, resizing, keys, `applyLengthDefaults`, `giveSound`, formatting helpers. Pure functions, no DOM. |
 | `js/store.js` | `store` (IndexedDB) and `prefs` (localStorage). |
 | `js/editor.js` | `PadEditor` (the pad sheet) and `SetupSheet` (Board settings). Read fields, validate, hand the result back to `App` through callbacks. |
 | `js/ui.js` | Drawing only: `drawGrid`, `paintPads` (per frame), `drawLibrary` (the tree), `drawStop`, `setPanel`, `setBook`, `toast`, `say`. Decides nothing. |
@@ -63,6 +63,7 @@ A pad:
 | `solo` | false | Fade everything else out when this starts. |
 | `key` | from position | One lowercase character (`migrate` lowercases an imported one). Kept unique by `PadEditor.save`; `migrate` does not dedupe keys in an imported board. |
 | `duration` | 0 | Measured length in seconds; 0 until measured. |
+| `settled` | false | Saved from the pad sheet: its length, or a new sound's, no longer sets anything (`applyLengthDefaults`, `giveSound`). |
 
 **Changing the format.** Add the field in `newPad` (its default) and in
 `migratePad` (read and clamp it from a stored or imported board), then in the
@@ -87,7 +88,9 @@ another pad holds takes it from that pad (`PadEditor.save`).
 a sound is a *hit* (tap set to `overlay`, fade in 0); otherwise a *cue* (gel
 `moss`). Only fields still at their untouched default move, and only once the
 length is known. It runs when a pad is made (`App.padFor`), when a pad is given
-a new sound by drag and drop, and when `measure()` finds pads with no duration.
+a new sound by drag and drop (`giveSound`, which first puts back what the old
+sound's length set), and when `measure()` finds pads with no duration. A
+`settled` pad, one saved from its sheet, is left alone.
 
 ## Where sounds come from (`library.js`)
 
@@ -115,7 +118,7 @@ a path held as a copy replaces the copy in place; a *different* sound with a
 clashing path gets `name (2).ext`. A pad therefore never silently changes sound.
 
 `url(path)` gives what an `<audio>` can play: the bundled URL, or a blob URL
-made once per path and revoked on `reset()`.
+made once per path, and revoked when a real file replaces the copy behind it.
 
 ## Playing (`engine.js`)
 
@@ -194,19 +197,22 @@ another): every pad is placed in its grid cell by hand (`grid-area`) and the
 pencil shares the cell, laid over the pad's corner. `padOf()` in `app.js`
 maps a pencil back to its pad for drags and drops.
 
-**Saving**: `queueSave()` debounces 500 ms; `saveNow()` on structural changes
-and `beforeunload`. `keepSounds()` copies every loaded sound (pads first) into
-IndexedDB, skipping bundled ones and unchanged ones, deleting copies of sounds
-no longer loaded; on `QuotaExceededError` it stops trying for the session.
+**Saving**: `queueSave()` debounces 500 ms; `saveNow()` on structural changes,
+`beforeunload`, `pagehide` and the page going hidden (a phone may close a
+hidden page with no unload event). Every storage call at launch goes through
+`remembered()`: if IndexedDB fails, the board runs from memory, says once
+that nothing done now will be kept, and `write()` stores nothing more that
+session, so a stand-in board never replaces the one that could not be read. `keepSounds()` copies every loaded sound
+(pads first) into IndexedDB, skipping bundled ones and unchanged ones, deleting
+copies of sounds no longer loaded; on `QuotaExceededError` it stops trying for the session.
 Called while a pass is running, it runs one more pass after it (`keepAgain`). A
 file that cannot be read is skipped, the rest are still kept, and the operator
 is told once per file.
 
-**Keys** (`onKey`): ignored in an open dialog, in a field, or with a modifier.
+**Keys** (`onKey`): ignored in an open dialog, in a field that takes typing
+(`TYPED`: not a slider, checkbox or button), or with a modifier.
 Space = `stop()` (each live pad on its own fade out); Escape = cut all; a pad
-key fires that pad, ignoring auto-repeat. Because of the field rule, keyboard
-focus left on the master slider turns every shortcut off, Escape included
-([#12](https://github.com/JeSuisUnCaillou/soundboard/issues/12)).
+key fires that pad, ignoring auto-repeat.
 
 ## What is remembered
 
@@ -218,8 +224,9 @@ focus left on the master slider turns every shortcut off, Escape included
 | store `meta` | `last`, `cols`, `rows` | Last open board id; last board size chosen (new boards start at it). |
 | localStorage `soundboard:ui` | `editing`, `book`, `filter`, `openDirs` | Where the operator was, applied before the first draw. |
 
-Only one board is in use at a time. `store.listBoards` and `deleteBoard` exist
-but nothing in the UI switches boards.
+Only one board is in use at a time; nothing in the UI switches boards. The
+first `keepSounds()` of a session calls `store.forgetOtherBoards`, which drops
+every other board with its handles and kept copies.
 
 ## Offline (`sw.js`)
 

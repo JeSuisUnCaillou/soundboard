@@ -16,7 +16,3 @@ const PATHS = BUNDLED.map((file) => `${BUNDLED_DIR}/${file}`);
 export function bundledPaths() {
   return [...PATHS];
 }
-
-export function isBundledPath(path) {
-  return PATHS.includes(path);
-}
