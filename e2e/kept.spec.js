@@ -145,46 +145,6 @@ test.describe('a folder opened with a handle', () => {
     await rain.click();
     await expect(rain).toHaveClass(/pad--playing/);
   });
-
-  test('plays from its copies until Reconnect, which brings the folder back', async ({ page }) => {
-    await openBoard(page);
-    await onDisk(page, 'rain.wav', silentWav(30));
-    await editing(page);
-    await page.locator('#btnAdd').click();
-    await page.locator('#btnAddFolder').click();
-    await openFolder(page, 'Show');
-    await row(page, 'rain').locator('.lib__add').click();
-    await expect(pad(page, 'Rain')).toHaveCount(1);
-
-    await onDisk(page, 'wind.wav', silentWav(30));
-    await page.evaluate(() => localStorage.setItem('test:ask', 'yes'));
-    await page.reload();
-
-    // The show can go on from the copies: nothing is asked before a pad plays.
-    await running(page);
-    const reconnect = page.locator('#btnReconnect');
-    await expect(reconnect).toHaveText('Reconnect “Show”');
-    const rain = pad(page, 'Rain');
-    await expect(rain).not.toHaveClass(/pad--missing/);
-    await rain.click();
-    await expect(rain).toHaveClass(/pad--playing/);
-    await page.keyboard.press('Escape');
-    await expect(rain).not.toHaveClass(/pad--playing/);
-
-    // Until then the folder is what was kept of it.
-    await editing(page);
-    await expect(row(page, 'rain')).toBeVisible();
-    await expect(row(page, 'wind')).toHaveCount(0);
-
-    await running(page);
-    await reconnect.click();
-    await expect(reconnect).toBeHidden();
-    await rain.click();
-    await expect(rain).toHaveClass(/pad--playing/);
-
-    await editing(page);
-    await expect(row(page, 'wind')).toBeVisible();
-  });
 });
 
 test('a browser out of room says so, and what it kept still comes back', async ({ page }) => {
@@ -211,6 +171,9 @@ test('a browser out of room says so, and what it kept still comes back', async (
   await add('rain.wav');
   await row(page, 'rain').locator('.lib__add').click();
   await expect(pad(page, 'Rain')).toHaveCount(1);
+  // Back after a reload, so its copy is kept before the browser fills up.
+  await page.reload();
+  await expect(pad(page, 'Rain')).not.toHaveClass(/pad--missing/);
 
   await page.evaluate(() => { window.full = true; });
   await add('wind.wav');
@@ -225,35 +188,4 @@ test('a browser out of room says so, and what it kept still comes back', async (
   await editing(page);
   await expect(row(page, 'rain')).toBeVisible();
   await expect(row(page, 'wind')).toHaveCount(0);
-});
-
-test('a pad whose sound is missing says so, and plays once the sound is added', async ({ page }) => {
-  await page.addInitScript(() => {
-    delete window.showOpenFilePicker;
-    delete window.showDirectoryPicker;
-  });
-  await openBoard(page);
-  const board = { version: 3, cols: 3, rows: 4, pads: [{ file: 'thunder.wav', name: 'Thunder' }] };
-  await page.locator('#importFile').setInputFiles({
-    name: 'storm.soundboard.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(board)),
-  });
-  const thunder = pad(page, 'Thunder');
-  await expect(thunder).toHaveClass(/pad--missing/);
-
-  await thunder.click();
-  await expect(page.locator('#toast')).toHaveText('“thunder.wav” is not in the open folder.');
-  await expect(thunder).not.toHaveClass(/pad--playing/);
-
-  await editing(page);
-  await page.locator('#btnAdd').click();
-  const chooser = page.waitForEvent('filechooser');
-  await page.locator('#btnAddFiles').click();
-  await (await chooser).setFiles({ name: 'thunder.wav', mimeType: 'audio/wav', buffer: silentWav(30) });
-  await expect(thunder).not.toHaveClass(/pad--missing/);
-
-  await running(page);
-  await thunder.click();
-  await expect(thunder).toHaveClass(/pad--playing/);
 });

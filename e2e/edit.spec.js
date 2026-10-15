@@ -456,6 +456,8 @@ test('a pad set up before its sound is open keeps what was chosen once the sound
   await page.locator('#padTap').selectOption('fadeout');
   await page.locator('#padSave').click();
   await expect(page.locator('#padEditor')).toBeHidden();
+  await pad(page, 'Door').click();
+  await expect(page.locator('#toast')).toHaveText('“door.wav” is not in the open folder.');
 
   // The sound turns up, and it is short: a hit, were it left to its length.
   await showSounds(page);

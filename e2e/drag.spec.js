@@ -81,7 +81,6 @@ test.describe('with a mouse', () => {
     await expect(row).toBeVisible();
     await expect(row).not.toHaveClass(/lib__item--used/);
   });
-
 });
 
 test.describe('with a finger', () => {
