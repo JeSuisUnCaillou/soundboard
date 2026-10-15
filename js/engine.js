@@ -152,6 +152,7 @@ export class Engine {
     voice.fading = false;
     voice.released = false;
     voice.state = 'starting'; // claimed, so a silent wake nudge cannot pause it
+    const claim = (voice.claim = (voice.claim || 0) + 1);
 
     const level = clamp01(pad.gain ?? 1);
     const fade = Math.max(0, fadeIn ?? pad.fadeIn ?? 0);
@@ -162,7 +163,11 @@ export class Engine {
     try {
       await voice.el.play();
     } catch (err) {
-      voice.state = 'idle';
+      // Stopped, or started afresh, while play() was still pending: the
+      // pause() that did it rejects the promise, and that is no failure.
+      if (voice.claim !== claim || voice.state !== 'starting') return null;
+      // Anything else leaves the element unusable. Let it go, so that the
+      // next tap builds the pad a new one instead of lighting up in silence.
       this._drop(voice);
       throw err;
     }
@@ -270,12 +275,10 @@ export class Engine {
           }
           continue;
         }
-        // Start the fade early enough that it lands on the stop point.
+        // Start the fade early enough that it lands on the stop point. A loop
+        // goes round instead of stopping there, so it has nothing to fade to.
         const fade = pad.fadeOut || 0;
-        if (fade > 0 && !voice.fading && end - t <= fade) this._stopVoice(voice, end - t);
-      } else if (pad.loop && pad.trimStart && voice.el.ended) {
-        voice.el.currentTime = pad.trimStart;
-        voice.el.play().catch(() => {});
+        if (fade > 0 && !pad.loop && !voice.fading && end - t <= fade) this._stopVoice(voice, end - t);
       }
     }
   }
@@ -302,10 +305,9 @@ export class Engine {
       src.connect(gain).connect(this.out);
       ch = { i, el, src, gain, pad, path: null, state: 'idle', fading: false, stopTimer: null };
       ch.onEnded = () => {
-        if (!ch.el.loop) {
-          ch.state = 'idle';
-          this.onchange();
-        }
+        if (ch.el.loop || this._goRound(ch)) return;
+        ch.state = 'idle';
+        this.onchange();
       };
       el.addEventListener('ended', ch.onEnded);
       this.channels.set(i, ch);
@@ -329,6 +331,7 @@ export class Engine {
     src.connect(gain).connect(this.out);
     const voice = { i, el, src, gain, pad, path: pad.file, state: 'idle', fading: false, stopTimer: null, transient: true };
     voice.onEnded = () => {
+      if (this._goRound(voice)) return;
       if (voice.i === PREVIEW) this.previewPath = null;
       this._drop(voice);
       this.onchange();
@@ -336,6 +339,19 @@ export class Engine {
     el.addEventListener('ended', voice.onEnded);
     this.extras.add(voice);
     return voice;
+  }
+
+  /**
+   * A loop with a start or stop point is looped by hand, as the element's own
+   * loop would go back to the top of the file. If the file runs out before
+   * the stop point — or there is none — go back to the start point here.
+   */
+  _goRound(voice) {
+    const pad = voice.pad;
+    if (!pad || !pad.loop || voice.state !== 'playing') return false;
+    voice.el.currentTime = pad.trimStart || 0;
+    voice.el.play().catch(() => {});
+    return true;
   }
 
   _extrasFor(i) {
@@ -389,6 +405,7 @@ export class Engine {
   _drop(voice) {
     this._teardown(voice);
     this.extras.delete(voice);
+    if (this.channels.get(voice.i) === voice) this.channels.delete(voice.i);
   }
 
   _teardown(voice) {

@@ -68,7 +68,11 @@ test('the keys still work after the master volume is touched', async ({ page }) 
 async function setUpPad(page, title, fields) {
   await page.locator('#btnEdit').click();
   await pad(page, title).locator('.pad__pencil').click();
-  for (const [id, value] of Object.entries(fields)) await page.locator(`#${id}`).fill(value);
+  for (const [id, value] of Object.entries(fields)) {
+    const field = page.locator(`#${id}`);
+    if (typeof value === 'boolean') await field.setChecked(value);
+    else await field.fill(value);
+  }
   await page.locator('#padSave').click();
   await expect(page.locator('#padEditor')).toBeHidden();
   await page.locator('#btnEdit').click();
@@ -146,6 +150,51 @@ test('a pad fading towards its stop point still answers a tap by stopping', asyn
   await expect(page.locator('#btnStop')).toBeDisabled();
 });
 
+/**
+ * Wait until a pad has played for this long, failing as soon as it stops
+ * rather than at the end of the wait.
+ */
+async function expectStillPlayingAfter(page, padEl, ms) {
+  const started = Date.now();
+  let stopped = false;
+  await expect.poll(async () => {
+    if (stopped || !(await padEl.evaluate((el) => el.classList.contains('pad--playing')))) {
+      stopped = true;
+      return 'stopped';
+    }
+    return Date.now() - started >= ms ? 'still playing' : 'waiting';
+  }, { timeout: ms + 5000, intervals: [100] }).toBe('still playing');
+}
+
+test('a looping pad with a stop point and a fade out goes round, not out', async ({ page }) => {
+  await openBoard(page);
+  // Stop at 2 s with a 1 s fade: without the loop it would be over after 2 s.
+  await setUpPad(page, 'Crickets ambiance', { padEnd: '2', padFadeOut: '1', padLoop: true });
+  const crickets = pad(page, 'Crickets ambiance');
+
+  await crickets.click();
+  await expect(crickets).toHaveClass(/pad--playing/);
+  await expectStillPlayingAfter(page, crickets, 4500);
+
+  await crickets.click();
+  await expect(crickets).not.toHaveClass(/pad--playing/);
+});
+
+test('a looping pad with a start point goes round when its file ends', async ({ page }) => {
+  await openBoard(page);
+  // The gunshot lasts 2.9 s; looping from 0.2 s means looping by hand.
+  await setUpPad(page, 'Gunshot', { padStart: '0.2', padLoop: true });
+  const gunshot = pad(page, 'Gunshot');
+
+  await gunshot.click();
+  await expect(gunshot).toHaveClass(/pad--playing/);
+  await expectStillPlayingAfter(page, gunshot, 4500);
+
+  // A sound this short layers on a tap, so Stop is what ends it.
+  await page.locator('#btnStop').click();
+  await expect(gunshot).not.toHaveClass(/pad--playing/);
+});
+
 test('holding a pad’s key is one tap', async ({ page }) => {
   await openBoard(page);
   const crickets = pad(page, 'Crickets ambiance');
@@ -191,5 +240,72 @@ test.describe('a sound served from another origin', () => {
       window.__meter.getFloatTimeDomainData(data);
       return Math.max(...data.map(Math.abs));
     }), { timeout: 5000 }).toBeGreaterThan(0.001);
+  });
+});
+
+test.describe('a pad stopped while its sound is still starting', () => {
+  test('answers the next tap with sound, and no complaint', async ({ page }) => {
+    await page.addInitScript(() => {
+      // Measure what reaches the speakers: tap whatever is wired to the output.
+      const connect = AudioNode.prototype.connect;
+      AudioNode.prototype.connect = function (dest, ...rest) {
+        if (dest instanceof AudioDestinationNode) {
+          window.__meter = dest.context.createAnalyser();
+          connect.call(this, window.__meter);
+        }
+        return connect.call(this, dest, ...rest);
+      };
+      // A slow start, as on a busy phone: while window.__slowPlay is set,
+      // play() takes a second to begin, and a pause() in that second rejects
+      // it the way the browser does.
+      const play = HTMLMediaElement.prototype.play;
+      const pause = HTMLMediaElement.prototype.pause;
+      HTMLMediaElement.prototype.play = function () {
+        if (!window.__slowPlay) return play.call(this);
+        return new Promise((resolve, reject) => {
+          const timer = setTimeout(() => {
+            this.__pending = null;
+            play.call(this).then(resolve, reject);
+          }, 1000);
+          this.__pending = () => {
+            clearTimeout(timer);
+            reject(new DOMException('The play() request was interrupted by a call to pause().', 'AbortError'));
+          };
+        });
+      };
+      HTMLMediaElement.prototype.pause = function () {
+        if (this.__pending) {
+          this.__pending();
+          this.__pending = null;
+        }
+        return pause.call(this);
+      };
+    });
+    const level = () => page.evaluate(() => {
+      const data = new Float32Array(window.__meter.fftSize);
+      window.__meter.getFloatTimeDomainData(data);
+      return Math.max(...data.map(Math.abs));
+    });
+
+    await openBoard(page);
+    const crickets = pad(page, 'Crickets ambiance');
+
+    // A first tap wakes the board's sound; it starts as it always does.
+    await crickets.click();
+    await expect(crickets).toHaveClass(/pad--playing/);
+    await page.keyboard.press('Escape');
+    await expect(crickets).not.toHaveClass(/pad--playing/);
+
+    // Escape lands while the sound is still starting.
+    await page.evaluate(() => { window.__slowPlay = true; });
+    await crickets.click();
+    await page.keyboard.press('Escape');
+    await page.evaluate(() => { window.__slowPlay = false; });
+    await expect(crickets).not.toHaveClass(/pad--playing/);
+
+    await crickets.click();
+    await expect(crickets).toHaveClass(/pad--playing/);
+    await expect.poll(level, { timeout: 5000 }).toBeGreaterThan(0.001);
+    await expect(page.locator('#toast')).not.toContainText('would not play');
   });
 });

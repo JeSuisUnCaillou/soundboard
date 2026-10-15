@@ -38,7 +38,11 @@ something changes, update its owner — and only its owner.
 | What exists, test gaps, known loose ends | `docs/status.md` |
 | Workflows, Pages, previews | `docs/deployment.md` |
 | Tasks, bugs, ideas, their order | [GitHub issues](https://github.com/JeSuisUnCaillou/soundboard/issues) |
-| Rules for working here | this file |
+| Rules for working here | this file; the Claude project's instructions and team memory point here |
+
+The Claude project's instructions and team memory hold no rule this file or a
+skill does not: the `harness-engineer` skill brings them home on each pass. If
+they differ, the repository wins.
 
 A change that alters behaviour, a file's role, a stored format or a convention
 updates the doc that owns it in the same commit. A doc that disagrees with the
@@ -56,7 +60,8 @@ Work is tracked in the repository's GitHub issues. Before starting a piece of
 work, find its issue or open one that says what and why. Reference it from the
 pull request (`Closes #n`) so merging closes it. Something found along the way
 and not done goes in a new issue, not in a TODO comment. When an issue opens or
-closes a gap listed in `docs/status.md`, update that table.
+closes a gap listed in `docs/status.md`, update that table. When you suggest
+work, say which suggestions already have an issue.
 
 ## End-to-end tests
 
@@ -120,7 +125,18 @@ against `main` — do not wait to be asked. Give it a title and description that
 say what changed and why, and include the raw.githack link above so the
 reviewer can try it.
 
+Assign the pull request to the owner, Caillou (`JeSuisUnCaillou`), and do not
+request their review: the pull requests are opened under their account, and
+GitHub refuses a review from a pull request's own author.
+
+## Who merges
+
+The owner merges. When the owner says "validated" or "merge once green" about
+a thread's pull requests, merge each one as soon as it is green.
+
 Once the work is pushed, review it with `Skill(skill: "review-loop")` before
-handing it over; a Stop hook starts it otherwise. The skill says which PRs
-merge by themselves once it converges (small bug fixes) and which wait for the
-user.
+handing it over; a Stop hook starts it otherwise. The skill says which pull
+requests Claude merges by itself once it converges (small bug fixes) and
+which wait for the owner.
+
+Merge with a squash, so the title ends with the pull request number, `… (#n)`.
