@@ -78,6 +78,10 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
   this way crashes Chromium now and then after its context closes, which took
   down the next test in the same browser (#78). Keep the switch out of
   `playwright.config.js`.
+- Do not wait for one exact reading of a pad's clock (`toHaveText('-0:23')`):
+  each shows for a second only, and a busy machine polls straight past it.
+  Compare `secondsLeft(pad)` in `board.spec.js` with a margin instead: play
+  until it is at most so much, then check it is above or below a bound.
 - Headless Chromium keeps every tab visible. A test of the board in a hidden
   tab overrides `document.hidden` and `visibilityState` in an init script and
   dispatches `visibilitychange`, as the stop-point test in `board.spec.js` does.
