@@ -45,8 +45,10 @@ is in [architecture.md](architecture.md).
   is the operator's code for a group, a scene, an act.
 - **The screen stays awake** while a board is open, and the board says so if
   the browser will not do it.
-- **Under a finger, a touch that moves scrolls**; resting picks a pad up.
-  With a mouse, any press-and-move drags, press-and-release plays.
+- **While editing, a pad drags at once, under a mouse or a finger.**
+  Press-and-move drags, press-and-release plays. A finger scrolls the board
+  from the empty places and the gaps, not from a filled pad. (The owner
+  dropped the rest-to-pick-up wait on 2026-10-15: it was annoying.)
 - **Nothing is destroyed by surprise.** *Empty the board* asks twice and keeps
   the sounds. A pad whose file is missing is struck through, not dropped. A
   sound clashing with another's path gets a path of its own, so a pad never
