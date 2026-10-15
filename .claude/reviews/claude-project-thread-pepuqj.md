@@ -22,3 +22,12 @@ Head reviewed: 9476a33 (after merging main), then 97319ad9e7f8b237fca31ab6b6957f
 - bugs: no finding; the suite (98 tests) passes, and main's adapted tests still test what they were written for.
 
 Reviewed head: 97319ad9e7f8b237fca31ab6b6957fbe8ec8e54b
+
+# Pass 4
+
+Head reviewed: a10cc7e (after merging main again)
+
+- architect: Phone and Sting (over 5 s, gel `daylight`) would turn green when `measure()` runs. Rejected: `place()` measures each pad in `padFor` before `layDefault` applies its setup, and `measure()` only touches pads with no duration. Pinned by a check on Phone's gel and second tap in the setup test, added in f1ae742, which passes.
+- bugs: no finding; main's `giveSound`, `write` and `remembered` survive the merge, and the adapted tests still test what they were written for.
+
+Reviewed head: f1ae7421e2ed6e231912f906f3f9708538440f27
