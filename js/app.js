@@ -272,12 +272,12 @@ class App {
       const el = document.elementFromPoint(e.clientX, e.clientY);
       if (!el) return null;
       if (el.closest('#book')) return refs.book;
-      if (el.closest('#browse')) return refs.browse;
+      if (drag.bar && el.closest('#transport')) return refs.transport;
       const pad = padOf(el);
       return pad && pad !== drag.el ? pad : null;
     };
 
-    const removes = (el) => el === refs.book || el === refs.browse;
+    const removes = (el) => el === refs.book || el === refs.transport;
 
     const over = (el) => {
       if (drag.target === el) return;
@@ -296,11 +296,13 @@ class App {
       ghost.style.transform = `translate(${box.left}px, ${box.top}px)`;
       document.body.append(ghost);
 
-      drag = { from, el, ghost, dx: e.clientX - box.left, dy: e.clientY - box.top, target: null };
+      // Where Browse files shows, the whole bar it sits in takes a pad off.
+      const bar = refs.browse.offsetParent !== null;
+      drag = { from, el, ghost, bar, dx: e.clientX - box.left, dy: e.clientY - box.top, target: null };
       el.classList.add('pad--dragging');
       // Show where it can be dropped off the board before it gets there.
       refs.book.classList.add('drop--ready');
-      refs.browse.classList.add('drop--ready');
+      refs.transport.classList.toggle('drop--ready', bar);
       this.dragged = true;                  // the click that follows is not a tap
       try {
         handle.setPointerCapture(e.pointerId);
@@ -372,7 +374,7 @@ class App {
       drag.ghost.remove();
       drag.el.classList.remove('pad--dragging');
       refs.book.classList.remove('drop--ready');
-      refs.browse.classList.remove('drop--ready');
+      refs.transport.classList.remove('drop--ready');
       target?.classList.remove('pad--drop', 'drop--off');
       drag = null;
       if (!drop || !target) return;

@@ -369,13 +369,13 @@ body[data-editing="on"] .pad__pencil:hover { color: var(--ink); }
 .pad--ghost-off { opacity: 0.55; filter: grayscale(0.6); }
 
 /* Somewhere a pad can be dropped to come off the board: the folder beside it
-   on a wide screen, the bar beneath it on a narrow one. Both look the same: a
+   on a wide screen, the whole bar beneath it on a narrow one. Both look the same: a
    dotted line around the zone and a label in its middle, from the moment a pad
    is picked up; the zone lights up once the pad is over it. */
 .drop--ready {
   position: relative;
   outline: 2px dotted var(--alert);
-  outline-offset: -6px;
+  outline-offset: -4px;
 }
 .drop--ready > * { opacity: 0.2; }
 .drop--off { background: color-mix(in oklab, var(--alert) 14%, var(--console)); }

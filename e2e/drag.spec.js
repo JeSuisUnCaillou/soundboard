@@ -207,7 +207,8 @@ test.describe('with a finger', () => {
   test('picking a pad up marks the bar at the bottom as the place to drop it off, before it gets there', async ({ page }) => {
     await openBoard(page);
     await page.locator('#btnEdit').click();
-    const zone = page.locator('#browse');
+    // The whole bar, not just the button in it.
+    const zone = page.locator('#transport');
     const sexy = pad(page, 'Sexy');
     const hand = await finger(page);
     const a = await centre(sexy);
@@ -216,7 +217,8 @@ test.describe('with a finger', () => {
     await expect(sexy).toHaveClass(/pad--dragging/);
     await expectDropZoneMarked(zone);
 
-    await hand.move(await centre(page.locator('#btnBrowse')));
+    const bar = await zone.boundingBox();
+    await hand.move({ x: bar.x + 4, y: bar.y + 4 });
     await expect(zone).toHaveClass(/drop--off/);
     await hand.move(a);
     await expectDropZoneMarked(zone);
