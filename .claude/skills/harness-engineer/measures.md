@@ -62,9 +62,9 @@ grep -ohE '(^|[^~/])(\.claude|e2e|js|css|docs|\.github)/[A-Za-z0-9_./*-]+' CLAUD
   $(ls .claude/skills/*/*.md 2>/dev/null | grep -v harness-engineer) \
   | sed -E 's/^[^.ejcd]//; s/[.,)]*$//' | grep -v '\*' | sort -u \
   | while read p; do [ -e "$p" ] || echo "missing: $p"; done
-# relative markdown links resolve from each file's own folder
+# relative markdown links resolve from each file's own folder; web links are skipped
 for f in CLAUDE.md .claude/skills/*/*.md; do d=$(dirname "$f")
-  grep -oE '\]\([^)#h][^)]*\)' "$f" | sed -E 's/^\]\((.*)\)$/\1/; s/#.*//' \
+  grep -oE '\]\([^)#][^)]*\)' "$f" | grep -vE '^\]\(https?:' | sed -E 's/^\]\((.*)\)$/\1/; s/#.*//' \
   | while read l; do [ -z "$l" ] || [ -e "$d/$l" ] || echo "$f -> $l"; done; done
 # siblings are linked one level deep: a sibling that links another sibling
 grep -lE '\]\([a-z-]+\.md\)' .claude/skills/*/*.md | grep -v SKILL.md
