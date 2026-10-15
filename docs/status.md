@@ -36,16 +36,16 @@ screen wake lock.
 tests, which run by mouse on desktop or by finger on phone. Covered: the
 first launch, tapping, Stop, Escape, the master volume, fade and second-tap
 edge cases, every second-tap mode, start and stop points, solo, a pad
-stopped while it is still starting, held keys and a pad's own key, a cross-
-origin sound, edit mode, renaming a pad and its level, fades and gel (with
-reload), Board settings rows and columns, shrinking the board, the waiting
-pad, emptying the board, adding sounds through the file input, saving a
-board file and loading it back (missing sounds struck through), dropping
-several sounds or folders at once, moving pads and taking them off by mouse
-and by finger, a tap on a pad under a toast, coming back offline, opening on
-weak wifi, keeping a good copy over a server error, asking no other site for
-anything, and setting up a pad, hearing a sound and putting it on a pad from
-the keyboard.
+stopped while it is still starting, held keys and a pad's own key, a
+cross-origin sound, edit mode, renaming a pad and its level, fades and gel
+(with reload), Board settings rows and columns, shrinking the board, the
+waiting pad, emptying the board, adding sounds through the file input,
+saving a board file and loading it back (missing sounds struck through),
+dropping several sounds or folders at once, moving pads and taking them off
+by mouse and by finger, a tap on a pad under a toast, coming back offline,
+opening on weak wifi, keeping a good copy over a server error, asking no
+other site for anything, and setting up a pad, hearing a sound and putting
+it on a pad from the keyboard.
 
 Not covered yet:
 
