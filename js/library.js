@@ -67,7 +67,7 @@ export class Library {
     if (this.sources.some((s) => s.kind === 'bundled')) return [];
     const src = this._source({ kind: 'bundled', name: BUNDLED_DIR });
     const added = [];
-    for (const file of BUNDLED) {
+    for (const { file } of BUNDLED) {
       const path = `${BUNDLED_DIR}/${file}`;
       if (this.entries.has(path)) continue;
       this.entries.set(path, {

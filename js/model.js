@@ -8,6 +8,10 @@ import { DEFAULT_GEL } from './gels.js';
 // moved to Daylight Blue follow it rather than keeping a colour nobody picked.
 const OLD_DEFAULT_GEL = 'bastard-amber';
 
+// Bundled sounds that ship under a new name. A board saved with the old one
+// plays the same sound under its new name rather than a pad struck through.
+const RENAMED = new Map([['default/crickets ambiance.wav', 'default/crickets.mp3']]);
+
 export const BOARD_VERSION = 3;
 export const MAX_COLS = 12;
 export const MAX_ROWS = 12;
@@ -202,7 +206,8 @@ export function migrate(raw, { id } = {}) {
 }
 
 function migratePad(board, i, raw, version) {
-  const pad = newPad(board, i, String(raw.file || ''));
+  const file = String(raw.file || '');
+  const pad = newPad(board, i, RENAMED.get(file) || file);
   pad.name = String(raw.name ?? pad.name).slice(0, 40);
   const inherited = version < 2 && raw.gel === OLD_DEFAULT_GEL ? DEFAULT_GEL : raw.gel;
   pad.gel = typeof inherited === 'string' ? inherited : pad.gel;

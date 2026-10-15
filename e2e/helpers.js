@@ -25,8 +25,12 @@ export const test = base.extend({
 
 export { expect };
 
-/** The three sounds that ship with the board, as their pads name them. */
-export const BUNDLED_TITLES = ['Gunshot', 'Crickets ambiance', 'Sexy'];
+/** The sounds that ship with the board, as their pads name them. */
+export const BUNDLED_TITLES = [
+  'Gunshot', 'Explosion', 'Phone', 'Sting',
+  'Storm', 'Crickets', 'Birds',
+  'Suspense', 'Romance', 'Sad', 'Hero', 'Happy',
+];
 
 /** A pad on the board, found by the name it shows. */
 export function pad(page, title) {

@@ -10,8 +10,8 @@ test('a browser that keeps nothing still opens the board, and says nothing done 
   });
   await openBoard(page);
   await expect(page.locator('#toast')).toHaveText("The browser's storage is not answering, so nothing done now will be kept.");
-  await pad(page, 'Crickets ambiance').click();
-  await expect(pad(page, 'Crickets ambiance')).toHaveClass(/pad--playing/);
+  await pad(page, 'Crickets').click();
+  await expect(pad(page, 'Crickets')).toHaveClass(/pad--playing/);
 });
 
 test('a launch whose storage fails once leaves the saved board as it was for the next', async ({ page }) => {
@@ -107,12 +107,19 @@ test('a pad put on the board, and a new size, are kept even if the page then goe
   });
   await openBoard(page);
   await page.locator('#btnEdit').click();
+  // The first board is full; make room, and let that be saved first.
+  await pencil(page, 'Sting').click();
+  await page.locator('#padClear').click();
+  await expect(pad(page, 'Sting')).toHaveCount(0);
+  await page.reload();
+  await expect(pad(page, 'Sting')).toHaveCount(0);
+
   await showSounds(page);
   await page.locator('#lib .tree__name', { hasText: 'default' }).click();
-  await page.getByRole('button', { name: /^Put crickets ambiance\.wav on a pad$/i }).click();
-  await expect(pad(page, 'Crickets ambiance')).toHaveCount(2);
+  await page.getByRole('button', { name: /^Put crickets\.mp3 on a pad$/i }).click();
+  await expect(pad(page, 'Crickets')).toHaveCount(2);
   await page.reload();
-  await expect(pad(page, 'Crickets ambiance')).toHaveCount(2);
+  await expect(pad(page, 'Crickets')).toHaveCount(2);
 
   await page.locator('#btnSetup').click();
   await page.locator('#setCols').fill('4');
@@ -173,9 +180,9 @@ test('the screen wake lock is asked for once, however many presses ask at once',
     };
   });
   await openBoard(page);
-  await pad(page, 'Crickets ambiance').click();
-  await pad(page, 'Sexy').click();
-  await expect(pad(page, 'Sexy')).toHaveClass(/pad--playing/);
+  await pad(page, 'Crickets').click();
+  await pad(page, 'Romance').click();
+  await expect(pad(page, 'Romance')).toHaveClass(/pad--playing/);
   expect(await page.evaluate(() => window.__wakeRequests)).toBe(1);
 });
 

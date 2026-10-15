@@ -24,28 +24,29 @@ None open.
 
 ## Test coverage
 
-83 tests, all green: each runs at desktop and phone size, except the 9 drag
+86 tests, all green: each runs at desktop and phone size, except the 9 drag
 tests, which run by mouse on desktop or by finger on phone. Covered: the first
-launch, tapping, Stop, Escape, the master volume, fade and second-tap edge
-cases, every second-tap mode, layering, both kinds of loop, start and stop
-points (also with the tab hidden), solo, a pad stopped while it is still
-starting, held keys, a pad's own key, keys after a button or the volume has the
-focus, a cross-origin sound, edit mode, renaming a pad and its level, fades and
-gel (with reload), Board settings rows and columns (both at once too), shrinking
-the board, the waiting pad, emptying the board, adding sounds through the file
-input, hearing a sound from the tree, the filter, saving a board file and
-loading it back (missing sounds struck through), dropping several sounds or
-folders at once, the kept copies after a reload and offline, Reconnect (also
-refused, and during a cue), a browser out of room for the copies, keeping sounds
-added mid-copy and skipping one that cannot be kept, moving pads and taking them
-off by mouse and by finger, a tap on a pad under a toast, dragging a sound from
-the tree onto a pad and a pad set up before its sound is open, a browser whose
-storage refuses or fails once, saving when the page is hidden, a change kept
-when the page goes without a word, clearing an abandoned board, the screen wake
-lock, a picker dismissed without a word, coming back offline, opening on weak
-wifi, keeping a good copy over a server error, asking no other site for
-anything, and setting up a pad, hearing a sound and putting it on a pad from the
-keyboard.
+launch and its improv board, the default board loaded back onto an empty board,
+a board file with the crickets' old name, tapping, Stop, Escape, the master
+volume, fade and second-tap edge cases, every second-tap mode, layering, both
+kinds of loop, start and stop points (also with the tab hidden), solo, a pad
+stopped while it is still starting, held keys, a pad's own key, keys after a
+button or the volume has the focus, a cross-origin sound, edit mode, renaming a
+pad and its level, fades and gel (with reload), Board settings rows and columns
+(both at once too), shrinking the board, the waiting pad, emptying the board,
+adding sounds through the file input, hearing a sound from the tree, the filter,
+saving a board file and loading it back (missing sounds struck through),
+dropping several sounds or folders at once, the kept copies after a reload and
+offline, Reconnect (also refused, and during a cue), a browser out of room for
+the copies, keeping sounds added mid-copy and skipping one that cannot be kept,
+moving pads and taking them off by mouse and by finger, a tap on a pad under a
+toast, dragging a sound from the tree onto a pad and a pad set up before its
+sound is open, a browser whose storage refuses or fails once, saving when the
+page is hidden, a change kept when the page goes without a word, clearing an
+abandoned board, the screen wake lock, a picker dismissed without a word, coming
+back offline, opening on weak wifi, keeping a good copy over a server error,
+asking no other site for anything, and setting up a pad, hearing a sound and
+putting it on a pad from the keyboard.
 
 Not covered yet: nothing known beyond the suite's limits in
 [testing.md](testing.md#limits) (Chromium only, audio not listened to).

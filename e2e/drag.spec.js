@@ -1,10 +1,17 @@
 // Moving pads in edit mode: a mouse drags, a finger rests and then drags.
 
-import { test, expect, openBoard, pad, showSounds } from './helpers.js';
+import { test, expect, openBoard, pad, pencil, showSounds } from './helpers.js';
 
 /** The pad in this place on the board, counted from the top left. */
 function slot(page, i) {
   return page.locator('#grid .pad').nth(i);
+}
+
+/** The first board is full: take Sting off it, leaving its place, the fourth, empty. */
+async function makeRoom(page) {
+  await pencil(page, 'Sting').click();
+  await page.locator('#padClear').click();
+  await expect(slot(page, 3)).toHaveClass(/pad--empty/);
 }
 
 async function centre(locator) {
@@ -35,14 +42,15 @@ test.describe('with a mouse', () => {
   test('a pad dragged to an empty place moves there, and stays after a reload', async ({ page }) => {
     await openBoard(page);
     await page.locator('#btnEdit').click();
-    await expectLayout(page, ['Gunshot', 'Crickets ambiance', 'Sexy', '']);
+    await makeRoom(page);
+    await expectLayout(page, ['Gunshot', 'Explosion', 'Phone', '']);
 
-    await drag(page, pad(page, 'Gunshot'), slot(page, 4));
-    await expectLayout(page, ['', 'Crickets ambiance', 'Sexy', '', 'Gunshot']);
+    await drag(page, pad(page, 'Gunshot'), slot(page, 3));
+    await expectLayout(page, ['', 'Explosion', 'Phone', 'Gunshot']);
     await expect(page.locator('#grid .pad--playing')).toHaveCount(0);
 
     await page.reload();
-    await expectLayout(page, ['', 'Crickets ambiance', 'Sexy', '', 'Gunshot']);
+    await expectLayout(page, ['', 'Explosion', 'Phone', 'Gunshot']);
   });
 
   test('a pad moved is kept even if the page then goes without a word', async ({ page }) => {
@@ -59,24 +67,25 @@ test.describe('with a mouse', () => {
     });
     await openBoard(page);
     await page.locator('#btnEdit').click();
-    await drag(page, pad(page, 'Gunshot'), slot(page, 4));
-    await expectLayout(page, ['', 'Crickets ambiance', 'Sexy', '', 'Gunshot']);
+    await makeRoom(page);
+    await drag(page, pad(page, 'Gunshot'), slot(page, 3));
+    await expectLayout(page, ['', 'Explosion', 'Phone', 'Gunshot']);
     await page.reload();
-    await expectLayout(page, ['', 'Crickets ambiance', 'Sexy', '', 'Gunshot']);
+    await expectLayout(page, ['', 'Explosion', 'Phone', 'Gunshot']);
   });
 
   test('a pad dragged onto another swaps places with it', async ({ page }) => {
     await openBoard(page);
     await page.locator('#btnEdit').click();
 
-    await drag(page, pad(page, 'Crickets ambiance'), pad(page, 'Sexy'));
-    await expectLayout(page, ['Gunshot', 'Sexy', 'Crickets ambiance']);
+    await drag(page, pad(page, 'Crickets'), pad(page, 'Romance'));
+    await expectLayout(page, ['Gunshot', 'Explosion', 'Phone', 'Sting', 'Storm', 'Romance', 'Birds', 'Suspense', 'Crickets']);
   });
 
   test('a press without a move plays the pad instead', async ({ page }) => {
     await openBoard(page);
     await page.locator('#btnEdit').click();
-    const crickets = pad(page, 'Crickets ambiance');
+    const crickets = pad(page, 'Crickets');
     const at = await centre(crickets);
 
     await page.mouse.move(at.x, at.y);
@@ -84,7 +93,7 @@ test.describe('with a mouse', () => {
     await page.mouse.move(at.x + 2, at.y + 2);
     await page.mouse.up();
     await expect(crickets).toHaveClass(/pad--playing/);
-    await expectLayout(page, ['Gunshot', 'Crickets ambiance', 'Sexy']);
+    await expectLayout(page, ['Gunshot', 'Explosion', 'Phone', 'Sting', 'Storm', 'Crickets', 'Birds', 'Suspense', 'Romance']);
   });
 
   test('a pad dragged onto the folder comes off the board, and its sound stays', async ({ page }) => {
@@ -92,12 +101,12 @@ test.describe('with a mouse', () => {
     await page.locator('#btnEdit').click();
     await showSounds(page);
     await page.locator('#lib .tree__name', { hasText: 'default' }).click();
-    const row = page.locator('#lib .lib__item', { hasText: 'sexy' });
+    const row = page.locator('#lib .lib__item', { hasText: 'romance' });
     await expect(row).toHaveClass(/lib__item--used/);
 
-    await drag(page, pad(page, 'Sexy'), page.locator('#lib'));
-    await expect(page.locator('#toast')).toHaveText(/^sexy is off the board\. The sound is still under Sounds\.$/i);
-    await expectLayout(page, ['Gunshot', 'Crickets ambiance', '']);
+    await drag(page, pad(page, 'Romance'), page.locator('#lib'));
+    await expect(page.locator('#toast')).toHaveText(/^romance is off the board\. The sound is still under Sounds\.$/i);
+    await expectLayout(page, ['Gunshot', 'Explosion', 'Phone', 'Sting', 'Storm', 'Crickets', 'Birds', 'Suspense', '']);
     await expect(row).toBeVisible();
     await expect(row).not.toHaveClass(/lib__item--used/);
   });
@@ -136,26 +145,27 @@ test.describe('with a finger', () => {
   test('a pad held and dragged to an empty place moves there, and stays after a reload', async ({ page }) => {
     await openBoard(page);
     await page.locator('#btnEdit').click();
+    await makeRoom(page);
 
-    await holdAndDrag(page, pad(page, 'Gunshot'), slot(page, 4));
-    await expectLayout(page, ['', 'Crickets ambiance', 'Sexy', '', 'Gunshot']);
+    await holdAndDrag(page, pad(page, 'Gunshot'), slot(page, 3));
+    await expectLayout(page, ['', 'Explosion', 'Phone', 'Gunshot']);
 
     await page.reload();
-    await expectLayout(page, ['', 'Crickets ambiance', 'Sexy', '', 'Gunshot']);
+    await expectLayout(page, ['', 'Explosion', 'Phone', 'Gunshot']);
   });
 
   test('a pad held and dragged onto another swaps places with it', async ({ page }) => {
     await openBoard(page);
     await page.locator('#btnEdit').click();
 
-    await holdAndDrag(page, pad(page, 'Crickets ambiance'), pad(page, 'Sexy'));
-    await expectLayout(page, ['Gunshot', 'Sexy', 'Crickets ambiance']);
+    await holdAndDrag(page, pad(page, 'Crickets'), pad(page, 'Romance'));
+    await expectLayout(page, ['Gunshot', 'Explosion', 'Phone', 'Sting', 'Storm', 'Romance', 'Birds', 'Suspense', 'Crickets']);
   });
 
   test('a finger that moves at once scrolls instead of picking the pad up', async ({ page }) => {
     await openBoard(page);
     await page.locator('#btnEdit').click();
-    const crickets = pad(page, 'Crickets ambiance');
+    const crickets = pad(page, 'Crickets');
     const hand = await finger(page);
     const a = await centre(crickets);
     const b = await centre(slot(page, 4));
@@ -170,20 +180,20 @@ test.describe('with a finger', () => {
       return Date.now() - started > 1000 ? 'left alone' : 'waiting';
     }, { intervals: [100] }).toBe('left alone');
     await hand.up();
-    await expectLayout(page, ['Gunshot', 'Crickets ambiance', 'Sexy', '', '']);
+    await expectLayout(page, ['Gunshot', 'Explosion', 'Phone', 'Sting', 'Storm', 'Crickets', 'Birds', 'Suspense', 'Romance']);
   });
 
   test('a pad held and dragged onto the bar at the bottom comes off the board', async ({ page }) => {
     await openBoard(page);
     await page.locator('#btnEdit').click();
 
-    await holdAndDrag(page, pad(page, 'Sexy'), page.locator('#btnBrowse'));
-    await expect(page.locator('#toast')).toHaveText(/^sexy is off the board\. The sound is still under Sounds\.$/i);
-    await expectLayout(page, ['Gunshot', 'Crickets ambiance', '']);
+    await holdAndDrag(page, pad(page, 'Romance'), page.locator('#btnBrowse'));
+    await expect(page.locator('#toast')).toHaveText(/^romance is off the board\. The sound is still under Sounds\.$/i);
+    await expectLayout(page, ['Gunshot', 'Explosion', 'Phone', 'Sting', 'Storm', 'Crickets', 'Birds', 'Suspense', '']);
 
     await showSounds(page);
     await page.locator('#lib .tree__name', { hasText: 'default' }).click();
-    const row = page.locator('#lib .lib__item', { hasText: 'sexy' });
+    const row = page.locator('#lib .lib__item', { hasText: 'romance' });
     await expect(row).toBeVisible();
     await expect(row).not.toHaveClass(/lib__item--used/);
   });

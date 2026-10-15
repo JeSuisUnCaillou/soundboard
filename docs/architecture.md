@@ -20,7 +20,7 @@ why things are the way they are is in [decisions.md](decisions.md).
 | `js/editor.js` | `PadEditor` (the pad sheet) and `SetupSheet` (Board settings). Read fields, validate, hand the result back to `App` through callbacks. |
 | `js/ui.js` | Drawing only: `drawGrid`, `paintPads` (per frame), `drawLibrary` (the tree), `drawStop`, `setPanel`, `setBook`, `toast`, `say`. Decides nothing. |
 | `js/gels.js` | The eleven *gels* and `DEFAULT_GEL`. |
-| `js/bundled.js` | The *bundled sounds* list and the `default/` path prefix. |
+| `js/bundled.js` | The *bundled sounds*, how the *Default board* sets up each one's pad (`bundledSetup`), and the `default/` path prefix. |
 | `sw.js` | The service worker: network first, cache as fallback. |
 | `sounds/` | The bundled sound files. |
 | `manifest.webmanifest`, `icon*` | Install metadata. |
@@ -169,7 +169,8 @@ made once per path, and revoked when a real file replaces the copy behind it.
 wire events, add the bundled sounds, then `restore()`:
 
 1. No `last` board in `meta` → `firstBoard()`: the *Default board* with the
-   bundled sounds on it.
+   bundled sounds on it, each pad measured as usual and then given its
+   `bundledSetup` (title, gel, level, fades, loop, second tap).
 2. Otherwise load and `migrate` the board, add its kept copies, `absorb([])`.
 3. Stored handles all `granted` → `reconnect()` silently. Some not → show
    **Reconnect** (pads already play from copies) or, if nothing at all can
@@ -179,7 +180,9 @@ wire events, add the bundled sounds, then `restore()`:
 **Adding sounds** always ends in `absorb(added)`: create a board if there is
 none (id = slug of the first source), store handles, save, `primeAll()` (every
 pad), `measure()` (three at a time), `keepAwake()`, `keepSounds()`, toast. Added sounds go under Sounds, not
-on pads; only `firstBoard()` lays sounds out, through `place()`.
+on pads; only `firstBoard()` and **Load the default board** (`loadDefault()`, what
+`#btnEmpty` does on a board with no filled pad) lay sounds out, both through
+`layDefault()` and `place()`.
 
 **Editing**: `setEditing(on)` toggles `body[data-editing]` and the book. In edit
 mode a click on a filled pad still fires it (a listen), a click on a sound in
@@ -255,7 +258,9 @@ site.
   if it changes playback, a test in `e2e/edit.spec.js` or `board.spec.js`.
 - **New board setting**: `model.js` (`newBoard`, `migrate`), `index.html`
   (`#setup`), `SetupSheet.open` / `apply`, `App.applySetup`.
-- **New bundled sound**: file in `sounds/`, name in `BUNDLED` (`bundled.js`),
+- **New bundled sound**: file in `sounds/` (MP3, metadata and cover art
+  stripped, to keep the offline shell small), a line in `BUNDLED` (`bundled.js`)
+  with its pad setup,
   path in `SHELL` (`sw.js`), and update `BUNDLED_TITLES` in `e2e/helpers.js`
   (the first-launch tests count them).
 - **New JS module**: import it from where it belongs and add it to `SHELL`.
