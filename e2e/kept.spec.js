@@ -30,6 +30,14 @@ async function running(page) {
   await expect(edit).toHaveAttribute('aria-pressed', 'false');
 }
 
+/** Reload, and wait for the board to come back in edit mode or not, as it was
+ * left: edit mode returns only once the board has loaded. */
+async function reload(page) {
+  const was = await page.locator('#btnEdit').getAttribute('aria-pressed');
+  await page.reload();
+  await expect(page.locator('#btnEdit')).toHaveAttribute('aria-pressed', was);
+}
+
 test('sounds added from the file picker come back after a reload, and with the network off', async ({ page, context }) => {
   // The plain file input, as in every browser that cannot hand over a file
   // handle: a copy is all that can outlive the page.
@@ -55,7 +63,7 @@ test('sounds added from the file picker come back after a reload, and with the n
 
   for (const offline of [false, true]) {
     await context.setOffline(offline);
-    await page.reload();
+    await reload(page);
     const rain = pad(page, 'Rain');
     await expect(rain).toBeVisible();
     await expect(rain).not.toHaveClass(/pad--missing/);
@@ -117,7 +125,7 @@ test.describe('a folder opened with a handle', () => {
 
     // A sound put in the folder since is there on the next launch.
     await onDisk(page, 'wind.wav', silentWav(30));
-    await page.reload();
+    await reload(page);
     await expect(pad(page, 'Rain')).toBeVisible();
     await expect(page.locator('#btnReconnect')).toBeHidden();
     await editing(page);
@@ -140,9 +148,7 @@ test.describe('a folder opened with a handle', () => {
       localStorage.setItem('test:ask', 'yes');
       localStorage.setItem('test:refuse', 'yes');
     });
-    await page.reload();
-    // The board comes back in edit mode, as it was left, once it has loaded.
-    await expect(page.locator('#btnEdit')).toHaveAttribute('aria-pressed', 'true');
+    await reload(page);
     await running(page);
     const reconnect = page.locator('#btnReconnect');
     await reconnect.click();
@@ -182,7 +188,7 @@ test('a browser out of room says so, and what it kept still comes back', async (
   await row(page, 'rain').locator('.lib__add').click();
   await expect(pad(page, 'Rain')).toHaveCount(1);
   // Back after a reload, so its copy is kept before the browser fills up.
-  await page.reload();
+  await reload(page);
   await expect(pad(page, 'Rain')).not.toHaveClass(/pad--missing/);
 
   await page.evaluate(() => { window.full = true; });
@@ -193,7 +199,7 @@ test('a browser out of room says so, and what it kept still comes back', async (
   await pad(page, 'Rain').click();
   await expect(pad(page, 'Rain')).toHaveClass(/pad--playing/);
 
-  await page.reload();
+  await reload(page);
   await expect(pad(page, 'Rain')).not.toHaveClass(/pad--missing/);
   await editing(page);
   await expect(row(page, 'rain')).toBeVisible();
