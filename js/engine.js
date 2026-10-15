@@ -143,9 +143,14 @@ export class Engine {
 
   async start(i, pad, { fadeIn, layer = false } = {}) {
     await this.unlock();
-    if (pad.solo) await this.stopAll({ fade: pad.fadeOut ?? 1, except: i });
+    // Everything else goes out on its own fade out, as Stop takes it.
+    if (pad.solo) await this.stopAll({ own: true, except: i });
 
     const voice = layer ? await this._extra(i, pad) : await this._channel(i, pad);
+    // A voice tapped back on while it fades out is still sounding: it comes
+    // back up from where the fade had got to, rather than dropping to silence
+    // first.
+    const sounding = voice.state !== 'idle' && voice.fading;
     clearTimeout(voice.stopTimer);
     voice.stopTimer = null;
     voice.pad = pad;
@@ -158,7 +163,8 @@ export class Engine {
     const fade = Math.max(0, fadeIn ?? pad.fadeIn ?? 0);
     voice.el.loop = !!pad.loop && !pad.trimEnd && !pad.trimStart;
     await seek(voice.el, pad.trimStart || 0);
-    this._set(voice.gain, fade > 0 ? FLOOR : level);
+    if (fade <= 0) this._set(voice.gain, level);
+    else this._set(voice.gain, sounding ? voice.gain.gain.value : FLOOR);
 
     try {
       await voice.el.play();
@@ -184,13 +190,15 @@ export class Engine {
     this.onchange();
   }
 
-  async stopAll({ fade = 0, except = null } = {}) {
+  /** Stop every voice, on one fade or (own) on each pad's own fade out. */
+  async stopAll({ fade = 0, own = false, except = null } = {}) {
     if (except !== PREVIEW) this.previewPath = null;
+    const fadeOf = (v) => (own && v.pad ? v.pad.fadeOut ?? fade : fade);
     for (const [i, ch] of this.channels) {
-      if (i !== except) this._release(ch, fade);
+      if (i !== except) this._release(ch, fadeOf(ch));
     }
     for (const v of this.extras) {
-      if (v.i !== except) this._release(v, fade);
+      if (v.i !== except) this._release(v, fadeOf(v));
     }
     this.onchange();
   }

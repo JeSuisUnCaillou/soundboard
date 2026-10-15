@@ -42,6 +42,7 @@ how `board.spec.js` tests a sound served cross-origin.
 | `expect` | Re-exported from Playwright. |
 | `openBoard(page)` | Go to `/` and wait for the default board's three pads. Every test starts from a fresh browser context, so this is always a first launch. |
 | `pad(page, title)` | A filled pad by the name it shows. |
+| `pencil(page, title)` | The button that opens that pad's settings in edit mode, by its label. |
 | `BUNDLED_TITLES` | `['Gunshot', 'Crickets ambiance', 'Sexy']`. Gunshot (3 s) is a hit; Crickets ambiance (26 s) and Sexy (2 min 54) are cues. |
 | `showSounds(page)` | Open the book wherever the layout keeps it (**Browse files** on phone). |
 | `isNarrow(page)` | Viewport ≤ 900px. |
@@ -61,8 +62,11 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 - Branch on `isNarrow(page)` only where the layout really differs (the book,
   the bottom bar).
 - `page.route` cannot see requests the service worker answers: a test that
-  routes requests needs `test.use({ serviceWorkers: 'block' })`, as the
-  cross-origin test in `board.spec.js` does.
+  routes the page's requests needs `test.use({ serviceWorkers: 'block' })`, as
+  the cross-origin test in `board.spec.js` does. To route the worker's own
+  requests (weak wifi, a server error), use `context.route`:
+  `playwright.config.js` sets `PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS`
+  so that it sees them.
 - Headless Chromium keeps every tab visible. A test of the board in a hidden
   tab overrides `document.hidden` and `visibilityState` in an init script and
   dispatches `visibilitychange`, as the stop-point test in `board.spec.js` does.
@@ -91,9 +95,9 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 
 | Spec | Covers |
 | --- | --- |
-| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades and second taps, stop points (also in a hidden tab), a pad stopped while starting, keys, cross-origin sound, Reconnect during a cue. |
-| `edit.spec.js` | Building a board: edit mode, the pad sheet, Board settings (resizing too), loading a board file, emptying, adding sounds, keeping copies of sounds. |
-| `offline.spec.js` | The service worker: reload with the network off. |
+| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades and second taps, tapping back on during a fade out, solo, priming a big board, stop points (also in a hidden tab), a pad stopped while starting, keys, cross-origin sound, Reconnect during a cue. |
+| `edit.spec.js` | Building a board: edit mode, the pad sheet, Board settings (resizing too), saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), keeping copies of sounds, the keyboard in edit mode. |
+| `offline.spec.js` | The service worker: reload with the network off, wifi that never answers, a server error, the board's own fonts. |
 
 What is not covered yet is listed in [status.md](status.md#test-coverage).
 

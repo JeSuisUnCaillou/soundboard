@@ -20,7 +20,7 @@ const KEY_ROWS = [
   ['z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', '`', '#'],
 ];
 
-export function newBoard({ id, cols = 3, rows = 3 }) {
+export function newBoard({ id, cols = 3, rows = 4 }) {
   const board = {
     version: BOARD_VERSION,
     id,
@@ -83,8 +83,8 @@ export function newPad(board, i, file) {
 
 /**
  * The board is exactly the size it was set to. Nothing grows it: a board of
- * nine pads holds nine sounds, and the tenth waits in the folder until there
- * is room for it. Returns how many sounds fell off the end, which only a
+ * twelve pads holds twelve sounds, and the thirteenth waits in the folder until
+ * there is room for it. Returns how many sounds fell off the end, which only a
  * smaller board can do.
  */
 export function fitPads(board) {
