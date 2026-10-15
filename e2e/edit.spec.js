@@ -1,5 +1,6 @@
 // Building a board: edit mode, the pad sheet, Board settings, emptying, adding sounds.
 
+import { readFileSync } from 'node:fs';
 import { test, expect, BUNDLED_TITLES, openBoard, pad, showSounds, silentWav, isNarrow } from './helpers.js';
 
 test('edit mode shows the folder and the board controls', async ({ page }) => {
@@ -171,6 +172,19 @@ test('a key loaded in capitals from a board file is still taken from its pad whe
   await page.locator('#padKey').fill('q');
   await page.locator('#padSave').click();
   await expect(page.locator('#toast')).toHaveText('Q was taken, so it moved to this pad.');
+  await expect(pad(page, 'Shot').locator('.pad__key')).toHaveText('');
+});
+
+test('a board file saved from Board settings holds the size just typed there', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await page.locator('#btnSetup').click();
+  await page.locator('#setCols').fill('4');
+
+  const download = page.waitForEvent('download');
+  await page.locator('#btnExport').click();
+  const saved = JSON.parse(readFileSync(await (await download).path(), 'utf8'));
+  expect(saved.cols).toBe(4);
 });
 
 test('a cue dropped on a hit’s pad fades out on a second tap, as a cue does', async ({ page }) => {

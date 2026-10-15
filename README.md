@@ -105,7 +105,8 @@ asks twice.
 four rows to begin with. That is the whole board: twelve pads hold twelve sounds, and the rest
 wait in the folder until there is room. A smaller board says what it could not
 keep. It also holds the fades new pads start with — a second in, a second and a half out,
-so nothing begins or ends on a hard edge unless a pad is told to.
+so nothing begins or ends on a hard edge unless a pad is told to. **Done** keeps what was
+changed there, and so does saving a board file from it; `Esc` leaves the board as it was.
 
 **Each pad holds**: the file it plays, a name of its own if the file's will not
 do, a colour, its level, fade in and fade out times, a loop switch, start and

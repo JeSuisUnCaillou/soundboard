@@ -134,7 +134,11 @@ export class SetupSheet {
     el('setupClose').addEventListener('click', close);
     el('setupDone').addEventListener('click', close);
 
-    el('btnExport').addEventListener('click', onExport);
+    // The file holds what the sheet shows, not what it showed when it opened.
+    el('btnExport').addEventListener('click', () => {
+      this.apply();
+      onExport();
+    });
     el('btnImport').addEventListener('click', () => el('importFile').click());
     el('importFile').addEventListener('change', async (e) => {
       const file = e.target.files && e.target.files[0];
