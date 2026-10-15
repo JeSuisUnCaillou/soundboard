@@ -243,6 +243,65 @@ test('a pad is set up, and a sound heard and put on a pad, from the keyboard', a
   await expect(pad(page, 'Crickets')).toHaveCount(2);
 });
 
+test('a sound in the folder is heard from its row, and a second click stops it', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+  await page.locator('#lib .tree__name', { hasText: 'default' }).click();
+  const row = page.locator('#lib .lib__item', { hasText: 'crickets' });
+
+  await row.locator('.lib__play').click();
+  await expect(row).toHaveClass(/lib__item--playing/);
+  // A listen is not part of the show: no pad lights up, and nothing is left to stop.
+  await expect(page.locator('#grid .pad--playing')).toHaveCount(0);
+
+  await row.locator('.lib__play').click();
+  await expect(row).not.toHaveClass(/lib__item--playing/);
+
+  // Another sound takes over from the one being heard.
+  const romance = page.locator('#lib .lib__item', { hasText: 'romance' });
+  await row.locator('.lib__play').click();
+  await expect(row).toHaveClass(/lib__item--playing/);
+  await romance.locator('.lib__play').click();
+  await expect(romance).toHaveClass(/lib__item--playing/);
+  await expect(row).not.toHaveClass(/lib__item--playing/);
+});
+
+test('typing in the filter narrows the sounds to the ones that match, and clearing it brings them back', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+  const filter = page.locator('#libFilter');
+  const rows = page.locator('#lib .lib__item');
+  await expect(rows).toHaveCount(BUNDLED_TITLES.length);
+
+  // Part of a name, in any case: the folder is flattened to what matches.
+  await filter.fill('CRICK');
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toBeVisible();
+  await expect(rows.first()).toContainText('default/crickets.mp3');
+
+  // The folder is part of each sound's path, so it matches all of them.
+  await filter.fill('default/');
+  await expect(rows).toHaveCount(BUNDLED_TITLES.length);
+
+  await filter.fill('nothing like it');
+  await expect(rows).toHaveCount(0);
+  await expect(page.locator('#libEmpty')).toHaveText('No sound here matches that.');
+
+  // The filter is still there after a reload.
+  await filter.fill('roma');
+  await page.reload();
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(BUNDLED_TITLES.length);
+  await showSounds(page);
+  await expect(filter).toHaveValue('roma');
+  await expect(rows).toHaveCount(1);
+
+  await filter.fill('');
+  await expect(rows).toHaveCount(BUNDLED_TITLES.length);
+  await expect(page.locator('#libEmpty')).toHaveText('');
+});
+
 test('Enter saves the pad sheet from the name, and presses whatever button has the focus', async ({ page }) => {
   await openBoard(page);
   await page.locator('#btnEdit').click();
@@ -350,6 +409,26 @@ test('a board file saved from Board settings holds the size just typed there', a
   expect(saved.cols).toBe(4);
 });
 
+test('a sound dragged from the folder onto an empty pad goes on it, and stays after a reload', async ({ page }) => {
+  test.skip(isNarrow(page), 'On a phone the tree covers the board, so nothing is dragged onto a pad.');
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  // The first board is full; make room.
+  await pencil(page, 'Sting').click();
+  await page.locator('#padClear').click();
+  const empty = page.locator('#grid .pad').nth(3);
+  await expect(empty).toHaveClass(/pad--empty/);
+  await showSounds(page);
+  await page.locator('#lib .tree__name', { hasText: 'default' }).click();
+
+  await page.locator('#lib .lib__item', { hasText: 'crickets' }).dragTo(empty);
+  await expect(pad(page, 'Crickets')).toHaveCount(2);
+  await expect(page.locator('#grid .pad').nth(3)).toContainText('Crickets', { ignoreCase: true });
+
+  await page.reload();
+  await expect(page.locator('#grid .pad').nth(3)).toContainText('Crickets', { ignoreCase: true });
+});
+
 test('a cue dropped on a hit’s pad fades out on a second tap, as a cue does', async ({ page }) => {
   // Dragging from the tree needs the tree beside the board.
   test.skip(isNarrow(page), 'On a phone the tree covers the board, so nothing is dragged onto a pad.');
@@ -428,6 +507,8 @@ test('a pad set up before its sound is open keeps what was chosen once the sound
   await page.locator('#padTap').selectOption('fadeout');
   await page.locator('#padSave').click();
   await expect(page.locator('#padEditor')).toBeHidden();
+  await pad(page, 'Door').click();
+  await expect(page.locator('#toast')).toHaveText('“door.wav” is not in the open folder.');
 
   // The sound turns up, and it is short: a hit, were it left to its length.
   await showSounds(page);

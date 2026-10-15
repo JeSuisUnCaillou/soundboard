@@ -46,6 +46,16 @@ export function pencil(page, title) {
   return page.getByRole('button', { name: new RegExp(`^Set up ${name}$`, 'i') });
 }
 
+/**
+ * The first board is full: take Sting, its fourth pad, off it so a sound can
+ * go on the board. Edit mode must be on.
+ */
+export async function makeRoom(page) {
+  await pencil(page, 'Sting').click();
+  await page.locator('#padClear').click();
+  await expect(page.locator('#grid .pad').nth(3)).toHaveClass(/pad--empty/);
+}
+
 /** Open the board fresh, and wait for the first launch to lay out its sounds. */
 export async function openBoard(page) {
   await page.goto('/');

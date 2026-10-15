@@ -32,7 +32,7 @@ included, went through.
 
 | Piece | What it does |
 | --- | --- |
-| `playwright.config.js` | Projects `desktop` (Desktop Chrome) and `phone` (Pixel 7, 412px wide, so *narrow*). Fully parallel; one retry on CI. Chromium runs with `--autoplay-policy=no-user-gesture-required`. |
+| `playwright.config.js` | Projects `desktop` (Desktop Chrome) and `phone` (Pixel 7, 412px wide, so *narrow*). Fully parallel; one retry on CI, but `failOnFlakyTests` fails a run whose test passed only on its retry. Chromium runs with `--autoplay-policy=no-user-gesture-required`. |
 | `e2e/serve.js` | A dependency-free static server that answers byte-range requests, sends `Cache-Control: no-cache`, and allows CORS. |
 | `e2e/helpers.js` | The `test` and `expect` every spec imports, and the helpers below. |
 
@@ -51,6 +51,7 @@ how `board.spec.js` tests a sound served cross-origin.
 | `pad(page, title)` | A filled pad by the name it shows. |
 | `pencil(page, title)` | The button that opens that pad's settings in edit mode, by its label. |
 | `BUNDLED_TITLES` | The twelve pad titles of the Default board, in board order; how each pad is set up is in `BUNDLED` (`js/bundled.js`). The first board is full, so a test that adds a sound clears a pad first. |
+| `makeRoom(page)` | In edit mode, take Sting off the full first board so a sound can go on it. |
 | `showSounds(page)` | Open the book wherever the layout keeps it (**Browse files** on phone), unless it is open already. |
 | `isNarrow(page)` | Viewport ≤ 900px. |
 | `silentWav(seconds, rate)` | A WAV buffer made in the test, for adding sounds. Never commit test audio. |
@@ -72,8 +73,11 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
   routes the page's requests needs `test.use({ serviceWorkers: 'block' })`, as
   the cross-origin test in `board.spec.js` does. To route the worker's own
   requests (weak wifi, a server error), use `context.route`:
-  `playwright.config.js` sets `PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS`
-  so that it sees them.
+  `offline.spec.js` sets `PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS` so
+  that it sees them, and runs in a worker of its own: a service worker watched
+  this way crashes Chromium now and then after its context closes, which took
+  down the next test in the same browser (#78). Keep the switch out of
+  `playwright.config.js`.
 - Headless Chromium keeps every tab visible. A test of the board in a hidden
   tab overrides `document.hidden` and `visibilityState` in an init script and
   dispatches `visibilitychange`, as the stop-point test in `board.spec.js` does.
@@ -107,11 +111,12 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 
 | Spec | Covers |
 | --- | --- |
-| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades, each second-tap mode, tapping back on during a fade out, solo, priming a big board, start and stop points (also in a hidden tab), a pad stopped while starting, keys (held, and a pad's own), cross-origin sound, Reconnect during a cue. |
-| `edit.spec.js` | Building a board: edit mode, the pad sheet (name, level, fades, gel, kept after a reload), Board settings (rows and columns, growing and shrinking, both at once), saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), dropping a sound on a pad, a pad set up before its sound is open, keeping copies of sounds, the keyboard in edit mode. |
+| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades, each second-tap mode (layering up to ×3), tapping back on during a fade out, solo, priming a big board, start and stop points (also in a hidden tab), both kinds of loop, a pad stopped while starting, keys (held, a pad's own, after the volume or a button has the focus), cross-origin sound, Reconnect during a cue. |
+| `edit.spec.js` | Building a board: edit mode, the pad sheet (name, level, fades, gel, kept after a reload), Board settings (rows and columns, growing and shrinking, both at once), saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), dropping a sound on a pad (empty or filled), a pad set up before its sound is open, keeping copies of sounds, the keyboard in edit mode, hearing a sound from the tree, the filter. |
+| `kept.spec.js` | Coming back to it: the kept copies of picked sounds after a reload and offline, a folder handle that comes back by itself, Reconnect refused, and a browser out of room for the copies. |
 | `offline.spec.js` | The service worker: reload with the network off, wifi that never answers, a server error, the board's own fonts. |
-| `drag.spec.js` | Moving pads in edit mode: by mouse on `desktop`, by a resting finger on `phone` (each `describe` skips the other project). Swapping, moving to an empty place, taking a pad off, and a press or a quick swipe that is not a drag. |
-| `storage.spec.js` | What is kept between launches: a browser that keeps nothing, a launch whose storage fails once, a kept folder that cannot be asked about, saving when the page is hidden, clearing an abandoned board, the wake lock, a picker dismissed without a cancel event. |
+| `drag.spec.js` | Moving pads in edit mode: by mouse on `desktop`, by a resting finger on `phone` (each `describe` skips the other project). Swapping, moving to an empty place (kept even without an unload event), taking a pad off, and a press or a quick swipe that is not a drag. |
+| `storage.spec.js` | What is kept between launches: a browser that keeps nothing, a launch whose storage fails once, a kept folder that cannot be asked about, saving when the page is hidden or goes without a word, clearing an abandoned board, the wake lock, a picker dismissed without a cancel event. |
 
 What is not covered yet is listed in [status.md](status.md#test-coverage).
 
@@ -122,7 +127,7 @@ What is not covered yet is listed in [status.md](status.md#test-coverage).
   `engine.wake`, pickers or touch handling.
 - The File System Access pickers cannot be answered from a test. A handle
   can still be had from the browser's private storage
-  (`navigator.storage.getDirectory()`): the Reconnect test in `board.spec.js`
-  returns one from a stubbed `showDirectoryPicker` and stubs
+  (`navigator.storage.getDirectory()`): the Reconnect tests in `board.spec.js`
+  and `kept.spec.js` return one from a stubbed `showDirectoryPicker` and stub
   `queryPermission` / `requestPermission` to make the board ask again.
 - Audio is not listened to: "playing" means the pad shows `pad--playing`.

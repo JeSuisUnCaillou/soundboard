@@ -200,8 +200,9 @@ another): every pad is placed in its grid cell by hand (`grid-area`) and the
 pencil shares the cell, laid over the pad's corner. `padOf()` in `app.js`
 maps a pencil back to its pad for drags and drops.
 
-**Saving**: `queueSave()` debounces 500 ms; `saveNow()` on structural changes,
-`beforeunload`, `pagehide` and the page going hidden (a phone may close a
+**Saving**: `queueSave()` debounces 500 ms, only for the master volume and
+measured lengths; `saveNow()` on every other change (a save left for the page
+going away is not sure to land), and on `beforeunload`, `pagehide` and the page going hidden (a phone may close a
 hidden page with no unload event). Every storage call at launch goes through
 `remembered()`: if IndexedDB fails, the board runs from memory, says once
 that nothing done now will be kept, and `write()` stores nothing more that

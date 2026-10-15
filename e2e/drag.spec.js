@@ -1,6 +1,6 @@
 // Moving pads in edit mode: a mouse drags, a finger rests and then drags.
 
-import { test, expect, openBoard, pad, pencil, showSounds } from './helpers.js';
+import { test, expect, makeRoom, openBoard, pad, showSounds } from './helpers.js';
 
 /** The pad in this place on the board, counted from the top left. */
 function slot(page, i) {
@@ -8,12 +8,6 @@ function slot(page, i) {
 }
 
 /** The first board is full: take Sting off it, leaving its place, the fourth, empty. */
-async function makeRoom(page) {
-  await pencil(page, 'Sting').click();
-  await page.locator('#padClear').click();
-  await expect(slot(page, 3)).toHaveClass(/pad--empty/);
-}
-
 async function centre(locator) {
   const box = await locator.boundingBox();
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
@@ -49,6 +43,27 @@ test.describe('with a mouse', () => {
     await expectLayout(page, ['', 'Explosion', 'Phone', 'Gunshot']);
     await expect(page.locator('#grid .pad--playing')).toHaveCount(0);
 
+    await page.reload();
+    await expectLayout(page, ['', 'Explosion', 'Phone', 'Gunshot']);
+  });
+
+  test('a pad moved is kept even if the page then goes without a word', async ({ page }) => {
+    // No beforeunload, pagehide or visibilitychange to save from, as when a
+    // page is torn down at once.
+    await page.addInitScript(() => {
+      for (const target of [window, document]) {
+        const add = target.addEventListener;
+        target.addEventListener = function (type, ...rest) {
+          if (['beforeunload', 'pagehide', 'visibilitychange'].includes(type)) return undefined;
+          return add.call(this, type, ...rest);
+        };
+      }
+    });
+    await openBoard(page);
+    await page.locator('#btnEdit').click();
+    await makeRoom(page);
+    await drag(page, pad(page, 'Gunshot'), slot(page, 3));
+    await expectLayout(page, ['', 'Explosion', 'Phone', 'Gunshot']);
     await page.reload();
     await expectLayout(page, ['', 'Explosion', 'Phone', 'Gunshot']);
   });

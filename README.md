@@ -38,8 +38,8 @@ That holds in every browser, with the network off, and on a phone.
 Where the browser allows it — Chrome, Edge and Opera on the desktop — the board
 also keeps a handle on the places the sounds came from, and goes back to the real
 files on disk when it can, so a file edited between rehearsals is the file that
-plays. If the browser wants permission again, a **Reconnect** button appears next
-to the folder's name; until it is used the board plays from its own copies, so
+plays. If the browser wants permission again, a **Reconnect** button appears at the
+top of the board, beside **Edit board**; until it is used the board plays from its own copies, so
 nothing stops a show.
 
 Those copies are the reason the board installs well. **Install** it from the

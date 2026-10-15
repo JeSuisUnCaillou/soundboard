@@ -1,6 +1,6 @@
 // What the board keeps between launches, and how it copes when it cannot.
 
-import { test, expect, openBoard, pad, pencil, showSounds } from './helpers.js';
+import { test, expect, makeRoom, openBoard, pad, pencil, showSounds } from './helpers.js';
 
 test('a browser that keeps nothing still opens the board, and says nothing done now will be kept', async ({ page }) => {
   await page.addInitScript(() => {
@@ -91,6 +91,40 @@ test('a change is kept when the page is hidden and then closed without beforeunl
   });
   await page.reload();
   await expect(pad(page, 'Pistol')).toBeVisible();
+});
+
+test('a pad put on the board, and a new size, are kept even if the page then goes without a word', async ({ page }) => {
+  // A page torn down at once, as a crash or a phone short of memory does: no
+  // beforeunload, no pagehide, no visibilitychange to save from.
+  await page.addInitScript(() => {
+    for (const target of [window, document]) {
+      const add = target.addEventListener;
+      target.addEventListener = function (type, ...rest) {
+        if (['beforeunload', 'pagehide', 'visibilitychange'].includes(type)) return undefined;
+        return add.call(this, type, ...rest);
+      };
+    }
+  });
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  // Room for a sound, saved before the change that is tested.
+  await makeRoom(page);
+  await page.reload();
+  await expect(pad(page, 'Sting')).toHaveCount(0);
+
+  await showSounds(page);
+  await page.locator('#lib .tree__name', { hasText: 'default' }).click();
+  await page.getByRole('button', { name: /^Put crickets\.mp3 on a pad$/i }).click();
+  await expect(pad(page, 'Crickets')).toHaveCount(2);
+  await page.reload();
+  await expect(pad(page, 'Crickets')).toHaveCount(2);
+
+  await page.locator('#btnSetup').click();
+  await page.locator('#setCols').fill('4');
+  await page.locator('#setupDone').click();
+  await expect(page.locator('#setup')).toBeHidden();
+  await page.reload();
+  await expect(page.locator('#grid .pad')).toHaveCount(16);
 });
 
 test('copies kept for a board that can no longer be opened are cleared', async ({ page }) => {
