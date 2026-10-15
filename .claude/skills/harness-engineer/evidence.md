@@ -51,11 +51,12 @@ loaded through `ToolSearch` if they are deferred:
 
 `user` events carry tool results as well as what the user typed, so a page of
 100 runs past the tool's output limit and is saved to a file, whose path the
-result gives. Extract from that file instead of reading it; what the user typed
-is the events whose content is a plain string:
+result gives. That file is either a JSON array holding the text or the text
+itself, and the snippet reads both. Extract from it instead of reading it;
+what the user typed is the events whose content is a plain string:
 
 ```sh
-jq -r '.[0].text' "$F" | grep -o '^    {.*' \
+{ jq -r '.[0].text' "$F" 2>/dev/null || cat "$F"; } | grep -o '^    {.*' \
   | jq -r '.ccr.data[] | (.user.internal_anthropic_catchall.message // .user.message // empty)
            | select((.content|type)=="string") | .content | gsub("\n";" ") | .[0:200]'
 ```
