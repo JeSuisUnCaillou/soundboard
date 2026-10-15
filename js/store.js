@@ -27,7 +27,12 @@ function open() {
       resolve(req.result);
     };
     req.onerror = () => reject(req.error);
-    req.onblocked = () => reject(new Error('the board is open in another tab — close it and reload'));
+    // Blocked by another tab holding an older version: it closes on the
+    // versionchange it has just been sent, and the open goes through then.
+  });
+  // A failure is not kept: the next call tries again.
+  dbPromise.catch(() => {
+    dbPromise = null;
   });
   return dbPromise;
 }
@@ -78,11 +83,28 @@ export const store = {
   loadBoard(id) {
     return run('boards', 'readonly', (s) => s.get(id));
   },
-  listBoards() {
-    return run('boards', 'readonly', (s) => s.getAll());
-  },
-  deleteBoard(id) {
-    return run('boards', 'readwrite', (s) => s.delete(id));
+
+  /**
+   * Only one board is in use. Any other left in storage — one made before the
+   * board it was replaced by — can no longer be opened, and its kept copies
+   * only take room the open board's sounds may need.
+   */
+  async forgetOtherBoards(id) {
+    const db = await open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(['boards', 'handles', 'sounds'], 'readwrite');
+      const others = (key) => key !== id;
+      for (const name of ['boards', 'handles']) {
+        const s = tx.objectStore(name);
+        s.getAllKeys().onsuccess = (e) => e.target.result.filter(others).forEach((key) => s.delete(key));
+      }
+      const sounds = tx.objectStore('sounds');
+      sounds.getAllKeys().onsuccess = (e) => e.target.result
+        .filter((key) => others(key.split('\n')[0]))
+        .forEach((key) => sounds.delete(key));
+      tx.oncomplete = () => resolve();
+      tx.onabort = () => reject(tx.error);
+    });
   },
 
   // Handles for every place a board's sounds came from. They survive a reload

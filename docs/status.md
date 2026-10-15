@@ -59,8 +59,8 @@ Not filed as issues yet; open one before working on any of them.
 - `sw.js` precaches `icon.svg` but not the PNG icons.
 - Remote branches left from merged work (`ccr-*`, `claude/compassionate-gauss-*`,
   `claude/mobile-upload-bug-*`) can be deleted.
-- `store.listBoards` / `deleteBoard` exist but there is no way to switch
-  between boards in the UI. In practice the board is always `default-board`:
+- There is no way to switch between boards in the UI, and any board but the
+  open one is forgotten (`store.forgetOtherBoards`). In practice the board is always `default-board`:
   a first launch creates it and stores it as the last board. Only when no
   board loads at all do `absorb` and `blankBoard` make one named after the
   first source.

@@ -176,8 +176,11 @@ finger after resting 400 ms. Dropping on another pad swaps them (`model.move`);
 dropping on `#book` or `#browse` takes the pad off. Sounds dragged from the tree
 use HTML5 drag and drop with the `application/x-soundboard-path` type.
 
-**Saving**: `queueSave()` debounces 500 ms; `saveNow()` on structural changes
-and `beforeunload`. `keepSounds()` copies every loaded sound (pads first) into
+**Saving**: `queueSave()` debounces 500 ms; `saveNow()` on structural changes,
+`beforeunload`, `pagehide` and the page going hidden (a phone may close a
+hidden page with no unload event). Every storage call at launch goes through
+`remembered()`: if IndexedDB fails, the board runs from memory and says once
+that the next launch starts afresh. `keepSounds()` copies every loaded sound (pads first) into
 IndexedDB, skipping bundled ones and unchanged ones, deleting copies of sounds
 no longer loaded; on `QuotaExceededError` it stops trying for the session.
 
@@ -197,8 +200,9 @@ focus left on the master slider turns every shortcut off, Escape included
 | store `meta` | `last`, `cols`, `rows` | Last open board id; last board size chosen (new boards start at it). |
 | localStorage `soundboard:ui` | `editing`, `book`, `filter`, `openDirs` | Where the operator was, applied before the first draw. |
 
-Only one board is in use at a time. `store.listBoards` and `deleteBoard` exist
-but nothing in the UI switches boards.
+Only one board is in use at a time; nothing in the UI switches boards. The
+first `keepSounds()` of a session calls `store.forgetOtherBoards`, which drops
+every other board with its handles and kept copies.
 
 ## Offline (`sw.js`)
 

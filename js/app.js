@@ -164,10 +164,14 @@ class App {
 
     this.wireDragging();
     document.addEventListener('keydown', (e) => this.onKey(e));
+    // A phone often closes a page without beforeunload: switching apps hides
+    // it, and the system may then drop it without another word.
     window.addEventListener('beforeunload', () => this.saveNow());
+    window.addEventListener('pagehide', () => this.saveNow());
     document.addEventListener('visibilitychange', () => {
       this.run();
-      if (!document.hidden) this.keepAwake();
+      if (document.hidden) this.saveNow();
+      else this.keepAwake();
     });
     this.placeEmptyButton();
     // Taken again on every press, and checked between them: a release can come
@@ -458,17 +462,20 @@ class App {
   async absorb(added, { announce = false } = {}) {
     if (!this.board) {
       const id = slug(this.library.rootName);
-      const saved = await store.loadBoard(id);
+      const saved = await this.remembered(store.loadBoard(id));
       // A board built today starts as wide as the last one the operator set.
-      this.useBoard((saved && migrate(saved, { id }))
-        || newBoard({ id, cols: await store.getMeta('cols'), rows: await store.getMeta('rows') }));
-      await store.setMeta('last', this.board.id);
+      this.useBoard((saved && migrate(saved, { id })) || newBoard({
+        id,
+        cols: await this.remembered(store.getMeta('cols')),
+        rows: await this.remembered(store.getMeta('rows')),
+      }));
+      await this.remembered(store.setMeta('last', this.board.id));
     }
 
     // Places waiting to be reconnected are still this board's places: adding a
     // sound while they are disconnected must not forget them.
     const places = [...(this.pendingHandles || []), ...this.library.handles];
-    if (places.length) await store.saveHandles(this.board.id, places);
+    if (places.length) await this.remembered(store.saveHandles(this.board.id, places));
     this.pendingHandles = null;
     if (refs.picker.open) refs.picker.close();
 
@@ -513,7 +520,7 @@ class App {
    * and then from the real files as soon as the browser allows it.
    */
   async restore() {
-    const lastId = await store.getMeta('last');
+    const lastId = await this.remembered(store.getMeta('last'));
     if (!lastId) {
       await this.firstBoard();
       return;
@@ -521,17 +528,17 @@ class App {
 
     // The board comes back whatever its sounds can be read from: the copies it
     // keeps, the ones that ship with the app, or — in a moment — the folder.
-    const saved = await store.loadBoard(lastId);
+    const saved = await this.remembered(store.loadBoard(lastId));
     const board = saved && migrate(saved, { id: lastId });
     if (board) {
       this.useBoard(board);
-      const kept = await store.soundsFor(lastId);
+      const kept = await this.remembered(store.soundsFor(lastId), []);
       if (kept.length) this.library.addCached(kept);
       await this.absorb([]);
     }
 
     const silent = !board || !filled(board).some(({ pad }) => this.library.has(pad.file));
-    const handles = await store.loadHandles(lastId);
+    const handles = await this.remembered(store.loadHandles(lastId), []);
 
     if (!handles.length) {
       // Nothing here can be played: ask for the sounds rather than leave a
@@ -545,7 +552,10 @@ class App {
       return;
     }
 
-    const states = await Promise.all(handles.map((h) => h.queryPermission({ mode: 'read' })));
+    // A handle that cannot even be asked is one to reconnect by hand.
+    const states = await Promise.all(handles.map((h) => Promise.resolve()
+      .then(() => h.queryPermission({ mode: 'read' }))
+      .catch(() => 'prompt')));
     if (states.every((state) => state === 'granted')) {
       await this.reconnect(handles);
       return;
@@ -585,17 +595,18 @@ class App {
   async firstBoard() {
     this.useBoard(newBoard({
       id: 'default-board',
-      cols: await store.getMeta('cols'),
-      rows: await store.getMeta('rows'),
+      cols: await this.remembered(store.getMeta('cols')),
+      rows: await this.remembered(store.getMeta('rows')),
     }));
-    await store.setMeta('last', this.board.id);
+    await this.remembered(store.setMeta('last', this.board.id));
     await this.place(bundledPaths());
     this.redraw();
     this.saveNow();
     this.primeAll();
     this.measure();
     this.keepAwake();
-    toast('A board to start with. Add files when you have your own.');
+    // A warning that nothing will be kept matters more than the welcome.
+    if (!this.warnedForgetful) toast('A board to start with. Add files when you have your own.');
   }
 
   /** Put the real files back behind the pads, in place of the kept copies. */
@@ -611,6 +622,24 @@ class App {
       toast(err.name === 'NotAllowedError'
         ? 'Without permission to read them, the board stays on the copies it kept.'
         : `Those sounds could not be reopened: ${err.message}`);
+    }
+  }
+
+  /**
+   * What the board reads from or writes to storage, or the fallback if the
+   * browser will not keep anything: the show goes on without it, and the
+   * operator is told once that the next launch starts afresh.
+   */
+  async remembered(promise, fallback = undefined) {
+    try {
+      return await promise;
+    } catch (err) {
+      console.error(err);
+      if (!this.warnedForgetful) {
+        this.warnedForgetful = true;
+        toast('This browser is not keeping the board, so the next launch starts afresh.');
+      }
+      return fallback;
     }
   }
 
@@ -637,6 +666,10 @@ class App {
       if (!this.askedToPersist && navigator.storage && navigator.storage.persist) {
         this.askedToPersist = true;
         navigator.storage.persist().catch(() => {});
+      }
+      if (!this.forgotOthers) {
+        this.forgotOthers = true;
+        await store.forgetOtherBoards(id);
       }
       const onPads = filled(this.board).map(({ pad }) => pad.file);
       const wanted = [...new Set([...onPads, ...this.library.list.map((e) => e.path)])];
@@ -973,7 +1006,9 @@ class App {
       this.sayUnlocked();
       return;
     }
-    if (this.wakeLock) return;
+    // Several presses can ask at once; one lock, asked for once, is enough.
+    if (this.wakeLock || this.askingAwake) return;
+    this.askingAwake = true;
     try {
       this.wakeLock = await navigator.wakeLock.request('screen');
       this.wakeLock.addEventListener('release', () => {
@@ -982,6 +1017,8 @@ class App {
     } catch {
       // Refused: the tab is not visible, or the phone is in low power mode.
       this.sayUnlocked();
+    } finally {
+      this.askingAwake = false;
     }
   }
 

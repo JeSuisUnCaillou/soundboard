@@ -388,7 +388,13 @@ function walkEntry(dir, prefix, out, depth = 0) {
   });
 }
 
+// The file input of a pick still waiting for an answer, if any.
+let waiting = null;
+
 function pickWithInput(wholeFolder) {
+  // A picker dismissed where the browser sends no cancel event leaves its
+  // input waiting. Opening another means that one was dismissed.
+  if (waiting) waiting(false);
   return new Promise((resolve) => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -405,16 +411,18 @@ function pickWithInput(wholeFolder) {
     const done = (value) => {
       if (settled) return;
       settled = true;
+      if (waiting === done) waiting = null;
       input.remove();
       resolve(value);
     };
+    waiting = done;
     input.addEventListener('change', () => done(input.files && input.files.length ? input.files : false));
     input.addEventListener('cancel', () => done(false));
     // No guessing at a dismissal from the window getting its focus back: on a
     // phone that happens before the files are handed over — while they are
     // still being copied out of the gallery or the cloud — and the choice was
-    // thrown away. A picker dismissed where there is no cancel event simply
-    // leaves this waiting, which costs nothing.
+    // thrown away. A picker dismissed where there is no cancel event leaves
+    // this waiting until the next pick.
     input.click();
   });
 }
