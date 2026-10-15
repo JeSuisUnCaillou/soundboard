@@ -27,20 +27,19 @@ screen wake lock.
 | Changing columns in Board settings throws pads away or leaves sounds on the wrong pads | [#17](https://github.com/JeSuisUnCaillou/soundboard/issues/17) |
 | Pressing Reconnect during a show cuts every sound dead | [#18](https://github.com/JeSuisUnCaillou/soundboard/issues/18) |
 | Keeping copies of sounds can silently skip some | [#19](https://github.com/JeSuisUnCaillou/soundboard/issues/19) |
-| Dropping several files or folders at once in Chromium adds only the first | [#20](https://github.com/JeSuisUnCaillou/soundboard/issues/20) |
-| The service worker is slow on weak wifi and can cache error pages | [#21](https://github.com/JeSuisUnCaillou/soundboard/issues/21) |
-| Sounds in the tree and pad settings cannot be reached from the keyboard | [#22](https://github.com/JeSuisUnCaillou/soundboard/issues/22) |
 | Save board file ignores what was just typed in Board settings | [#45](https://github.com/JeSuisUnCaillou/soundboard/issues/45) |
 | Smaller fixes from the code review | [#23](https://github.com/JeSuisUnCaillou/soundboard/issues/23) |
 
 ## Test coverage
 
-29 tests, each run at desktop and phone size, all green. Covered: the first
+36 tests, each run at desktop and phone size, all green. Covered: the first
 launch, tapping, Stop, Escape, the master volume, fade and second-tap edge
 cases, stop points, a pad stopped while it is still starting, held keys, a cross-origin sound, edit mode, renaming a pad
 (with reload), emptying the board, adding sounds through the file input, saving a
-board file and loading it back (missing sounds struck through), and coming
-back offline.
+board file and loading it back (missing sounds struck through), dropping several sounds or folders at once,
+coming back offline, opening on weak wifi, keeping a good copy over a server
+error, asking no other site for anything, and setting up a pad, hearing a
+sound and putting it on a pad from the keyboard.
 
 Not covered yet:
 
@@ -55,9 +54,6 @@ Not covered yet:
 
 Not filed as issues yet; open one before working on any of them.
 
-- Offline, the Google Fonts stylesheet is not available (the service worker
-  only caches same-origin files), so the board falls back to system fonts.
-- `sw.js` precaches `icon.svg` but not the PNG icons.
 - Remote branches left from merged work (`ccr-*`, `claude/compassionate-gauss-*`,
   `claude/mobile-upload-bug-*`) can be deleted.
 - `store.listBoards` / `deleteBoard` exist but there is no way to switch

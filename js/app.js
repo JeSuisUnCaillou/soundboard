@@ -27,6 +27,13 @@ const TYPED = 'textarea, select, '
   + 'input:not([type=range]):not([type=checkbox]):not([type=radio])'
   + ':not([type=button]):not([type=submit]):not([type=reset]):not([type=color]):not([type=file])';
 
+/** The pad under a node: the pad itself, or the pad whose pencil it is. */
+function padOf(node) {
+  const pen = node.closest('.pad__pencil');
+  if (pen) return refs.grid.querySelector(`.pad[data-i="${pen.dataset.i}"]`);
+  return node.closest('.pad');
+}
+
 class App {
   constructor() {
     this.library = new Library();
@@ -117,6 +124,12 @@ class App {
     });
 
     refs.grid.addEventListener('click', (e) => {
+      // The pencil sets the pad up; it sits beside the pad, not inside it.
+      const pen = e.target.closest('.pad__pencil');
+      if (pen && this.editing) {
+        this.padEditor.open(this.board, Number(pen.dataset.i));
+        return;
+      }
       const el = e.target.closest('.pad');
       if (!el) return;
       if (this.dragged) return;           // that click is the tail of a drag
@@ -130,11 +143,7 @@ class App {
         else if (this.padWanting === i) toast('Now pick a sound — its + puts it here.');
         return;
       }
-      // While editing: the pencil sets the pad up, the pad itself is heard.
-      if (this.editing && e.target.closest('.pad__pencil')) {
-        this.padEditor.open(this.board, i);
-        return;
-      }
+      // While editing the pad itself is heard; with Shift, it is set up.
       if (this.editing && e.shiftKey) {
         this.padEditor.open(this.board, i);
         return;
@@ -190,7 +199,7 @@ class App {
     });
 
     refs.grid.addEventListener('dragover', (e) => {
-      const el = e.target.closest('.pad');
+      const el = padOf(e.target);
       if (!el || !e.dataTransfer.types.includes(PATH_TYPE)) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'copy';
@@ -198,11 +207,11 @@ class App {
     });
 
     refs.grid.addEventListener('dragleave', (e) => {
-      e.target.closest('.pad')?.classList.remove('pad--drop');
+      padOf(e.target)?.classList.remove('pad--drop');
     });
 
     refs.grid.addEventListener('drop', async (e) => {
-      const el = e.target.closest('.pad');
+      const el = padOf(e.target);
       if (!el) return;
       e.preventDefault();
       el.classList.remove('pad--drop');
@@ -264,7 +273,7 @@ class App {
       if (!el) return null;
       if (el.closest('#book')) return refs.book;
       if (el.closest('#browse')) return refs.browse;
-      const pad = el.closest('.pad');
+      const pad = padOf(el);
       return pad && pad !== drag.el ? pad : null;
     };
 
@@ -306,7 +315,6 @@ class App {
       disarm();
       const el = e.target.closest('.pad');
       if (!el || !this.editing || e.button > 0) return;
-      if (e.target.closest('.pad__pencil')) return;      // the corner is for settings
       const from = Number(el.dataset.i);
       if (!this.board.pads[from] || !this.board.pads[from].file) return;
 

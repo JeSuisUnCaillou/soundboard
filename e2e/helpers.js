@@ -33,6 +33,15 @@ export function pad(page, title) {
   return page.locator('#grid .pad--filled', { hasText: title });
 }
 
+/**
+ * The pencil that opens a pad's settings in edit mode, found by its label. The
+ * label has the name as stored; the pad shows it capitalised.
+ */
+export function pencil(page, title) {
+  const name = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return page.getByRole('button', { name: new RegExp(`^Set up ${name}$`, 'i') });
+}
+
 /** Open the board fresh, and wait for the first launch to lay out its sounds. */
 export async function openBoard(page) {
   await page.goto('/');
