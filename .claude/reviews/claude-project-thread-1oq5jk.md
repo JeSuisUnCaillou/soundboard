@@ -1,8 +1,6 @@
-# Pass 1 (toast fix, #51)
+# Pass 1 (flaky fade-out test, #67)
 
-Head: 2947090
+Head: ff5d07b
 
-- architect: docs/status.md coverage line broke the paragraph's wrap: fixed in 133055c. Text, not blocking.
-- bugs: no finding; saw the new test fail without `pointer-events: none` and pass with it.
-
-Reviewed head: aeb124d60bdcf99de83e0b0d00cc3978f561730d
+- bugs: the comment and commit said the pad comes back from where the fade got to; engine.start seeks to trimStart, so it restarts from the top, and the rewrite dropped that check: fixed in c899e10. The test now checks restart from the top with margin, and fails without the seek (tried).
+- architect: no finding.
