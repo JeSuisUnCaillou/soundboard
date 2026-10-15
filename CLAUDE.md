@@ -140,3 +140,18 @@ requests Claude merges by itself once it converges (small bug fixes) and
 which wait for the owner.
 
 Merge with a squash, so the title ends with the pull request number, `… (#n)`.
+
+## Periodic review
+
+Every 20 pull requests merged into `main`,
+`.github/workflows/periodic-review.yml` opens an issue labelled
+`periodic-review` and assigns it to the owner. A session that takes it up
+runs, in order:
+
+1. `Skill(skill: "harness-engineer")`, the retrospective pass; its PR waits
+   for the owner.
+2. `Skill(skill: "architecture-review")`, which reviews the whole codebase and
+   files what it finds as issues.
+
+Then it comments on the issue with the harness PR and the issues filed, and
+closes it. The next count starts from that issue.
