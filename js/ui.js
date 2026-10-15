@@ -15,7 +15,7 @@ export function bindRefs() {
     'browse', 'btnBrowse', 'btnBrowseDone',
     'picker', 'pickerTitle', 'pickerBlurb', 'pickerNote', 'pickerKeys', 'pickerClose',
     'btnAddFolder', 'btnAddFiles', 'btnReopen',
-    'btnStop', 'master', 'masterValue',
+    'transport', 'btnStop', 'master', 'masterValue',
     'live', 'toast',
   ];
   for (const id of ids) refs[id] = document.getElementById(id);

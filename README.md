@@ -96,15 +96,14 @@ does a pad, so a cue can be checked before and after it goes on the board. The
 click an empty pad and it lights up and waits, and the next **+** lands there.
 Clicking it again lets it go. The pencil in a pad's corner opens its settings,
 where **Hear it** plays it again. All of these can be reached with Tab and
-pressed with Enter. With a mouse the whole pad
-is a handle: press anywhere but the pencil and move, and the pad comes with you;
-press and release without moving and it just plays. Under a finger, rest on a pad
-for a moment and it comes away with you — a touch that moves straight away is
-scrolling the board, not dragging. Dropping a pad on the folder beside the board,
-or on the bar beneath it, takes it off the board and leaves the sound where it
-is. There is no limit on how many sounds a
-board holds. **Empty the board** clears the pads without touching the sounds,
-and asks twice. On an empty board the same button reads **Load the default
+pressed with Enter. Under a mouse or a finger the
+whole pad is a handle: press anywhere but the pencil and move, and the pad comes
+with you; press and release without moving and it just plays. While editing, the
+board scrolls from its empty places and the gaps between pads. Dropping a pad
+on the folder beside the board, or on the bar beneath it, takes it off the board
+and leaves the sound where it is; that place is marked in red as soon as a pad
+is picked up. There is no limit on how many sounds a board holds. **Empty the
+board** clears the pads without touching the sounds, and asks twice. On an empty board the same button reads **Load the default
 board** and lays the twelve sounds back out, set up as on a first launch.
 
 **Board settings** sets how many rows and columns the board has — three columns by
@@ -143,8 +142,8 @@ you gave it: a six-column board is six columns wide everywhere, scrolling rather
 than rearranging itself under the operator. While editing, Stop and the volume
 give their place to **Browse files**, which opens the folder over the whole
 screen — the pads and the files are never half each — and **Back to the pads**
-closes it. A pad is picked up by resting a finger on it, and dropped on the bar
-at the bottom to take it off the board.
+closes it. A pad comes away under the finger as soon as it moves, and dropped
+anywhere on the bar at the bottom it comes off the board.
 
 The screen is held awake for as long as a board is open — a show has long
 minutes in it where nothing is pressed, and a phone that locks in one of them

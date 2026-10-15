@@ -369,28 +369,32 @@ body[data-editing="on"] .pad__pencil:hover { color: var(--ink); }
 .pad--ghost-off { opacity: 0.55; filter: grayscale(0.6); }
 
 /* Somewhere a pad can be dropped to come off the board: the folder beside it
-   on a wide screen, the bar beneath it on a narrow one. */
-.drop--off {
-  outline: 2px dashed var(--alert);
-  outline-offset: -6px;
-  background: color-mix(in oklab, var(--alert) 12%, var(--console));
+   on a wide screen, the whole bar beneath it on a narrow one. Both look the same: a
+   dotted line around the zone and a label in its middle, from the moment a pad
+   is picked up; the zone lights up once the pad is over it. */
+.drop--ready {
+  position: relative;
+  outline: 2px dotted var(--alert);
+  outline-offset: -4px;
 }
-.drop--off .book__title::after {
-  content: " — drop to take it off the board";
-  color: var(--alert);
-  font-weight: 400;
-}
-.browse.drop--off::before {
+.drop--ready > * { opacity: 0.2; }
+.drop--off { background: color-mix(in oklab, var(--alert) 14%, var(--console)); }
+.drop--ready::after {
   content: "Drop to take it off the board";
   position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  background: color-mix(in oklab, var(--alert) 16%, var(--console));
-  color: var(--alert);
-  font: 600 16px/1 var(--cond);
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: var(--alert);
+  color: #fff;
+  font: 600 16px/1.1 var(--cond);
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
 }
+.drop--off::after { box-shadow: 0 0 0 4px color-mix(in oklab, var(--alert) 40%, transparent); }
 
 /* cue lights, the one piece of language borrowed wholesale from the booth.
    The lamp is a box the size of the pencil with the dot drawn inside it, so the
@@ -790,6 +794,8 @@ select.field option:checked { background: var(--warn); color: #241a07; }
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
+/* While editing, a finger on a filled pad drags it rather than the board. */
+body[data-editing="on"] .pad--filled { touch-action: none; }
 .pad, .lib__item {
   user-select: none;
   -webkit-user-select: none;
