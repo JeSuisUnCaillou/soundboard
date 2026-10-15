@@ -844,7 +844,7 @@ class App {
 
   /** Stop what is playing, each pad taking its own fade out with it. */
   stop() {
-    const live = this.engine.active();
+    const live = this.engine.active().filter(({ voice }) => !voice.fading);
     if (!live.length) return;
     for (const { i, pad } of live) {
       this.engine.stop(i, { fade: pad.fadeOut ?? this.fadeTime() });

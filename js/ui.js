@@ -218,9 +218,12 @@ function soundRow(entry, used, showPath) {
 
 // ── transport ─────────────────────────────────────────────────────────────
 
-/** Stop is only a button when there is something to stop. */
+/**
+ * Stop is only a button when there is something to stop. A sound already
+ * fading out has been stopped; it only takes its tail with it.
+ */
 export function drawStop(engine) {
-  const live = engine.active().length;
+  const live = engine.active().filter(({ voice }) => !voice.fading).length;
   refs.btnStop.disabled = live === 0;
   refs.btnStop.setAttribute(
     'aria-label',

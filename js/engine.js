@@ -356,6 +356,7 @@ export class Engine {
       voice.fading = true;
       this._ramp(voice.gain, FLOOR, seconds);
       voice.stopTimer = setTimeout(settle, seconds * 1000 + 30);
+      this.onchange();
     } else {
       this._set(voice.gain, FLOOR);
       settle();
