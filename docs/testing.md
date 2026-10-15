@@ -25,7 +25,7 @@ kept on failure) as the `playwright-report` artifact.
 
 | Piece | What it does |
 | --- | --- |
-| `playwright.config.js` | Projects `desktop` (Desktop Chrome) and `phone` (Pixel 7, 412px wide, so *narrow*). Fully parallel; one retry on CI. Chromium runs with `--autoplay-policy=no-user-gesture-required`. |
+| `playwright.config.js` | Projects `desktop` (Desktop Chrome) and `phone` (Pixel 7, 412px wide, so *narrow*). Fully parallel; one retry on CI, but `failOnFlakyTests` fails a run whose test passed only on its retry. Chromium runs with `--autoplay-policy=no-user-gesture-required`. |
 | `e2e/serve.js` | A dependency-free static server that answers byte-range requests, sends `Cache-Control: no-cache`, and allows CORS. |
 | `e2e/helpers.js` | The `test` and `expect` every spec imports, and the helpers below. |
 
@@ -97,10 +97,11 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 
 | Spec | Covers |
 | --- | --- |
-| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades, each second-tap mode, tapping back on during a fade out, solo, priming a big board, start and stop points, a pad stopped while starting, keys (held, and a pad's own), cross-origin sound. |
-| `edit.spec.js` | Building a board: edit mode, the pad sheet (name, level, fades, gel, kept after a reload), Board settings (rows and columns, growing and shrinking), saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), the keyboard in edit mode. |
+| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades, each second-tap mode (layering up to ×3, and a hit layering by default), tapping back on during a fade out, solo, priming a big board, start and stop points, both kinds of loop, a pad stopped while starting, keys (held, a pad's own, after the volume or a button has the focus), cross-origin sound. |
+| `edit.spec.js` | Building a board: edit mode, the pad sheet (name, level, fades, gel, kept after a reload), Board settings (rows and columns, growing and shrinking), saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), the keyboard in edit mode, hearing a sound from the tree. |
+| `kept.spec.js` | Coming back to it: the kept copies of picked sounds after a reload and offline, a folder handle that comes back by itself, Reconnect, and a pad whose sound is missing until it is added. |
 | `offline.spec.js` | The service worker: reload with the network off, wifi that never answers, a server error, the board's own fonts. |
-| `drag.spec.js` | Moving pads in edit mode: by mouse on `desktop`, by a resting finger on `phone` (each `describe` skips the other project). Swapping, moving to an empty place, taking a pad off, and a press or a quick swipe that is not a drag. |
+| `drag.spec.js` | Moving pads in edit mode: by mouse on `desktop`, by a resting finger on `phone` (each `describe` skips the other project). Swapping, moving to an empty place, taking a pad off, and a press or a quick swipe that is not a drag; on `desktop`, a sound dragged from the tree onto an empty or a filled pad. |
 
 What is not covered yet is listed in [status.md](status.md#test-coverage).
 
@@ -109,5 +110,9 @@ What is not covered yet is listed in [status.md](status.md#test-coverage).
 - Chromium only: Safari and Firefox behaviour (iOS gesture rules, no folder
   picker) is not exercised. Check it by hand on a device when a change touches
   `engine.wake`, pickers or touch handling.
-- The File System Access API (handles, Reconnect) cannot be driven from a test.
+- The File System Access pickers cannot be answered from a test. `kept.spec.js`
+  stands in for a folder picked on disk with a real handle from the browser's
+  private file system (`navigator.storage.getDirectory()`), and makes the
+  browser ask for permission again by replacing `queryPermission` and
+  `requestPermission` on `FileSystemHandle.prototype`.
 - Audio is not listened to: "playing" means the pad shows `pad--playing`.

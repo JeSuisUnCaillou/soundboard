@@ -13,7 +13,10 @@ export default defineConfig({
   testDir: 'e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
+  // One retry on CI keeps a trace of the second run, but a test that passes
+  // only on its retry still fails the run: a flake is a bug to find.
   retries: process.env.CI ? 1 : 0,
+  failOnFlakyTests: !!process.env.CI,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: `http://localhost:${PORT}`,

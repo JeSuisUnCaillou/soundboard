@@ -82,15 +82,18 @@ async function setUpPad(page, title, fields) {
 
 test('Stop greys out as soon as everything is fading out', async ({ page }) => {
   await openBoard(page);
+  // Fades longer than an assertion waits: passing proves the button did not
+  // wait for them, however slow the machine.
+  await setUpPad(page, 'Crickets ambiance', { padFadeOut: '20' });
+  await setUpPad(page, 'Sexy', { padFadeOut: '20' });
   const crickets = pad(page, 'Crickets ambiance');
   const sexy = pad(page, 'Sexy');
   await crickets.click();
   await sexy.click();
   await expect(page.locator('#grid .pad--playing')).toHaveCount(2);
 
-  // The fade out takes 1.5 s; the button must not wait for it.
   await page.locator('#btnStop').click();
-  await expect(page.locator('#btnStop')).toBeDisabled({ timeout: 500 });
+  await expect(page.locator('#btnStop')).toBeDisabled();
   await expect(page.locator('#grid .pad--playing')).toHaveCount(0);
 });
 
@@ -106,9 +109,8 @@ test('a pad tapped while it fades out starts again, and keeps playing', async ({
   await crickets.click();
   await expect(crickets).toHaveClass(/pad--playing/);
   await expect(page.locator('#btnStop')).toBeEnabled();
-  // Well past the end of the fade it interrupted, it is still running.
-  await expect(crickets.locator('.pad__time')).toHaveText('-0:23', { timeout: 6000 });
-  await expect(crickets).toHaveClass(/pad--playing/);
+  // Well past the end of the 1.5 s fade it interrupted, it is still running.
+  await expectStillPlayingAfter(page, crickets, 3000);
 });
 
 test('a pad tapped after Stop, during the fade, starts again', async ({ page }) => {
@@ -283,6 +285,20 @@ test('a looping pad with a stop point and a fade out goes round, not out', async
   await expect(crickets).not.toHaveClass(/pad--playing/);
 });
 
+test('a looping pad with no start or stop point goes round when its file ends', async ({ page }) => {
+  await openBoard(page);
+  // The gunshot lasts 2.9 s; with nothing trimmed, the file loops by itself.
+  await setUpPad(page, 'Gunshot', { padLoop: true });
+  const gunshot = pad(page, 'Gunshot');
+
+  await gunshot.click();
+  await expect(gunshot).toHaveClass(/pad--playing/);
+  await expectStillPlayingAfter(page, gunshot, 4500);
+
+  await page.locator('#btnStop').click();
+  await expect(gunshot).not.toHaveClass(/pad--playing/);
+});
+
 test('a looping pad with a start point goes round when its file ends', async ({ page }) => {
   await openBoard(page);
   // The gunshot lasts 2.9 s; looping from 0.2 s means looping by hand.
@@ -296,6 +312,31 @@ test('a looping pad with a start point goes round when its file ends', async ({ 
   // A sound this short layers on a tap, so Stop is what ends it.
   await page.locator('#btnStop').click();
   await expect(gunshot).not.toHaveClass(/pad--playing/);
+});
+
+test('the keys still work after a button is clicked, and Space does not press it again', async ({ page }) => {
+  await openBoard(page);
+  const crickets = pad(page, 'Crickets ambiance');
+  const key = (await crickets.locator('.pad__key').textContent()).trim();
+
+  // Into edit mode and out again: the focus stays on the button, as it does
+  // under a mouse.
+  const edit = page.locator('#btnEdit');
+  await edit.click();
+  await edit.click();
+  await expect(edit).toHaveAttribute('aria-pressed', 'false');
+  await expect(edit).toBeFocused();
+
+  await page.keyboard.press(key);
+  await expect(crickets).toHaveClass(/pad--playing/);
+  await page.keyboard.press(' ');
+  await expect(crickets).not.toHaveClass(/pad--playing/);
+  await expect(edit).toHaveAttribute('aria-pressed', 'false');
+
+  await page.keyboard.press(key);
+  await expect(crickets).toHaveClass(/pad--playing/);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#grid .pad--playing')).toHaveCount(0);
 });
 
 test('holding a pad’s key is one tap', async ({ page }) => {
@@ -479,10 +520,25 @@ test.describe('a second tap', () => {
     await crickets.click();
     await expect(crickets).toHaveClass(/pad--playing/);
     await expect(crickets.locator('.pad__stack')).toHaveText('×2');
+    await crickets.click();
+    await expect(crickets.locator('.pad__stack')).toHaveText('×3');
 
     await page.locator('#btnStop').click();
     await expect(crickets).not.toHaveClass(/pad--playing/);
     await expect(crickets.locator('.pad__stack')).toHaveCount(0);
+  });
+
+  test('layers a short sound over itself without being told to', async ({ page }) => {
+    await openBoard(page);
+    const gunshot = pad(page, 'Gunshot');
+
+    await gunshot.click();
+    await expect(gunshot).toHaveClass(/pad--playing/);
+    await gunshot.click();
+    await expect(gunshot.locator('.pad__stack')).toHaveText('×2');
+    // Each copy runs its course and the pad goes quiet by itself.
+    await expect(gunshot).not.toHaveClass(/pad--playing/, { timeout: 8000 });
+    await expect(gunshot.locator('.pad__stack')).toHaveCount(0);
   });
 
   test('does nothing', async ({ page }) => {

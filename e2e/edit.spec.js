@@ -214,6 +214,65 @@ test('a pad is set up, and a sound heard and put on a pad, from the keyboard', a
   await expect(pad(page, 'Crickets ambiance')).toHaveCount(2);
 });
 
+test('a sound in the folder is heard from its row, and a second click stops it', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+  await page.locator('#lib .tree__name', { hasText: 'default' }).click();
+  const row = page.locator('#lib .lib__item', { hasText: 'crickets' });
+
+  await row.locator('.lib__play').click();
+  await expect(row).toHaveClass(/lib__item--playing/);
+  // A listen is not part of the show: no pad lights up, and nothing is left to stop.
+  await expect(page.locator('#grid .pad--playing')).toHaveCount(0);
+
+  await row.locator('.lib__play').click();
+  await expect(row).not.toHaveClass(/lib__item--playing/);
+
+  // Another sound takes over from the one being heard.
+  const sexy = page.locator('#lib .lib__item', { hasText: 'sexy' });
+  await row.locator('.lib__play').click();
+  await expect(row).toHaveClass(/lib__item--playing/);
+  await sexy.locator('.lib__play').click();
+  await expect(sexy).toHaveClass(/lib__item--playing/);
+  await expect(row).not.toHaveClass(/lib__item--playing/);
+});
+
+test('typing in the filter narrows the sounds to the ones that match, and clearing it brings them back', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+  const filter = page.locator('#libFilter');
+  const rows = page.locator('#lib .lib__item');
+  await expect(rows).toHaveCount(BUNDLED_TITLES.length);
+
+  // Part of a name, in any case: the folder is flattened to what matches.
+  await filter.fill('CRICK');
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toBeVisible();
+  await expect(rows.first()).toContainText('default/crickets ambiance.wav');
+
+  // The folder is part of each sound's path, so it matches all of them.
+  await filter.fill('default/');
+  await expect(rows).toHaveCount(BUNDLED_TITLES.length);
+
+  await filter.fill('nothing like it');
+  await expect(rows).toHaveCount(0);
+  await expect(page.locator('#libEmpty')).toHaveText('No sound here matches that.');
+
+  // The filter is still there after a reload.
+  await filter.fill('sex');
+  await page.reload();
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(BUNDLED_TITLES.length);
+  await showSounds(page);
+  await expect(filter).toHaveValue('sex');
+  await expect(rows).toHaveCount(1);
+
+  await filter.fill('');
+  await expect(rows).toHaveCount(BUNDLED_TITLES.length);
+  await expect(page.locator('#libEmpty')).toHaveText('');
+});
+
 test('Enter saves the pad sheet from the name, and presses whatever button has the focus', async ({ page }) => {
   await openBoard(page);
   await page.locator('#btnEdit').click();
