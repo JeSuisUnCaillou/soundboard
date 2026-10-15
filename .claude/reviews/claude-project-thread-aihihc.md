@@ -46,4 +46,12 @@ Head: d434a03
 - bugs: no finding (left out as low-confidence: on a very slow runner the debounce could fire before the reload, so the new tests could pass without the fix; they cannot fail with it).
 - architect: no finding.
 
-Reviewed head: d434a031f230b54bf98539099bea7366577ffa72
+
+# Pass 7
+
+Head: 195ea09 (main's twelve-sound first board merged; tests adapted to it).
+
+- bugs: "layers a short sound over itself without being told to" passed on the Default board's own Gunshot setting, not the length rule; test dropped in d17e249.
+- architect: makeRoom written in drag.spec.js and kept.spec.js with different meanings; one helper in helpers.js, in d17e249. main's inline copies in edit.spec.js left as they predate the branch.
+
+Reviewed head: d17e249b3ef492de4dc978db3d509ab5c9239d73
