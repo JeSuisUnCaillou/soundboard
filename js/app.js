@@ -17,10 +17,6 @@ import {
 
 const PATH_TYPE = 'application/x-soundboard-path';
 
-// How many of a folder's sounds land on the board by themselves. The rest are
-// in the panel, to be put where the operator wants them.
-const AUTO_PLACE = 10;
-
 // Below this width the sounds list slides over the pads instead of sitting beside them.
 const NARROW = window.matchMedia('(max-width: 900px)');
 
@@ -424,7 +420,7 @@ class App {
     refs.pickerBlurb.textContent = first
       ? "Choose the folder that holds this show's audio, or pick the sounds one by one. They are read "
         + 'straight off your disk and stay there — nothing is uploaded, and the board works with the network off.'
-      : 'Whatever you add joins the sounds already open, and lands on the first free pads.';
+      : 'Whatever you add joins the sounds already open, under Sounds, ready to put on a pad.';
     refs.pickerKeys.hidden = !first;
     refs.btnReopen.hidden = !this.pendingHandles;
     refs.pickerNote.textContent = CAN_PERSIST
@@ -447,7 +443,11 @@ class App {
     }
   }
 
-  /** Sounds have arrived: make sure there is a board, and put them on it. */
+  /**
+   * Sounds have arrived: make sure there is a board, and keep them. They wait
+   * in the tree until the operator puts them somewhere — the board is theirs,
+   * empty or not.
+   */
   async absorb(added, { announce = false } = {}) {
     if (!this.board) {
       const id = slug(this.library.rootName);
@@ -457,14 +457,6 @@ class App {
         || newBoard({ id, cols: await store.getMeta('cols'), rows: await store.getMeta('rows') }));
       await store.setMeta('last', this.board.id);
     }
-
-    // The first sounds to arrive lay themselves out, so there is a board to
-    // look at. After that the board belongs to the operator: anything added
-    // waits in the tree until they put it somewhere.
-    const startedEmpty = filled(this.board).length === 0;
-    this.waiting = 0;
-    const placed = startedEmpty ? await this.place(added) : 0;
-    const waiting = startedEmpty ? this.waiting : added.length;
 
     // Places waiting to be reconnected are still this board's places: adding a
     // sound while they are disconnected must not forget them.
@@ -481,35 +473,22 @@ class App {
     this.keepSounds();
 
     const missing = filled(this.board).filter(({ pad }) => !this.library.has(pad.file)).length;
-    if (placed && waiting) {
-      toast(`${placed} sound${placed === 1 ? '' : 's'} on the board. The other ${waiting} are under Sounds, `
-        + 'in edit mode, ready to put where you want them.');
-    } else if (placed) {
-      toast(`${placed} sound${placed === 1 ? '' : 's'} added to the board.`);
-    } else if (waiting) {
-      toast(`${waiting} sound${waiting === 1 ? '' : 's'} added, under Sounds in edit mode. `
+    if (added.length) {
+      toast(`${added.length} sound${added.length === 1 ? '' : 's'} added, under Sounds in edit mode. `
         + 'The board is left as it is.');
     } else if (announce) toast('Those sounds are already loaded.');
     else if (missing) toast(`${missing} pad${missing === 1 ? '' : 's'} point at sounds that are not open.`);
     say(`${this.library.entries.size} sounds open`);
   }
 
-  /**
-   * The first few new sounds go on the first free pads, in the order they were
-   * found. A folder of two hundred effects is a library, not a board.
-   */
+  /** Sounds on the first free pads, in order, for as many as there are pads. */
   async place(paths) {
     const onBoard = new Set(filled(this.board).map(({ pad }) => pad.file));
     const taking = [];
     for (const path of paths) {
       if (onBoard.has(path)) continue;
-      const i = taking.length < AUTO_PLACE
-        ? this.board.pads.findIndex((pad, at) => (!pad || !pad.file) && !taking.some((t) => t.i === at))
-        : -1;
-      if (i === -1) {                       // the board is full; the rest wait
-        this.waiting = (this.waiting || 0) + 1;
-        continue;
-      }
+      const i = this.board.pads.findIndex((pad, at) => (!pad || !pad.file) && !taking.some((t) => t.i === at));
+      if (i === -1) break;                  // the board is full
       taking.push({ i, path });
       onBoard.add(path);
     }

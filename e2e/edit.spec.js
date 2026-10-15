@@ -70,3 +70,30 @@ test('sounds added from the file picker land in the folder and can go on a pad',
   await row.locator('.lib__add').click();
   await expect(pad(page, 'Door slam')).toHaveCount(1);
 });
+
+test('sounds added to an emptied board wait under Sounds instead of filling pads', async ({ page }) => {
+  await page.addInitScript(() => {
+    delete window.showOpenFilePicker;
+    delete window.showDirectoryPicker;
+  });
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  const empty = page.locator('#btnEmpty');
+  await empty.click();
+  await empty.click();
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(0);
+
+  await showSounds(page);
+  await page.locator('#btnAdd').click();
+  const chooser = page.waitForEvent('filechooser');
+  await page.locator('#btnAddFiles').click();
+  await (await chooser).setFiles([
+    { name: 'door slam.wav', mimeType: 'audio/wav', buffer: silentWav() },
+    { name: 'phone ring.wav', mimeType: 'audio/wav', buffer: silentWav() },
+  ]);
+
+  await expect(page.locator('#toast')).toHaveText('2 sounds added, under Sounds in edit mode. The board is left as it is.');
+  await expect(page.locator('#lib .lib__item', { hasText: 'door slam' })).toBeVisible();
+  await expect(page.locator('#lib .lib__item', { hasText: 'phone ring' })).toBeVisible();
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(0);
+});
