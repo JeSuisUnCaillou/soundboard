@@ -14,8 +14,11 @@ show the same scenario behaving correctly with the change.
 
 How:
 
-1. Serve the folder: `python3 -m http.server 8765` (it must be served over
-   `http://localhost`, not opened from the file system).
+1. Serve the folder over `http://localhost` (not from the file system) with a
+   server that honours HTTP `Range` requests — a few lines of Node with
+   `fs.createReadStream(file, { start, end })` and a `206` answer will do.
+   `python3 -m http.server` does not support `Range`, and under Playwright a
+   sound then sometimes never loads, so a tap looks ignored when the app is fine.
 2. Drive it with Playwright in Chromium
    (`executablePath: '/opt/pw-browsers/chromium'`, launched with
    `--autoplay-policy=no-user-gesture-required` so sounds play without a

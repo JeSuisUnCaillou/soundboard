@@ -122,7 +122,10 @@ export class Engine {
   /** What tapping the pad does, given what it is doing now. */
   async fire(i, pad) {
     const ch = this.channels.get(i);
-    const live = (ch && ch.state !== 'idle') || this._extrasFor(i).length > 0;
+    // A sound fading out has already been stopped: tapping it again starts it
+    // afresh rather than stopping it a second time.
+    const live =
+      (ch && ch.state !== 'idle' && !ch.fading) || this._extrasFor(i).some((v) => !v.fading);
     if (!live) return this.start(i, pad);
 
     switch (pad.tap) {
