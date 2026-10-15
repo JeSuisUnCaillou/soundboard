@@ -22,4 +22,12 @@ Head reviewed: dbeaa75ba62eb124f061b27846971b8b079b374e
 - bugs: no findings; each behaviour change has a test that fails without it.
 - architect: no findings.
 
-Reviewed head: dbeaa75ba62eb124f061b27846971b8b079b374e
+
+# Pass 3
+
+Head reviewed: 1dac2014e2fc62cf88f2dd4cf5a650f10923cc12 (after merging main: pencil buttons beside pads, board-file test)
+
+- bugs: boards saved before this branch have no `settled`, so a hit pad an operator set to layer on purpose is treated as length-set, and a cue dropped on it goes back to fades it out — left to the user: an old board cannot tell an operator's choice from the length's, and treating every old pad as settled would keep the #23 bug on every existing board.
+- architect: no findings.
+
+Reviewed head: 1dac2014e2fc62cf88f2dd4cf5a650f10923cc12
