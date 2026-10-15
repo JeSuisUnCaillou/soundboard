@@ -940,7 +940,7 @@ class App {
   }
 
   primeAll() {
-    filled(this.board).slice(0, 48).forEach(({ i, pad }) => this.engine.prime(i, pad));
+    filled(this.board).forEach(({ i, pad }) => this.engine.prime(i, pad));
   }
 
   /** Read the length of each sound once, for the pads, three at a time. */
