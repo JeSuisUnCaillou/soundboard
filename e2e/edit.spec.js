@@ -324,6 +324,19 @@ test('a cue dropped on a hit’s pad fades out on a second tap, as a cue does', 
   await expect(page.locator('#padTap')).toHaveValue('fadeout');
 });
 
+test('a hit dropped on a cue’s pad takes back the blue the cue’s length gave it', async ({ page }) => {
+  test.skip(isNarrow(page), 'On a phone the tree covers the board, so nothing is dragged onto a pad.');
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+  await page.locator('#lib .tree__name', { hasText: 'default' }).click();
+  await page.locator('#lib .lib__item', { hasText: 'gunshot' }).dragTo(pad(page, 'Crickets ambiance'));
+  await expect(pad(page, 'Crickets ambiance').locator('.pad__time')).toHaveText('0:02');
+
+  await pencil(page, 'Crickets ambiance').click();
+  await expect(page.locator('#padGels .gel[aria-label^="Daylight Blue"]')).toHaveAttribute('aria-pressed', 'true');
+});
+
 test('a pad saved from its sheet keeps its second tap when a cue is dropped on it', async ({ page }) => {
   test.skip(isNarrow(page), 'On a phone the tree covers the board, so nothing is dragged onto a pad.');
   await page.addInitScript(() => {

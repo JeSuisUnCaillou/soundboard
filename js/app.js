@@ -473,13 +473,13 @@ class App {
         cols: await this.remembered(store.getMeta('cols')),
         rows: await this.remembered(store.getMeta('rows')),
       }));
-      await this.remembered(store.setMeta('last', this.board.id));
+      await this.write(() => store.setMeta('last', this.board.id));
     }
 
     // Places waiting to be reconnected are still this board's places: adding a
     // sound while they are disconnected must not forget them.
     const places = [...(this.pendingHandles || []), ...this.library.handles];
-    if (places.length) await this.remembered(store.saveHandles(this.board.id, places));
+    if (places.length) await this.write(() => store.saveHandles(this.board.id, places));
     this.pendingHandles = null;
     if (refs.picker.open) refs.picker.close();
 
@@ -587,7 +587,7 @@ class App {
   /** A board to edit when there is none: empty, and saved from the start. */
   blankBoard() {
     this.useBoard(newBoard({ id: slug(this.library.rootName || 'board') }));
-    store.setMeta('last', this.board.id).catch(() => {});
+    this.write(() => store.setMeta('last', this.board.id));
     this.saveNow();
   }
 
@@ -602,7 +602,7 @@ class App {
       cols: await this.remembered(store.getMeta('cols')),
       rows: await this.remembered(store.getMeta('rows')),
     }));
-    await this.remembered(store.setMeta('last', this.board.id));
+    await this.write(() => store.setMeta('last', this.board.id));
     await this.place(bundledPaths());
     this.redraw();
     this.saveNow();
@@ -632,7 +632,7 @@ class App {
   /**
    * What the board reads from or writes to storage, or the fallback if the
    * browser will not keep anything: the show goes on without it, and the
-   * operator is told once that the next launch starts afresh.
+   * operator is told once that nothing done now will be kept.
    */
   async remembered(promise, fallback = undefined) {
     try {
@@ -641,10 +641,20 @@ class App {
       console.error(err);
       if (!this.warnedForgetful) {
         this.warnedForgetful = true;
-        toast('This browser is not keeping the board, so the next launch starts afresh.');
+        toast("The browser's storage is not answering, so nothing done now will be kept.");
       }
       return fallback;
     }
+  }
+
+  /**
+   * Write to storage, unless a read failed this session: the board on screen
+   * may then be a stand-in for the one that could not be read, and writing it
+   * would put the stand-in in that board's place.
+   */
+  write(save) {
+    if (this.warnedForgetful) return Promise.resolve();
+    return save().catch((err) => console.error(err));
   }
 
   useBoard(board) {
@@ -662,7 +672,7 @@ class App {
    * ones a show needs; copies of sounds that have gone are dropped.
    */
   async keepSounds() {
-    if (!this.board || this.keeping || this.outOfRoom) return;
+    if (!this.board || this.keeping || this.outOfRoom || this.warnedForgetful) return;
     this.keeping = true;
     const id = this.board.id;
     try {
@@ -781,11 +791,11 @@ class App {
     let lost = 0;
     if (cols !== this.board.cols) {
       lost += setCols(this.board, cols);
-      store.setMeta('cols', this.board.cols).catch(() => {});
+      this.write(() => store.setMeta('cols', this.board.cols));
     }
     if (rows !== this.board.rows) {
       lost += setRows(this.board, rows);
-      store.setMeta('rows', this.board.rows).catch(() => {});
+      this.write(() => store.setMeta('rows', this.board.rows));
     }
     if (lost) {
       this.engine.reset();
@@ -1040,7 +1050,7 @@ class App {
 
   saveNow() {
     clearTimeout(this.saveTimer);
-    if (this.board) store.saveBoard(structuredClone(this.board)).catch(() => {});
+    if (this.board) this.write(() => store.saveBoard(structuredClone(this.board)));
   }
 }
 

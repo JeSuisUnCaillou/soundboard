@@ -194,8 +194,9 @@ maps a pencil back to its pad for drags and drops.
 **Saving**: `queueSave()` debounces 500 ms; `saveNow()` on structural changes,
 `beforeunload`, `pagehide` and the page going hidden (a phone may close a
 hidden page with no unload event). Every storage call at launch goes through
-`remembered()`: if IndexedDB fails, the board runs from memory and says once
-that the next launch starts afresh. `keepSounds()` copies every loaded sound
+`remembered()`: if IndexedDB fails, the board runs from memory, says once
+that nothing done now will be kept, and `write()` stores nothing more that
+session, so a stand-in board never replaces the one that could not be read. `keepSounds()` copies every loaded sound
 (pads first) into IndexedDB, skipping bundled ones and unchanged ones, deleting
 copies of sounds no longer loaded; on `QuotaExceededError` it stops trying for the session.
 

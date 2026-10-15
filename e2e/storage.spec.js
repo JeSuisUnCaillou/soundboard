@@ -2,16 +2,69 @@
 
 import { test, expect, openBoard, pad, pencil, showSounds } from './helpers.js';
 
-test('a browser that keeps nothing still opens the board, and says the next launch starts afresh', async ({ page }) => {
+test('a browser that keeps nothing still opens the board, and says nothing done now will be kept', async ({ page }) => {
   await page.addInitScript(() => {
     indexedDB.open = () => {
       throw new DOMException('Storage is turned off.', 'UnknownError');
     };
   });
   await openBoard(page);
-  await expect(page.locator('#toast')).toHaveText('This browser is not keeping the board, so the next launch starts afresh.');
+  await expect(page.locator('#toast')).toHaveText("The browser's storage is not answering, so nothing done now will be kept.");
   await pad(page, 'Crickets ambiance').click();
   await expect(pad(page, 'Crickets ambiance')).toHaveClass(/pad--playing/);
+});
+
+test('a launch whose storage fails once leaves the saved board as it was for the next', async ({ page }) => {
+  // When asked to, the next launch's first read from storage fails.
+  await page.addInitScript(() => {
+    if (!localStorage.getItem('failOnce')) return;
+    localStorage.removeItem('failOnce');
+    const get = IDBObjectStore.prototype.get;
+    let first = true;
+    IDBObjectStore.prototype.get = function (...args) {
+      if (first) {
+        first = false;
+        throw new DOMException('Storage is busy.', 'UnknownError');
+      }
+      return get.apply(this, args);
+    };
+  });
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await pencil(page, 'Gunshot').click();
+  await page.locator('#padName').fill('Pistol');
+  await page.locator('#padSave').click();
+  await expect(pad(page, 'Pistol')).toBeVisible();
+  await page.reload();
+  await expect(pad(page, 'Pistol')).toBeVisible();
+
+  // That launch cannot read the board, and shows a board to start with.
+  await page.evaluate(() => localStorage.setItem('failOnce', '1'));
+  await page.reload();
+  await expect(page.locator('#toast')).toHaveText("The browser's storage is not answering, so nothing done now will be kept.");
+  await expect(pad(page, 'Gunshot')).toBeVisible();
+
+  // The one after finds the board as the operator left it.
+  await page.reload();
+  await expect(pad(page, 'Pistol')).toBeVisible();
+});
+
+test('a kept folder the browser cannot even ask about is offered for reconnecting', async ({ page }) => {
+  await openBoard(page);
+  // A stored place that no longer answers questions about its permission.
+  await page.evaluate(() => new Promise((resolve, reject) => {
+    const req = indexedDB.open('soundboard');
+    req.onsuccess = () => {
+      const tx = req.result.transaction('handles', 'readwrite');
+      tx.objectStore('handles').put([{ kind: 'directory', name: 'Show' }], 'default-board');
+      tx.oncomplete = () => { req.result.close(); resolve(); };
+      tx.onabort = () => reject(tx.error);
+    };
+    req.onerror = () => reject(req.error);
+  }));
+  await page.reload();
+  await expect(pad(page, 'Gunshot')).toBeVisible();
+  await expect(page.locator('#btnReconnect')).toHaveText('Reconnect “Show”');
 });
 
 test('a change is kept when the page is hidden and then closed without beforeunload, as on a phone', async ({ page }) => {

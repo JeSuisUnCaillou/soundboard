@@ -27,12 +27,7 @@ function open() {
       resolve(req.result);
     };
     req.onerror = () => reject(req.error);
-    // Blocked by another tab holding an older version: it closes on the
-    // versionchange it has just been sent, and the open goes through then.
-  });
-  // A failure is not kept: the next call tries again.
-  dbPromise.catch(() => {
-    dbPromise = null;
+    req.onblocked = () => reject(new Error('the board is open in another tab — close it and reload'));
   });
   return dbPromise;
 }

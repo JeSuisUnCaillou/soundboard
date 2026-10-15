@@ -95,7 +95,7 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 | `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades, each second-tap mode, tapping back on during a fade out, solo, priming a big board, start and stop points, a pad stopped while starting, keys (held, and a pad's own), cross-origin sound. |
 | `edit.spec.js` | Building a board: edit mode, the pad sheet (name, level, fades, gel, kept after a reload), Board settings (rows and columns, growing and shrinking), saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), dropping a sound on a pad, a pad set up before its sound is open, the keyboard in edit mode. |
 | `offline.spec.js` | The service worker: reload with the network off, wifi that never answers, a server error, the board's own fonts. |
-| `storage.spec.js` | What is kept between launches: a browser that keeps nothing, saving when the page is hidden, clearing an abandoned board, the wake lock, a picker dismissed without a cancel event. |
+| `storage.spec.js` | What is kept between launches: a browser that keeps nothing, a launch whose storage fails once, a kept folder that cannot be asked about, saving when the page is hidden, clearing an abandoned board, the wake lock, a picker dismissed without a cancel event. |
 
 What is not covered yet is listed in [status.md](status.md#test-coverage).
 
