@@ -37,6 +37,10 @@ Not covered yet:
 
 ## Known loose ends
 
+- Sounds no longer lay themselves out on the board, except the bundled ones on
+  a first launch. `App.absorb` in `js/app.js` still places up to `AUTO_PLACE`
+  (10) added sounds when the board has no filled pad, which only happens after
+  **Empty the board**.
 - Offline, the Google Fonts stylesheet is not available (the service worker
   only caches same-origin files), so the board falls back to system fonts.
 - `sw.js` precaches `icon.svg` but not the PNG icons.
