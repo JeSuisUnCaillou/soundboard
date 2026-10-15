@@ -26,21 +26,24 @@ other work (`CLAUDE.md` § Track work in GitHub issues).
    `subagent_type: "general-purpose"`, `model: "sonnet"`, in the foreground.
    Each prompt is the common part, then its own, then the two lists of step 2
    under "Already known; raise one again only with a fact it did not
-   consider".
+   consider". Done when both have reported.
 
 4. **Settle each finding yourself** at the code it cites: confirmed, rejected
    with one line of why, or a choice the owner makes (a rule of
-   `docs/decisions.md`, a behaviour the README does not settle).
+   `docs/decisions.md`, a behaviour the README does not settle). Done when
+   every finding has one of the three.
 
 5. **File each confirmed finding** as an issue labelled `architecture`: the
    title says what is wrong in plain words; the body gives `file:line`, the
    case where it bites, the remedy and its size. A finding that matches an
    open issue gets a comment there if it grew, else nothing. A gap listed in
-   `docs/status.md` is named in the issue, for the PR that fixes it.
+   `docs/status.md` is named in the issue, for the PR that fixes it. Done
+   when every confirmed finding has its issue or its comment.
 
 6. **Report** in one comment on the `periodic-review` issue (in the thread if
    none): the issues filed, the choices left to the owner, and every rejected
-   finding with its reason, which the next review reads at step 2.
+   finding with its reason, which the next review reads at step 2. Done when
+   the comment is posted.
 
 ## The reviewers
 
@@ -61,17 +64,13 @@ what a rule of docs/decisions.md settles on purpose. No finding is a valid
 answer.
 ```
 
-**modules**:
+**modules**: the architect prompt of
+[`review-loop/reviewers.md`](../review-loop/reviewers.md#architect), with "the
+change" read as the whole codebase, then:
 
 ```
-Judge the code against docs/architecture.md § The files and the paragraph
-after it: what each file owns and which way the imports point (app.js is the
-only module that decides; ui.js draws; engine.js and library.js know nothing
-of the DOM; model.js is pure functions). Find: a decision outside app.js; an
-import against that direction; a module reaching into another's state; one
-concept split across modules or two in one function; a function or file grown
-past what one reader holds; logic written twice; an export nothing imports;
-a branch no caller reaches. Also docs/decisions.md § Technical.
+Also: a function or file grown past what one reader holds; logic written
+twice; an export nothing imports.
 ```
 
 **docs and tests**:

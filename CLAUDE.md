@@ -143,15 +143,7 @@ Merge with a squash, so the title ends with the pull request number, `… (#n)`.
 
 ## Periodic review
 
-Every 20 pull requests merged into `main`,
-`.github/workflows/periodic-review.yml` opens an issue labelled
-`periodic-review` and assigns it to the owner. A session that takes it up
-runs, in order:
-
-1. `Skill(skill: "harness-engineer")`, the retrospective pass; its PR waits
-   for the owner.
-2. `Skill(skill: "architecture-review")`, which reviews the whole codebase and
-   files what it finds as issues.
-
-Then it comments on the issue with the harness PR and the issues filed, and
-closes it. The next count starts from that issue.
+An open issue labelled `periodic-review` (opened every 20 merges, see
+[docs/deployment.md](docs/deployment.md#workflows)) is taken up by running
+`Skill(skill: "harness-engineer")`, then `Skill(skill: "architecture-review")`,
+then commenting on it with the harness PR and the issues filed, and closing it.

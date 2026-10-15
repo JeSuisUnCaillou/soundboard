@@ -23,7 +23,7 @@ None due: the `Check:` issues of the earlier passes are dated 2026-10-22.
 | PRs merged into `main`, all time | 14 (#1 to #50) | — |
 | harness passes run without being asked | 0 of 2 | first |
 | whole-codebase reviews in the repository | 0 (the one of 2026-10-15 lives outside it, in the project's files) | first |
-| harness shape (`shape.py`): files over a threshold, description characters, duplicates | 0, 675, 0 before; see the PR | 0, 675, 0 |
+| harness shape (`shape.py`): files over a threshold, description characters, duplicates | 0, 957 (was 675), 0 after | 0, 675, 0 |
 
 ## How it is done today, and what that costs
 
@@ -66,7 +66,7 @@ and tests against the code), settled by the session, each confirmed finding
 filed as an issue labelled `architecture`, the rejected ones kept in a comment
 on the `periodic-review` issue so the next review does not raise them again.
 It changes no code: the fixes are ordinary issues the owner orders. A new
-skill costs its description on every turn (+~300 characters); it is paid for
+skill costs its description on every turn (+282 characters, `shape.py`); it is paid for
 by the request.
 **Expected impact**: `architecture` issues filed by a review that were already
 open or rejected before — baseline none, 2026-10-15 — expected 0 — check at
@@ -79,8 +79,9 @@ the second periodic review — if not: move the rejected lines into a file under
 **Pillar**: context
 **Evidence**: `CLAUDE.md` names neither review.
 **Remedy**: write — `CLAUDE.md` § Periodic review: what opens the issue, the
-two skills to run in order, how it closes. Eight lines; `CLAUDE.md` goes from
-142 to about 155, far under the 300 of `how-we-write.md`.
+two skills to run in order, how it closes; the trigger itself is described
+once, in `docs/deployment.md`. `CLAUDE.md` goes from 142 to 149 lines, far
+under the 300 of `how-we-write.md`.
 **Expected impact**: `periodic-review` issues closed with a harness PR and an
 architecture comment linked — baseline none — expected every one — check at
 the first periodic review — if not: put the two steps in the issue body itself,
