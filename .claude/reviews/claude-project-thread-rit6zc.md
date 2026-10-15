@@ -34,4 +34,9 @@ Head reviewed: 54f084a, after merging main (3 × 4 starting board, tap back on d
 
 Head reviewed: 4f7bb8e, after merging main again (pad settings and board size tests, #55). No finding.
 
-Reviewed head: 4f7bb8e37a3224a9bbdeefad6c4382a4d0fa5128
+
+# Pass 6
+
+Head reviewed: a8277d8, after merging main a third time (code conflicts in keepSounds and applySetup with main's storage-failure guard and write()). No finding.
+
+Reviewed head: a8277d8cdedb5a9f52cfd5588bb02b1871a8f4ae
