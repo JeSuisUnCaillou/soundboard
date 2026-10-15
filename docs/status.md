@@ -27,17 +27,16 @@ screen wake lock.
 | Changing columns in Board settings throws pads away or leaves sounds on the wrong pads | [#17](https://github.com/JeSuisUnCaillou/soundboard/issues/17) |
 | Pressing Reconnect during a show cuts every sound dead | [#18](https://github.com/JeSuisUnCaillou/soundboard/issues/18) |
 | Keeping copies of sounds can silently skip some | [#19](https://github.com/JeSuisUnCaillou/soundboard/issues/19) |
-| Dropping several files or folders at once in Chromium adds only the first | [#20](https://github.com/JeSuisUnCaillou/soundboard/issues/20) |
 | The service worker is slow on weak wifi and can cache error pages | [#21](https://github.com/JeSuisUnCaillou/soundboard/issues/21) |
 | Sounds in the tree and pad settings cannot be reached from the keyboard | [#22](https://github.com/JeSuisUnCaillou/soundboard/issues/22) |
 | Smaller fixes from the code review | [#23](https://github.com/JeSuisUnCaillou/soundboard/issues/23) |
 
 ## Test coverage
 
-21 tests, each run at desktop and phone size, all green. Covered: the first
+22 tests, each run at desktop and phone size, all green. Covered: the first
 launch, tapping, Stop, Escape, the master volume, fade and second-tap edge
 cases, stop points, a pad stopped while it is still starting, held keys, a cross-origin sound, edit mode, renaming a pad
-(with reload), emptying the board, adding sounds through the file input, and
+(with reload), emptying the board, adding sounds through the file input, dropping several sounds at once, and
 coming back offline.
 
 Not covered yet:

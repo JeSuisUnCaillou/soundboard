@@ -97,3 +97,42 @@ test('sounds added to an emptied board wait under Sounds instead of filling pads
   await expect(page.locator('#lib .lib__item', { hasText: 'phone ring' })).toBeVisible();
   await expect(page.locator('#grid .pad--filled')).toHaveCount(0);
 });
+
+test('dropping several sounds at once adds every one of them', async ({ page }) => {
+  // A real drop of files cannot be made from a test. This one stands in for
+  // Chromium's: each dropped item gives a real file handle, but only while the
+  // drop is being handled; asked for later, it gives nothing, as Chromium does.
+  await page.addInitScript(() => {
+    window.dropOpen = false;
+    DataTransferItem.prototype.getAsFileSystemHandle = function () {
+      if (!window.dropOpen) return Promise.resolve(null);
+      const file = this.getAsFile();
+      return (async () => {
+        const root = await navigator.storage.getDirectory();
+        const handle = await root.getFileHandle(file.name, { create: true });
+        const out = await handle.createWritable();
+        await out.write(file);
+        await out.close();
+        return handle;
+      })();
+    };
+  });
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+
+  const wav = silentWav().toString('base64');
+  await page.evaluate((data) => {
+    const bytes = Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
+    const dt = new DataTransfer();
+    for (const name of ['door slam.wav', 'phone ring.wav']) {
+      dt.items.add(new File([bytes], name, { type: 'audio/wav' }));
+    }
+    window.dropOpen = true;
+    document.body.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
+    window.dropOpen = false;
+  }, wav);
+
+  await expect(page.locator('#lib .lib__item', { hasText: 'door slam' })).toBeVisible();
+  await expect(page.locator('#lib .lib__item', { hasText: 'phone ring' })).toBeVisible();
+});

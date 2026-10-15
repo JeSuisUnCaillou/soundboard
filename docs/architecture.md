@@ -98,6 +98,10 @@ The library is additive: sources are added, never swapped. Each entry is
 | `dir` / `files` without handle | `<input type=file>` (with `webkitdirectory` for a folder), or a drop via `webkitGetAsEntry` | `File` | No; only through the *kept copies*. |
 | `cache` | At restore, from IndexedDB (`addCached`) | `File` made from the stored blob | Yes. |
 
+A drop is read in full before anything is awaited: Chromium empties the
+drop's items once its event is over, so every handle or entry is asked for
+first. Each dropped folder becomes a source of its own.
+
 Paths include the folder's own name (`Show/cue.wav`) so the tree shows it.
 Folders are walked to depth 6, skipping dotfiles, `__MACOSX` and
 `node_modules`; only names matching the `AUDIO` regex count.
