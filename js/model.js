@@ -8,6 +8,10 @@ import { DEFAULT_GEL } from './gels.js';
 // moved to Daylight Blue follow it rather than keeping a colour nobody picked.
 const OLD_DEFAULT_GEL = 'bastard-amber';
 
+// Bundled sounds that ship under a new name. A board saved with the old one
+// plays the same sound under its new name rather than a pad struck through.
+const RENAMED = new Map([['default/crickets ambiance.wav', 'default/crickets.mp3']]);
+
 export const BOARD_VERSION = 3;
 export const MAX_COLS = 12;
 export const MAX_ROWS = 12;
@@ -47,17 +51,35 @@ const LONG_GEL = 'moss';
  * A sound's length says what it probably is, which settles what the operator
  * would otherwise set by hand: a hit layers when it is tapped again and starts
  * at full level — faded in, a gunshot is not a gunshot — while a cue is green.
- * Only fields still at their untouched default move, and a length that could
- * not be read decides nothing.
+ * Only fields still at their untouched default move, a length that could not
+ * be read decides nothing, and a pad saved from its sheet is the operator's.
  */
 export function applyLengthDefaults(board, pad) {
-  if (!pad.duration) return;
+  if (!pad.duration || pad.settled) return;
   if (pad.duration < SHORT_SOUND) {
     if (pad.tap === 'fadeout') pad.tap = 'overlay';
     if (pad.fadeIn === board.defaults.fadeIn) pad.fadeIn = 0;
   } else if (pad.gel === DEFAULT_GEL) {
     pad.gel = LONG_GEL;
   }
+}
+
+/**
+ * A pad given a different sound keeps what the operator set on it. On a pad
+ * nobody has saved from its sheet, what the old sound's length set goes back
+ * to the board's default first, so a cue dropped on a former hit's pad fades
+ * out on a second tap, as a cue does.
+ */
+export function giveSound(board, pad, file, duration) {
+  const next = { ...pad, file, duration };
+  if (!pad.settled && pad.duration && pad.duration < SHORT_SOUND) {
+    if (next.tap === 'overlay') next.tap = 'fadeout';
+    if (next.fadeIn === 0) next.fadeIn = board.defaults.fadeIn;
+  } else if (!pad.settled && pad.duration && next.gel === LONG_GEL) {
+    next.gel = DEFAULT_GEL;
+  }
+  applyLengthDefaults(board, next);
+  return next;
 }
 
 // A new pad takes the board's defaults; what the sound is — a hit or a cue —
@@ -78,6 +100,7 @@ export function newPad(board, i, file) {
     solo: false,
     key: defaultKey(board, i),
     duration: 0,
+    settled: false,
   };
 }
 
@@ -96,12 +119,8 @@ export function fitPads(board) {
 }
 
 /** Re-wrap the same pads into a different shape. Returns how many fell off. */
-export function setCols(board, cols) {
+export function resize(board, cols, rows) {
   board.cols = clampInt(cols, 1, MAX_COLS);
-  return fitPads(board);
-}
-
-export function setRows(board, rows) {
   board.rows = clampInt(rows, 1, MAX_ROWS);
   return fitPads(board);
 }
@@ -187,7 +206,8 @@ export function migrate(raw, { id } = {}) {
 }
 
 function migratePad(board, i, raw, version) {
-  const pad = newPad(board, i, String(raw.file || ''));
+  const file = String(raw.file || '');
+  const pad = newPad(board, i, RENAMED.get(file) || file);
   pad.name = String(raw.name ?? pad.name).slice(0, 40);
   const inherited = version < 2 && raw.gel === OLD_DEFAULT_GEL ? DEFAULT_GEL : raw.gel;
   pad.gel = typeof inherited === 'string' ? inherited : pad.gel;
@@ -201,6 +221,7 @@ function migratePad(board, i, raw, version) {
   pad.solo = !!raw.solo;
   pad.key = typeof raw.key === 'string' ? raw.key.slice(0, 1).toLowerCase() : '';
   pad.duration = clampNum(raw.duration, 0, 1e5, 0);
+  pad.settled = !!raw.settled;
   return pad;
 }
 

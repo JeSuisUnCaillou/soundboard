@@ -25,8 +25,12 @@ export const test = base.extend({
 
 export { expect };
 
-/** The three sounds that ship with the board, as their pads name them. */
-export const BUNDLED_TITLES = ['Gunshot', 'Crickets ambiance', 'Sexy'];
+/** The sounds that ship with the board, as their pads name them. */
+export const BUNDLED_TITLES = [
+  'Gunshot', 'Explosion', 'Phone', 'Sting',
+  'Storm', 'Crickets', 'Birds',
+  'Suspense', 'Romance', 'Sad', 'Hero', 'Happy',
+];
 
 /** A pad on the board, found by the name it shows. */
 export function pad(page, title) {
@@ -40,6 +44,16 @@ export function pad(page, title) {
 export function pencil(page, title) {
   const name = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return page.getByRole('button', { name: new RegExp(`^Set up ${name}$`, 'i') });
+}
+
+/**
+ * The first board is full: take Sting, its fourth pad, off it so a sound can
+ * go on the board. Edit mode must be on.
+ */
+export async function makeRoom(page) {
+  await pencil(page, 'Sting').click();
+  await page.locator('#padClear').click();
+  await expect(page.locator('#grid .pad').nth(3)).toHaveClass(/pad--empty/);
 }
 
 /** Open the board fresh, and wait for the first launch to lay out its sounds. */

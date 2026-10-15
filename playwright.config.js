@@ -5,15 +5,14 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 4173;
 
-// Let tests see and route the service worker's own requests, as they do the
-// page's: that is how offline.spec.js makes the wifi weak.
-process.env.PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS = '1';
-
 export default defineConfig({
   testDir: 'e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
+  // One retry on CI keeps a trace of the second run, but a test that passes
+  // only on its retry still fails the run: a flake is a bug to find.
   retries: process.env.CI ? 1 : 0,
+  failOnFlakyTests: !!process.env.CI,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: `http://localhost:${PORT}`,

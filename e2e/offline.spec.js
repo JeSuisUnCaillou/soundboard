@@ -2,6 +2,14 @@
 
 import { test, expect, BUNDLED_TITLES, openBoard, pad } from './helpers.js';
 
+// Let context.route see and route the service worker's own requests, as it
+// does the page's: that is how these tests make the wifi weak. In a browser of
+// their own, since a worker seen this way crashes Chromium now and then once
+// its context is gone, taking down whatever test runs next (#78). Setting a
+// worker-scoped option gives this file its own worker process.
+process.env.PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS = '1';
+test.use({ launchOptions: { args: ['--autoplay-policy=no-user-gesture-required'] } });
+
 test('once loaded, the board comes back with the network off', async ({ page, context }) => {
   await openBoard(page);
   await page.evaluate(() => navigator.serviceWorker.ready);
@@ -13,7 +21,7 @@ test('once loaded, the board comes back with the network off', async ({ page, co
   await page.reload();
   for (const title of BUNDLED_TITLES) await expect(pad(page, title)).toBeVisible();
 
-  const crickets = pad(page, 'Crickets ambiance');
+  const crickets = pad(page, 'Crickets');
   await crickets.click();
   await expect(crickets).toHaveClass(/pad--playing/);
 });
