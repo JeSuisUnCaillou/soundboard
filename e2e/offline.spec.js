@@ -13,7 +13,7 @@ test('once loaded, the board comes back with the network off', async ({ page, co
   await page.reload();
   for (const title of BUNDLED_TITLES) await expect(pad(page, title)).toBeVisible();
 
-  const crickets = pad(page, 'Crickets ambiance');
+  const crickets = pad(page, 'Crickets');
   await crickets.click();
   await expect(crickets).toHaveClass(/pad--playing/);
 });

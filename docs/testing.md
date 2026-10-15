@@ -47,10 +47,10 @@ how `board.spec.js` tests a sound served cross-origin.
 | --- | --- |
 | `test` | Playwright's `test` with a granted screen wake lock injected; headless Chromium refuses one, and the board's warning toast would hide what a test reads. Always import this one. |
 | `expect` | Re-exported from Playwright. |
-| `openBoard(page)` | Go to `/` and wait for the default board's three pads. Every test starts from a fresh browser context, so this is always a first launch. |
+| `openBoard(page)` | Go to `/` and wait for the default board's twelve pads. Every test starts from a fresh browser context, so this is always a first launch. |
 | `pad(page, title)` | A filled pad by the name it shows. |
 | `pencil(page, title)` | The button that opens that pad's settings in edit mode, by its label. |
-| `BUNDLED_TITLES` | `['Gunshot', 'Crickets ambiance', 'Sexy']`. Gunshot (3 s) is a hit; Crickets ambiance (26 s) and Sexy (2 min 54) are cues. |
+| `BUNDLED_TITLES` | The twelve pad titles of the Default board, in board order; how each pad is set up is in `BUNDLED` (`js/bundled.js`). The first board is full, so a test that adds a sound clears a pad first. |
 | `showSounds(page)` | Open the book wherever the layout keeps it (**Browse files** on phone), unless it is open already. |
 | `isNarrow(page)` | Viewport ≤ 900px. |
 | `silentWav(seconds, rate)` | A WAV buffer made in the test, for adding sounds. Never commit test audio. |

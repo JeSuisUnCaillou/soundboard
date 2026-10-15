@@ -13,7 +13,7 @@ it from context, and define new terms here, not elsewhere.
 | **Sound** | An audio file the board can reach, by its library path. | `Library.entries` |
 | **Path** | A sound's identity: its folder-relative path including the folder's own name, e.g. `Show/Act 1/rain.wav`. Pads point at paths, so a board travels with its folder. | `pad.file`, entry `path` |
 | **Source** | One place sounds came from: a folder, some files, the bundled set, or the kept copies. | `Library.sources`, `kind` |
-| **Bundled sounds** | The three sounds served with the app under `sounds/`, shown under `default/` in the tree. | `bundled.js` |
+| **Bundled sounds** | The twelve sounds served with the app under `sounds/`, shown under `default/` in the tree. | `bundled.js` |
 | **Kept copies** | Blobs of every loaded sound stored in IndexedDB, so a reload plays without the folder. | `store.putSound`, `App.keepSounds`, `Library.addCached`, source kind `cache` |
 | **Handle** | A `FileSystemHandle` from the File System Access API (desktop Chromium only), stored so the real files can be reopened. | `store.saveHandles`, `CAN_PERSIST` |
 | **Reconnect / Reopen** | Granting read permission on stored handles again. *Reconnect* (rail) when pads already play from copies; *Reopen* (picker) when nothing can play. | `#btnReconnect`, `#btnReopen`, `App.reconnect` |

@@ -10,8 +10,8 @@ test('a browser that keeps nothing still opens the board, and says nothing done 
   });
   await openBoard(page);
   await expect(page.locator('#toast')).toHaveText("The browser's storage is not answering, so nothing done now will be kept.");
-  await pad(page, 'Crickets ambiance').click();
-  await expect(pad(page, 'Crickets ambiance')).toHaveClass(/pad--playing/);
+  await pad(page, 'Crickets').click();
+  await expect(pad(page, 'Crickets')).toHaveClass(/pad--playing/);
 });
 
 test('a launch whose storage fails once leaves the saved board as it was for the next', async ({ page }) => {
@@ -144,9 +144,9 @@ test('the screen wake lock is asked for once, however many presses ask at once',
     };
   });
   await openBoard(page);
-  await pad(page, 'Crickets ambiance').click();
-  await pad(page, 'Sexy').click();
-  await expect(pad(page, 'Sexy')).toHaveClass(/pad--playing/);
+  await pad(page, 'Crickets').click();
+  await pad(page, 'Romance').click();
+  await expect(pad(page, 'Romance')).toHaveClass(/pad--playing/);
   expect(await page.evaluate(() => window.__wakeRequests)).toBe(1);
 });
 

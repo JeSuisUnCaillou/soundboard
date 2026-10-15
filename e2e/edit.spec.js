@@ -49,6 +49,26 @@ test('emptying the board asks twice', async ({ page }) => {
   await expect(page.locator('#toast')).toHaveText('The board is empty. The sounds are still under Sounds.');
 });
 
+test('an empty board offers the default board back, set up as it was', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  const button = page.locator('#btnEmpty');
+
+  await button.click();
+  await button.click();
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(0);
+  await expect(button).toHaveText('Load the default board');
+
+  // Nothing is lost by loading onto an empty board, so it does not ask twice.
+  await button.click();
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(BUNDLED_TITLES.length);
+  await expect(button).toHaveText('Empty the board');
+
+  await pencil(page, 'Storm').click();
+  await expect(page.locator('#padLoop')).toBeChecked();
+  await expect(page.locator('#padGainOut')).toHaveText('50');
+});
+
 test('sounds added from the file picker land in the folder and can go on a pad', async ({ page }) => {
   // Take away the File System Access pickers, which a test cannot answer, so
   // the board falls back to the plain file input every other browser uses.
@@ -58,6 +78,10 @@ test('sounds added from the file picker land in the folder and can go on a pad',
   });
   await openBoard(page);
   await page.locator('#btnEdit').click();
+  // The first board is full; make room for the new sound.
+  await pencil(page, 'Sting').click();
+  await page.locator('#padClear').click();
+  await expect(pad(page, 'Sting')).toHaveCount(0);
   await showSounds(page);
 
   await page.locator('#btnAdd').click();
@@ -199,19 +223,24 @@ test('a pad is set up, and a sound heard and put on a pad, from the keyboard', a
   await page.keyboard.press('Escape');
   await expect(page.locator('#padEditor')).toBeHidden();
 
+  // The first board is full; make room for a second Crickets.
+  await pencil(page, 'Sting').click();
+  await page.locator('#padClear').click();
+  await expect(pad(page, 'Sting')).toHaveCount(0);
+
   await showSounds(page);
   await page.locator('#lib .tree__name', { hasText: 'default' }).focus();
   await page.keyboard.press('Enter');
   const row = page.locator('#lib .lib__item', { hasText: 'crickets' });
-  const hear = row.getByRole('button', { name: /^crickets ambiance/i });
+  const hear = row.getByRole('button', { name: /^crickets/i });
   await hear.focus();
   await page.keyboard.press('Enter');
   await expect(row).toHaveClass(/lib__item--playing/);
 
-  const put = page.getByRole('button', { name: /^Put crickets ambiance\.wav on a pad$/i });
+  const put = page.getByRole('button', { name: /^Put crickets\.mp3 on a pad$/i });
   await put.focus();
   await page.keyboard.press('Enter');
-  await expect(pad(page, 'Crickets ambiance')).toHaveCount(2);
+  await expect(pad(page, 'Crickets')).toHaveCount(2);
 });
 
 test('Enter saves the pad sheet from the name, and presses whatever button has the focus', async ({ page }) => {
@@ -264,6 +293,25 @@ test('a new board starts three columns by four rows', async ({ page }) => {
   await expect(page.locator('#setRows')).toHaveValue('4');
 });
 
+test('a board saved with the crickets under their old name still plays them', async ({ page }) => {
+  await openBoard(page);
+  const board = {
+    version: 3,
+    cols: 3,
+    rows: 3,
+    pads: [{ file: 'default/crickets ambiance.wav', name: 'Night' }],
+  };
+  await page.locator('#importFile').setInputFiles({
+    name: 'show.soundboard.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(board)),
+  });
+  const night = pad(page, 'Night');
+  await expect(night).not.toHaveClass(/pad--missing/);
+  await night.click();
+  await expect(night).toHaveClass(/pad--playing/);
+});
+
 test('a key loaded in capitals from a board file is still taken from its pad when another pad wants it', async ({ page }) => {
   await openBoard(page);
   const board = {
@@ -272,7 +320,7 @@ test('a key loaded in capitals from a board file is still taken from its pad whe
     rows: 3,
     pads: [
       { file: 'default/gunshot.mp3', name: 'Shot', key: 'Q' },
-      { file: 'default/sexy.mp3', name: 'Song', key: 'w' },
+      { file: 'default/romance.mp3', name: 'Song', key: 'w' },
     ],
   };
   await page.locator('#importFile').setInputFiles({
@@ -315,12 +363,12 @@ test('a cue dropped on a hit’s pad fades out on a second tap, as a cue does', 
   await page.locator('#btnAdd').click();
   const chooser = page.waitForEvent('filechooser');
   await page.locator('#btnAddFiles').click();
-  await (await chooser).setFiles({ name: 'storm.wav', mimeType: 'audio/wav', buffer: silentWav(10) });
+  await (await chooser).setFiles({ name: 'rain.wav', mimeType: 'audio/wav', buffer: silentWav(10) });
 
-  await page.locator('#lib .lib__item', { hasText: 'storm' }).dragTo(pad(page, 'Gunshot'));
+  await page.locator('#lib .lib__item', { hasText: 'rain' }).dragTo(pad(page, 'Gunshot'));
   await expect(pad(page, 'Gunshot').locator('.pad__time')).toHaveText('0:10');
   await pencil(page, 'Gunshot').click();
-  await expect(page.locator('#padFileName')).toHaveText('storm.wav');
+  await expect(page.locator('#padFileName')).toHaveText('rain.wav');
   await expect(page.locator('#padTap')).toHaveValue('fadeout');
 });
 
@@ -330,10 +378,10 @@ test('a hit dropped on a cue’s pad takes back the blue the cue’s length gave
   await page.locator('#btnEdit').click();
   await showSounds(page);
   await page.locator('#lib .tree__name', { hasText: 'default' }).click();
-  await page.locator('#lib .lib__item', { hasText: 'gunshot' }).dragTo(pad(page, 'Crickets ambiance'));
-  await expect(pad(page, 'Crickets ambiance').locator('.pad__time')).toHaveText('0:02');
+  await page.locator('#lib .lib__item', { hasText: 'gunshot' }).dragTo(pad(page, 'Crickets'));
+  await expect(pad(page, 'Crickets').locator('.pad__time')).toHaveText('0:02');
 
-  await pencil(page, 'Crickets ambiance').click();
+  await pencil(page, 'Crickets').click();
   await expect(page.locator('#padGels .gel[aria-label^="Daylight Blue"]')).toHaveAttribute('aria-pressed', 'true');
 });
 
@@ -354,8 +402,8 @@ test('a pad saved from its sheet keeps its second tap when a cue is dropped on i
   await page.locator('#btnAdd').click();
   const chooser = page.waitForEvent('filechooser');
   await page.locator('#btnAddFiles').click();
-  await (await chooser).setFiles({ name: 'storm.wav', mimeType: 'audio/wav', buffer: silentWav(10) });
-  await page.locator('#lib .lib__item', { hasText: 'storm' }).dragTo(pad(page, 'Gunshot'));
+  await (await chooser).setFiles({ name: 'rain.wav', mimeType: 'audio/wav', buffer: silentWav(10) });
+  await page.locator('#lib .lib__item', { hasText: 'rain' }).dragTo(pad(page, 'Gunshot'));
   await expect(pad(page, 'Gunshot').locator('.pad__time')).toHaveText('0:10');
 
   await pencil(page, 'Gunshot').click();
@@ -402,7 +450,10 @@ test('fewer columns and more rows at once keep every pad', async ({ page }) => {
   await openBoard(page);
   await page.locator('#btnEdit').click();
 
-  // A fourth pad in the last place of the 3 × 4 board.
+  // The first board is full: a new sound in the last place of the 3 × 4 board, instead of Happy.
+  await pencil(page, 'Happy').click();
+  await page.locator('#padClear').click();
+  await expect(pad(page, 'Happy')).toHaveCount(0);
   await page.locator('#grid .pad--empty').last().click();
   // On a phone the waiting pad opens the sounds by itself.
   await expect(page.locator('#book')).toBeVisible();
@@ -412,9 +463,9 @@ test('fewer columns and more rows at once keep every pad', async ({ page }) => {
   await (await chooser).setFiles({ name: 'door slam.wav', mimeType: 'audio/wav', buffer: silentWav() });
   await page.locator('#lib .lib__item', { hasText: 'door slam' }).locator('.lib__add').click();
   await expect(page.locator('#toast')).toContainText('is on row 4, column 3.');
-  await expect(page.locator('#grid .pad--filled')).toHaveCount(4);
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(12);
 
-  // 2 × 8 has sixteen places, room for all four.
+  // 2 × 8 has sixteen places, room for all twelve.
   await page.locator('#btnSetup').click();
   await page.locator('#setCols').fill('2');
   await page.locator('#setRows').fill('8');
@@ -422,7 +473,7 @@ test('fewer columns and more rows at once keep every pad', async ({ page }) => {
   await expect(page.locator('#setup')).toBeHidden();
 
   await expect(page.locator('#grid .pad')).toHaveCount(16);
-  await expect(page.locator('#grid .pad--filled')).toHaveCount(4);
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(12);
   await expect(page.locator('#toast')).not.toContainText('came off the board');
 });
 
@@ -540,8 +591,8 @@ test('a board saved to a file loads back as it was, with missing sounds struck t
   await expect(page.locator('#toast')).toHaveText('Board loaded. 1 pad point at files this folder does not have.');
 
   await expect(page.locator('#grid .pad')).toHaveCount(8);
-  await expect(page.locator('#grid .pad--filled')).toHaveCount(3);
-  await expect(pad(page, 'Sexy')).not.toHaveClass(/pad--missing/);
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(8);
+  await expect(pad(page, 'Storm')).not.toHaveClass(/pad--missing/);
   await expect(pad(page, 'Thunder')).toHaveClass(/pad--missing/);
   const pistol = pad(page, 'Pistol');
   await expect(pistol).not.toHaveClass(/pad--missing/);
@@ -562,7 +613,7 @@ test('a pad’s level, fades and colour stay after a reload', async ({ page }) =
   await openBoard(page);
   await page.locator('#btnEdit').click();
 
-  await pencil(page, 'Crickets ambiance').click();
+  await pencil(page, 'Crickets').click();
   await page.locator('#padGain').fill('40');
   await expect(page.locator('#padGainOut')).toHaveText('40');
   await page.locator('#padFadeIn').fill('2.5');
@@ -572,7 +623,7 @@ test('a pad’s level, fades and colour stay after a reload', async ({ page }) =
   await expect(page.locator('#padEditor')).toBeHidden();
 
   await page.reload();
-  await pencil(page, 'Crickets ambiance').click();
+  await pencil(page, 'Crickets').click();
   await expect(page.locator('#padGain')).toHaveValue('40');
   await expect(page.locator('#padGainOut')).toHaveText('40');
   await expect(page.locator('#padFadeIn')).toHaveValue('2.5');
@@ -603,32 +654,28 @@ test('a smaller board says which sounds it could not keep', async ({ page }) => 
   await openBoard(page);
   await page.locator('#btnEdit').click();
 
-  // A sound on the last row, which a board one row shorter has no room for.
-  await page.locator('#grid .pad').nth(8).click();
-  await expect(page.locator('#grid .pad').nth(8)).toHaveClass(/pad--waiting/);
-  await showSounds(page);   // a phone opens them by itself for a waiting pad
-  await page.locator('#lib .tree__name', { hasText: 'default' }).click();
-  await page.locator('#lib .lib__item', { hasText: 'gunshot' }).locator('.lib__add').click();
-  await expect(page.locator('#toast')).toHaveText(/^gunshot is on row 3, column 3\.$/i);
-  await expect(pad(page, 'Gunshot')).toHaveCount(2);
-
+  // The last row holds Sad, Hero and Happy; a board one row shorter has no room for them.
   await page.locator('#btnSetup').click();
-  await page.locator('#setRows').fill('2');
+  await page.locator('#setRows').fill('3');
   await page.locator('#setupDone').click();
-  await expect(page.locator('#toast')).toHaveText('1 sound came off the board. They are still under Sounds.');
-  await expect(page.locator('#grid .pad')).toHaveCount(6);
-  await expect(pad(page, 'Gunshot')).toHaveCount(1);
-  for (const title of BUNDLED_TITLES) await expect(pad(page, title)).toBeVisible();
+  await expect(page.locator('#toast')).toHaveText('3 sounds came off the board. They are still under Sounds.');
+  await expect(page.locator('#grid .pad')).toHaveCount(9);
+  await expect(pad(page, 'Happy')).toHaveCount(0);
+  for (const title of BUNDLED_TITLES.slice(0, 9)) await expect(pad(page, title)).toBeVisible();
 
   await showSounds(page);
-  await expect(page.locator('#lib .lib__item', { hasText: 'gunshot' })).toBeVisible();
+  await page.locator('#lib .tree__name', { hasText: 'default' }).click();
+  await expect(page.locator('#lib .lib__item', { hasText: 'happy' })).toBeVisible();
 });
 
 test('a pad under a toast still answers a tap', async ({ page }) => {
   await openBoard(page);
   await page.locator('#btnEdit').click();
+  // Emptying the board says so in a toast, and leaves empty pads under it.
+  await page.locator('#btnEmpty').click();
+  await page.locator('#btnEmpty').click();
   const toast = page.locator('#toast');
-  await expect(toast).toBeVisible();
+  await expect(toast).toHaveText('The board is empty. The sounds are still under Sounds.');
 
   // Find a pad the toast covers, and tap it where the toast is.
   const over = await toast.boundingBox();
@@ -647,7 +694,7 @@ test('a pad under a toast still answers a tap', async ({ page }) => {
       at = { x: (left + right) / 2, y: (top + bottom) / 2 };
     }
   }
-  expect(target, 'the first launch’s toast covers an empty pad').not.toBeNull();
+  expect(target, 'the toast covers an empty pad').not.toBeNull();
 
   await page.mouse.click(at.x, at.y);
   await expect(target).toHaveClass(/pad--waiting/);
