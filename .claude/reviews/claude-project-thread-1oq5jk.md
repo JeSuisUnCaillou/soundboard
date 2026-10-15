@@ -17,4 +17,11 @@ Head: be6f6e2
 - bugs: no finding.
 - architect: no finding.
 
-Reviewed head: be6f6e22975355aaa81f1c7eaa773ba4dd5b71ab
+
+# Pass 3
+
+Head: a9e6f64
+
+Rebased on main for the merge. #61 made the first board full and added a storm sound, so the three tests now clear a pad first, add wind.wav instead of storm.wav, and check Crickets instead of the removed Sexy pad; status.md counts them on top of main's 88. Not reviewed again; suite green locally (165 passed).
+
+Reviewed head: a9e6f6455ce2133d6d4f587f58f0f70572f72752
