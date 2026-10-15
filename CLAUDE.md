@@ -135,9 +135,9 @@ The owner merges. When the owner says "validated" or "merge once green" about
 a thread's pull requests, merge each one as soon as it is green.
 
 Once the work is pushed, review it with `Skill(skill: "review-loop")` before
-handing it over; a Stop hook starts it otherwise. The skill says which pull
-requests Claude merges by itself once it converges (small bug fixes) and
-which wait for the owner.
+handing it over; a Stop hook starts it otherwise. Once it converges, Claude
+merges every pull request on green CI except a medium-to-big feature, which
+waits for the owner; the skill's step 7 draws the line.
 
 Merge with a squash, so the title ends with the pull request number, `… (#n)`.
 
