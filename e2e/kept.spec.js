@@ -141,6 +141,8 @@ test.describe('a folder opened with a handle', () => {
       localStorage.setItem('test:refuse', 'yes');
     });
     await page.reload();
+    // The board comes back in edit mode, as it was left, once it has loaded.
+    await expect(page.locator('#btnEdit')).toHaveAttribute('aria-pressed', 'true');
     await running(page);
     const reconnect = page.locator('#btnReconnect');
     await reconnect.click();
