@@ -1,21 +1,11 @@
-# Pass 1 (flaky fade-out test, #67)
+# Review of claude/project-thread-1oq5jk (PR #77, #70)
 
-Head: ff5d07b
+# Pass 1
 
-- bugs: the comment and commit said the pad comes back from where the fade got to; engine.start seeks to trimStart, so it restarts from the top, and the rewrite dropped that check: fixed in c899e10. The test now checks restart from the top with margin, and fails without the seek (tried).
-- architect: no finding.
+Head: 3e7ee19
 
-# Pass 2
-
-Head: 0489ee3
-
-- bugs: no finding; noted the restart check leaves about a second of room, and judged it not worth a finding (40 in 40 under four workers).
-- architect: no finding.
-
-# Pass 3
-
-Head: b608618
-
-Rebased on main for the merge. Main (#60) had loosened the same test to accept any clock reading from -0:19 to -0:23; this branch's version replaces it, since it also checks the pad starts again from the top. Nothing else changed. Not reviewed again; suite green locally (123 passed, 11 skipped).
-
-Reviewed head: b608618533e1ecd36023f0d1c0d9468c2711e200
+- bugs: a pad given a good sound stayed red, because redraw ran before prime cleared the flag on the channel. Fixed in 0b6e60d: the broken note lives in the engine keyed by pad and file.
+- bugs: a failed tap drops the channel, so the broken mark vanished on the next redraw. Fixed in 0b6e60d: the note outlives the channel.
+- bugs: no test for recovery, a tap on a broken pad, or the two-pad message. Fixed in 0b6e60d: three tests.
+- architect: onbroken also fired on recovery and re-toasted. Fixed in 0b6e60d: onbroken(i, broken), toast only on failure; architecture.md says so.
+- architect: README's "tapping it tries again" untested. Fixed in 0b6e60d.
