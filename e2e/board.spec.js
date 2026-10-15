@@ -139,10 +139,7 @@ test('Stop greys out as soon as everything is fading out', async ({ page }) => {
 test('a pad tapped while it fades out starts again, and keeps playing', async ({ page }) => {
   await openBoard(page);
   const crickets = pad(page, 'Crickets');
-  const left = async () => {
-    const [m, sec] = (await crickets.locator('.pad__time').textContent()).replace('-', '').split(':');
-    return Number(m) * 60 + Number(sec);
-  };
+  const left = () => secondsLeft(crickets);
 
   // Far enough in that starting again from the top shows on the clock, however
   // slowly the steps below run.
@@ -294,13 +291,23 @@ test('a pad fading towards its stop point still answers a tap by stopping', asyn
   const crickets = pad(page, 'Crickets');
 
   await crickets.click();
-  await expect(crickets.locator('.pad__time')).toHaveText('-0:02', { timeout: 4000 });
+  await expect.poll(() => secondsLeft(crickets), { timeout: 4000 }).toBeLessThanOrEqual(2);
   await expect(crickets).toHaveClass(/pad--playing/);
 
   await crickets.click();
   await expect(crickets).not.toHaveClass(/pad--playing/);
   await expect(page.locator('#btnStop')).toBeDisabled();
 });
+
+/**
+ * The seconds a playing pad's clock says are left. Tests compare it with a
+ * margin rather than wait for one exact reading, which shows for a second
+ * only and a busy machine can poll straight past.
+ */
+async function secondsLeft(padEl) {
+  const [m, sec] = (await padEl.locator('.pad__time').textContent()).replace('-', '').split(':');
+  return Number(m) * 60 + Number(sec);
+}
 
 /**
  * Wait until a pad has played for this long, failing as soon as it stops
@@ -628,12 +635,13 @@ test.describe('a second tap', () => {
     await openBoard(page);
     await setUpPad(page, 'Crickets', { padTap: 'restart' });
     const crickets = pad(page, 'Crickets');
-    const time = crickets.locator('.pad__time');
+    const left = () => secondsLeft(crickets);
 
+    // Far enough in that starting over shows on the clock.
     await crickets.click();
-    await expect(time).toHaveText('-0:23', { timeout: 6000 });
+    await expect.poll(left, { timeout: 15000 }).toBeLessThanOrEqual(21);
     await crickets.click();
-    await expect(time).toHaveText(/-0:2[56]/);
+    await expect.poll(left).toBeGreaterThan(22);
     await expect(crickets).toHaveClass(/pad--playing/);
   });
 
@@ -641,20 +649,21 @@ test.describe('a second tap', () => {
     await openBoard(page);
     await setUpPad(page, 'Crickets', { padTap: 'pause' });
     const crickets = pad(page, 'Crickets');
-    const time = crickets.locator('.pad__time');
+    const left = () => secondsLeft(crickets);
 
     await crickets.click();
-    await expect(time).toHaveText('-0:24', { timeout: 5000 });
+    await expect.poll(left, { timeout: 15000 }).toBeLessThanOrEqual(24);
     await crickets.click();
     await expect(crickets).toHaveClass(/pad--paused/);
     await expect(crickets).not.toHaveClass(/pad--playing/);
-    const held = await time.textContent();
-    expect(held).toMatch(/-0:2[34]/);
+    const held = await left();
+    expect(held).toBeLessThanOrEqual(24);
 
     await crickets.click();
     await expect(crickets).toHaveClass(/pad--playing/);
     await expect(crickets).not.toHaveClass(/pad--paused/);
-    await expect(time).toHaveText(/-0:2[234]/);
+    // From where it was held, not from the top.
+    expect(await left()).toBeLessThanOrEqual(held);
   });
 
   test('layers the sound over itself', async ({ page }) => {
@@ -679,15 +688,17 @@ test.describe('a second tap', () => {
     await openBoard(page);
     await setUpPad(page, 'Crickets', { padTap: 'ignore' });
     const crickets = pad(page, 'Crickets');
-    const time = crickets.locator('.pad__time');
+    const left = () => secondsLeft(crickets);
 
     await crickets.click();
-    await expect(time).toHaveText('-0:24', { timeout: 5000 });
+    await expect.poll(left, { timeout: 15000 }).toBeLessThanOrEqual(24);
+    const before = await left();
     await crickets.click();
     await expect(crickets).toHaveClass(/pad--playing/);
     await expect(crickets.locator('.pad__stack')).toHaveCount(0);
     // It runs on from where it was rather than starting over.
-    await expect(time).toHaveText('-0:22', { timeout: 4000 });
+    expect(await left()).toBeLessThanOrEqual(before);
+    await expect.poll(left, { timeout: 5000 }).toBeLessThanOrEqual(before - 2);
   });
 });
 
@@ -698,6 +709,8 @@ test('a pad with a start point plays from there', async ({ page }) => {
 
   await crickets.click();
   await expect(crickets).toHaveClass(/pad--playing/);
-  await expect(crickets.locator('.pad__time')).toHaveText(/-0:0[56]/);
+  // From 20 s into a 26 s sound: 6 s or a little less are left, never more.
+  await expect.poll(() => secondsLeft(crickets)).toBeLessThanOrEqual(6);
+  expect(await secondsLeft(crickets)).toBeGreaterThan(2);
 });
 

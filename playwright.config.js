@@ -23,9 +23,12 @@ export default defineConfig({
       args: ['--autoplay-policy=no-user-gesture-required'],
     },
   },
+  // The full Chromium in its new headless mode, not Playwright's separate
+  // headless shell, which now and then crashed as a test's context closed
+  // and took the next test down with it (#78).
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
-    { name: 'phone', use: { ...devices['Pixel 7'] } },
+    { name: 'desktop', use: { ...devices['Desktop Chrome'], channel: 'chromium' } },
+    { name: 'phone', use: { ...devices['Pixel 7'], channel: 'chromium' } },
   ],
   webServer: {
     command: `node e2e/serve.js ${PORT}`,
