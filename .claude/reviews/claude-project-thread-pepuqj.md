@@ -31,3 +31,12 @@ Head reviewed: a10cc7e (after merging main again)
 - bugs: no finding; main's `giveSound`, `write` and `remembered` survive the merge, and the adapted tests still test what they were written for.
 
 Reviewed head: f1ae7421e2ed6e231912f906f3f9708538440f27
+
+# Pass 5
+
+Head reviewed: 65336b58f7b10243cea3e15d27819c8bd19f4e6f
+
+- CI showed the toast test racing the first board's welcome toast; fixed in 65336b5 by raising the board's own toast (emptying it), seen red without the toast's `pointer-events: none`.
+- bugs, architect: no finding.
+
+Reviewed head: 65336b58f7b10243cea3e15d27819c8bd19f4e6f
