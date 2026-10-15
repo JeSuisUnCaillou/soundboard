@@ -47,7 +47,11 @@ test('the master volume follows its slider', async ({ page }) => {
 async function setUpPad(page, title, fields) {
   await page.locator('#btnEdit').click();
   await pad(page, title).locator('.pad__pencil').click();
-  for (const [id, value] of Object.entries(fields)) await page.locator(`#${id}`).fill(value);
+  for (const [id, value] of Object.entries(fields)) {
+    const field = page.locator(`#${id}`);
+    if (typeof value === 'boolean') await field.setChecked(value);
+    else await field.fill(value);
+  }
   await page.locator('#padSave').click();
   await expect(page.locator('#padEditor')).toBeHidden();
   await page.locator('#btnEdit').click();
@@ -123,6 +127,51 @@ test('a pad fading towards its stop point still answers a tap by stopping', asyn
   await crickets.click();
   await expect(crickets).not.toHaveClass(/pad--playing/);
   await expect(page.locator('#btnStop')).toBeDisabled();
+});
+
+/**
+ * Wait until a pad has played for this long, failing as soon as it stops
+ * rather than at the end of the wait.
+ */
+async function expectStillPlayingAfter(page, padEl, ms) {
+  const started = Date.now();
+  let stopped = false;
+  await expect.poll(async () => {
+    if (stopped || !(await padEl.evaluate((el) => el.classList.contains('pad--playing')))) {
+      stopped = true;
+      return 'stopped';
+    }
+    return Date.now() - started >= ms ? 'still playing' : 'waiting';
+  }, { timeout: ms + 5000, intervals: [100] }).toBe('still playing');
+}
+
+test('a looping pad with a stop point and a fade out goes round, not out', async ({ page }) => {
+  await openBoard(page);
+  // Stop at 2 s with a 1 s fade: without the loop it would be over after 2 s.
+  await setUpPad(page, 'Crickets ambiance', { padEnd: '2', padFadeOut: '1', padLoop: true });
+  const crickets = pad(page, 'Crickets ambiance');
+
+  await crickets.click();
+  await expect(crickets).toHaveClass(/pad--playing/);
+  await expectStillPlayingAfter(page, crickets, 4500);
+
+  await crickets.click();
+  await expect(crickets).not.toHaveClass(/pad--playing/);
+});
+
+test('a looping pad with a start point goes round when its file ends', async ({ page }) => {
+  await openBoard(page);
+  // The gunshot lasts 2.9 s; looping from 0.2 s means looping by hand.
+  await setUpPad(page, 'Gunshot', { padStart: '0.2', padLoop: true });
+  const gunshot = pad(page, 'Gunshot');
+
+  await gunshot.click();
+  await expect(gunshot).toHaveClass(/pad--playing/);
+  await expectStillPlayingAfter(page, gunshot, 4500);
+
+  // A sound this short layers on a tap, so Stop is what ends it.
+  await page.locator('#btnStop').click();
+  await expect(gunshot).not.toHaveClass(/pad--playing/);
 });
 
 test('holding a pad’s key is one tap', async ({ page }) => {
