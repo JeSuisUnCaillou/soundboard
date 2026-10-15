@@ -78,3 +78,16 @@ bugs and architect.
 No blocking finding: the loop stops here.
 
 Reviewed head: 3371c682dafb25f772d8bba7c106da3ad87af0c2
+
+# PR #69, pass 2
+
+Head reviewed: dcdd5b8, after the leftovers sweep fixed `docs/status.md`.
+Reviewers: bugs and architect.
+
+- bugs: `docs/architecture.md` § Keys still said a focused master slider turns
+  every shortcut off (#12, fixed in #27). Text, not blocking; fixed in c47bede.
+- architect: no finding.
+
+No blocking finding: the loop stops here.
+
+Reviewed head: c47bede68c72169aaf94b04d00b059fd8ceaee72
