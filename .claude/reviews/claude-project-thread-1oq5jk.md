@@ -1,15 +1,8 @@
-# Pass 1
+# Pass 1 (toast fix, #51)
 
-Head: 84fdea8204f966a5011acb35fffd5bc4bb47bd76
+Head: 2947090
 
-- bugs: no finding (ran the new test at desktop and phone size).
-- architect: no finding. Its doubt about "26 tests" in docs/status.md rejected: the suite runs 52 (26 per project).
+- architect: docs/status.md coverage line broke the paragraph's wrap: fixed in 133055c. Text, not blocking.
+- bugs: no finding; saw the new test fail without `pointer-events: none` and pass with it.
 
-
-# Pass 2
-
-Head: 922891a047b4841fcb8ac26fc9651f160c0a564d
-
-Rebased on main for the merge; the change itself is the same apart from the test count in docs/status.md and the merged docs/testing.md rows. Not reviewed again; suite green locally.
-
-Reviewed head: 922891a047b4841fcb8ac26fc9651f160c0a564d
+Reviewed head: aeb124d60bdcf99de83e0b0d00cc3978f561730d
