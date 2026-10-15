@@ -188,7 +188,7 @@ export class Library {
     if (!records.length) return [];
     // The folder is in every path, so the copies can say where they came from
     // without being told.
-    const roots = new Set(records.map((r) => r.path.split('/')[0]).filter((r, i, all) => all.length && r));
+    const roots = new Set(records.map((r) => r.path.split('/')[0]).filter(Boolean));
     const nested = records.filter((r) => r.path.includes('/'));
     const name = nested.length && roots.size === 1 ? [...roots][0] : 'Kept sounds';
     const src = this._source({ kind: 'cache', name });
@@ -276,13 +276,6 @@ export class Library {
     const made = URL.createObjectURL(await this.file(path));
     this._urls.set(path, made);
     return made;
-  }
-
-  reset() {
-    for (const url of this._urls.values()) URL.revokeObjectURL(url);
-    this._urls.clear();
-    this.entries.clear();
-    this.sources = [];
   }
 
   _source(src) {
@@ -400,7 +393,13 @@ function walkEntry(dir, prefix, out, depth = 0) {
   });
 }
 
+// The file input of a pick still waiting for an answer, if any.
+let waiting = null;
+
 function pickWithInput(wholeFolder) {
+  // A picker dismissed where the browser sends no cancel event leaves its
+  // input waiting. Opening another means that one was dismissed.
+  if (waiting) waiting(false);
   return new Promise((resolve) => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -417,16 +416,18 @@ function pickWithInput(wholeFolder) {
     const done = (value) => {
       if (settled) return;
       settled = true;
+      if (waiting === done) waiting = null;
       input.remove();
       resolve(value);
     };
+    waiting = done;
     input.addEventListener('change', () => done(input.files && input.files.length ? input.files : false));
     input.addEventListener('cancel', () => done(false));
     // No guessing at a dismissal from the window getting its focus back: on a
     // phone that happens before the files are handed over — while they are
     // still being copied out of the gallery or the cloud — and the choice was
-    // thrown away. A picker dismissed where there is no cancel event simply
-    // leaves this waiting, which costs nothing.
+    // thrown away. A picker dismissed where there is no cancel event leaves
+    // this waiting until the next pick.
     input.click();
   });
 }
