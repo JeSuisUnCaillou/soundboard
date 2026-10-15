@@ -189,20 +189,29 @@ test('Escape leaves Board settings without changing the board, and Done keeps th
   await page.locator('#btnEdit').click();
   const sheet = page.locator('#setup');
   const pads = page.locator('#grid .pad');
-  await expect(pads).toHaveCount(9);
+  await expect(pads).toHaveCount(12);
 
   await page.locator('#btnSetup').click();
-  await page.locator('#setRows').fill('4');
+  await page.locator('#setRows').fill('5');
   await page.keyboard.press('Escape');
   await expect(sheet).toBeHidden();
-  await expect(pads).toHaveCount(9);
+  await expect(pads).toHaveCount(12);
 
   await page.locator('#btnSetup').click();
-  await expect(page.locator('#setRows')).toHaveValue('3');
-  await page.locator('#setRows').fill('4');
+  await expect(page.locator('#setRows')).toHaveValue('4');
+  await page.locator('#setRows').fill('5');
   await page.locator('#setupDone').click();
   await expect(sheet).toBeHidden();
-  await expect(pads).toHaveCount(12);
+  await expect(pads).toHaveCount(15);
+});
+
+test('a new board starts three columns by four rows', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await expect(page.locator('#grid .pad')).toHaveCount(12);
+  await page.locator('#btnSetup').click();
+  await expect(page.locator('#setCols')).toHaveValue('3');
+  await expect(page.locator('#setRows')).toHaveValue('4');
 });
 
 test('a key loaded in capitals from a board file is still taken from its pad when another pad wants it', async ({ page }) => {
