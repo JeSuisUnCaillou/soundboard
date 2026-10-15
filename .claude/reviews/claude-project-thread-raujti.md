@@ -14,3 +14,12 @@ Head reviewed: cd5b5e3695ea29c55ebb6a625c918d5baf744df5
 - architect: model.js row did not list giveSound — fixed in 92afc6f.
 - architect: an over-long line in the Saving paragraph — fixed in 92afc6f.
 - bugs (caveat): the hidden-page save test also sees pagehide on reload — rejected as a finding: it still fails without the fix (checked).
+
+# Pass 2
+
+Head reviewed: dbeaa75ba62eb124f061b27846971b8b079b374e
+
+- bugs: no findings; each behaviour change has a test that fails without it.
+- architect: no findings.
+
+Reviewed head: dbeaa75ba62eb124f061b27846971b8b079b374e
