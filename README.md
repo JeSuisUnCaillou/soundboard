@@ -176,6 +176,20 @@ rather than after a fetch. Fades are exponential ramps on the gain node, which i
 why a fade out can be interrupted by a fade in without a click. Boards and folder
 handles live in IndexedDB.
 
+## Testing
+
+End-to-end tests drive the board in Chromium, at desktop and phone size, with
+[Playwright](https://playwright.dev). They are the only reason for the
+`package.json`: the board itself still has no dependencies.
+
+```sh
+npm install
+npx playwright install chromium   # once
+npm run test:e2e
+```
+
+They run on every pull request, and the deploy to Pages runs them first.
+
 ## What it does not do
 
 No streaming services: this plays files you have. No recording, no editing, no

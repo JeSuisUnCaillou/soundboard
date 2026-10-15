@@ -1,4 +1,8 @@
-# CLAUDE.md
+# Working on the soundboard
+
+A static web app: `index.html`, `css/`, `js/` (ES modules), `sw.js`. No build
+step and no runtime dependencies — keep it that way. `package.json` exists only
+for the test tooling. The README's "How it is built" section maps the files.
 
 ## English only
 
@@ -6,32 +10,47 @@ Everything in the repository is written in English: code, comments, docs,
 commit messages, and this file — even when the conversation is in another
 language.
 
-## Always test in the app
+## End-to-end tests
 
-Every change must be tried in the running app before it is reported as done —
-checking syntax is not enough. Reproduce the problem on the old code first, then
-show the same scenario behaving correctly with the change.
+The board is covered by Playwright tests in `e2e/`, run against the site as it
+is served, in Chromium at desktop and phone size.
 
-How:
+```sh
+npm install
+npm run test:e2e
+```
 
-1. Serve the folder over `http://localhost` (not from the file system) with a
-   server that honours HTTP `Range` requests — a few lines of Node with
-   `fs.createReadStream(file, { start, end })` and a `206` answer will do.
-   `python3 -m http.server` does not support `Range`, and under Playwright a
-   sound then sometimes never loads, so a tap looks ignored when the app is fine.
-2. Drive it with Playwright in Chromium
-   (`executablePath: '/opt/pw-browsers/chromium'`, launched with
-   `--autoplay-policy=no-user-gesture-required` so sounds play without a
-   gesture). A fresh launch shows the bundled sounds from `sounds/` on the
-   first pads, so there is always something to press.
-3. Assert on the DOM (`.pad--playing`, `#btnStop` disabled, aria-labels…),
-   watch for `pageerror`, and take a screenshot to look at the result.
-4. To compare with the old behaviour, check out the previous commit's files
-   (`git checkout HEAD~1 -- js`), run the same script, then restore them
-   (`git checkout HEAD -- js`).
+**Every change in behaviour comes with an end-to-end test.** A new feature gets
+a test that drives it the way an operator would; a bug fix gets a test that
+fails without the fix. Add it in the same commit as the change, in the spec
+that matches the area (`board.spec.js` for running the show, `edit.spec.js` for
+building a board, `offline.spec.js` for the service worker), or a new spec if
+none fits. Run the whole suite before pushing, and do not push with it red.
 
-Keep test scripts in the scratchpad, not in the repo, and say in the report what
-was tested and what was not.
+How the tests are written:
+
+- Import `test` and `expect` from `e2e/helpers.js`, not from
+  `@playwright/test`: its `test` grants a screen wake lock, which headless
+  Chromium refuses.
+- Find things the way the operator does — by a pad's name (`pad(page, title)`),
+  by the ids in `index.html` — and assert on what is on screen: classes such
+  as `pad--playing`, text, the toast. Do not reach into the app's internals.
+- Tests must pass in both projects, `desktop` and `phone`. On the narrow layout
+  the sounds open from **Browse files**; `showSounds(page)` handles both.
+- Sounds a test needs are made in the test (`silentWav()`), not committed.
+- The File System Access pickers cannot be answered from a test: delete
+  `showOpenFilePicker` / `showDirectoryPicker` in an init script and the board
+  falls back to the file input, which `page.waitForEvent('filechooser')` drives.
+- Wait on assertions (`await expect(...)`), never on `waitForTimeout`.
+- The tests are served by `e2e/serve.js`, which answers byte-range requests.
+  `python3 -m http.server` does not, and Chromium will not play a sound
+  through it under test.
+
+CI runs the suite on every pull request (`.github/workflows/e2e.yml`), and
+the Pages deploy runs it first and does not publish if it fails.
+
+Checking syntax is never enough: a change is not done until it has been seen
+working in the running app, through the suite or a test driven the same way.
 
 ## Hand over a link to try it
 
