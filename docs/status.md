@@ -24,7 +24,7 @@ None open.
 
 ## Test coverage
 
-88 tests, all green: each runs at desktop and phone size, except the 12 drag
+91 tests, all green: each runs at desktop and phone size, except the 12 drag
 tests, which run by mouse on desktop or by finger on phone. Covered: the first
 launch and its improv board, the default board loaded back onto an empty board,
 a board file with the crickets' old name, tapping, Stop, Escape, the master
@@ -36,7 +36,7 @@ pad and its level, fades and gel (with reload), Board settings rows and columns
 (both at once too), shrinking the board, the waiting pad, emptying the board,
 adding sounds through the file input, hearing a sound from the tree, the filter,
 saving a board file and loading it back (missing sounds struck through),
-dropping several sounds or folders at once, the kept copies after a reload and
+pads whose file will not load, dropping several sounds or folders at once, the kept copies after a reload and
 offline, Reconnect (also refused, and during a cue), a browser out of room for
 the copies, keeping sounds added mid-copy and skipping one that cannot be kept,
 moving pads and taking them off by mouse and by finger, a tap on a pad under a
