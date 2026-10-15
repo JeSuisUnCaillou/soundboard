@@ -295,8 +295,7 @@ export class Engine {
     let ch = this.channels.get(i);
     if (!ch) {
       await this.unlock(false);
-      const el = new Audio();
-      el.preload = 'auto';
+      const el = voiceElement();
       const src = this.ctx.createMediaElementSource(el);
       const gain = this.ctx.createGain();
       gain.gain.value = FLOOR;
@@ -322,8 +321,7 @@ export class Engine {
 
   async _extra(i, pad) {
     await this.unlock(false);
-    const el = new Audio();
-    el.preload = 'auto';
+    const el = voiceElement();
     el.src = await this.lib.url(pad.file);
     const src = this.ctx.createMediaElementSource(el);
     const gain = this.ctx.createGain();
@@ -425,6 +423,20 @@ export class Engine {
 
 function clamp01(v) {
   return Math.min(1, Math.max(0, Number(v) || 0));
+}
+
+/**
+ * A media element for the gain chain. It asks for its file with CORS: a host
+ * may hand a file over from another origin (a proxy redirecting to where the
+ * repository keeps its files, a CDN), and the audio graph plays a media
+ * element from another origin as silence unless it was fetched that way.
+ * Files from the board's own origin, or from disk, are not affected.
+ */
+function voiceElement() {
+  const el = new Audio();
+  el.crossOrigin = 'anonymous';
+  el.preload = 'auto';
+  return el;
 }
 
 function seek(el, time) {

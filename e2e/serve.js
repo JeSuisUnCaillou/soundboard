@@ -41,6 +41,9 @@ createServer(async (req, res) => {
     'Content-Type': TYPES[extname(file)] || 'application/octet-stream',
     'Accept-Ranges': 'bytes',
     'Cache-Control': 'no-cache',
+    // Reached as 127.0.0.1 rather than localhost it is another origin, which
+    // is how a test hands a sound over from elsewhere, as hosts that allow it.
+    'Access-Control-Allow-Origin': '*',
   };
   const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
   if (range && (range[1] || range[2])) {

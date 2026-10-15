@@ -136,3 +136,39 @@ test('holding a pad’s key is one tap', async ({ page }) => {
   await expect(crickets).toHaveClass(/pad--playing/);
   await expect(page.locator('#btnStop')).toBeEnabled();
 });
+
+test.describe('a sound served from another origin', () => {
+  // The service worker would answer the board's requests before the routes
+  // below could see them.
+  test.use({ serviceWorkers: 'block' });
+
+  test('is heard, not played as silence', async ({ page }) => {
+    // Measure what reaches the speakers: tap whatever is wired to the output.
+    await page.addInitScript(() => {
+      const connect = AudioNode.prototype.connect;
+      AudioNode.prototype.connect = function (dest, ...rest) {
+        if (dest instanceof AudioDestinationNode) {
+          window.__meter = dest.context.createAnalyser();
+          connect.call(this, window.__meter);
+        }
+        return connect.call(this, dest, ...rest);
+      };
+    });
+    // Hand the sounds over from another origin, as a host that redirects to
+    // where it keeps its files does. The test server, reached as 127.0.0.1, is
+    // that origin, and allows CORS as such hosts do.
+    await page.route(/\/\/localhost:\d+\/sounds\//, (route) =>
+      route.fulfill({ status: 302, headers: { Location: route.request().url().replace('//localhost:', '//127.0.0.1:') } }));
+
+    await openBoard(page);
+    const crickets = pad(page, 'Crickets ambiance');
+    await crickets.click();
+    await expect(crickets).toHaveClass(/pad--playing/);
+
+    await expect.poll(() => page.evaluate(() => {
+      const data = new Float32Array(window.__meter.fftSize);
+      window.__meter.getFloatTimeDomainData(data);
+      return Math.max(...data.map(Math.abs));
+    }), { timeout: 5000 }).toBeGreaterThan(0.001);
+  });
+});
