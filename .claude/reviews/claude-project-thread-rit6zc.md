@@ -21,4 +21,12 @@ Head reviewed: 6a52aee. No finding.
 
 - Noted and not counted: a first tap in the same few milliseconds as Reconnect could be dropped while its channel awaits its URL. Too narrow to act on.
 
-Reviewed head: 6a52aee8e0dc55e1df24ff0c99961fc7c4d5502d
+
+# Pass 4
+
+Head reviewed: 54f084a, after merging main (3 × 4 starting board, tap back on during a fade, solo, multi-drop). No finding.
+
+- Checked: repoint/_renew with main's tap-back-on and solo paths, the resize test on the 3 × 4 board, the merged docs.
+- Noted and not counted: a stale pad tapped again inside its own fade stays on the kept copy until it next falls silent; the same sound unless the file changed on disk.
+
+Reviewed head: 54f084a329d636474d9c6dd02ab4c1d603ad1be0
