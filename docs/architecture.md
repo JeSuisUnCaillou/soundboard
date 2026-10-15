@@ -10,6 +10,7 @@ why things are the way they are is in [decisions.md](decisions.md).
 | File | Owns |
 | --- | --- |
 | `index.html` | The shell: the rail, the grid, the *book*, the transport, and the three `<dialog>` sheets (`#picker`, `#padEditor`, `#setup`). Every element the code or a test finds has an `id` here. |
+| `css/fonts.css`, `fonts/` | IBM Plex, served with the board (Latin and Latin Extended; licence in `fonts/OFL.txt`). |
 | `css/app.css` | All styling. BEM-ish classes (`pad--playing`, `lib__item--used`). Layout breakpoints at 900px (*narrow*: the book opens over the board) and 560px, and `pointer: coarse` for touch. |
 | `js/app.js` | The `App` class: owns the open board and the edit state, wires every event (taps, keys, drags, drops, pickers), saves, restores, keeps the screen awake. The only module that decides things. |
 | `js/engine.js` | `Engine`: Web Audio. One *channel* per pad, extra *voices* for layering and previews, fades, the per-frame `tick()`. Also `probeDuration()`. |
@@ -20,7 +21,7 @@ why things are the way they are is in [decisions.md](decisions.md).
 | `js/ui.js` | Drawing only: `drawGrid`, `paintPads` (per frame), `drawLibrary` (the tree), `drawStop`, `setPanel`, `setBook`, `toast`, `say`. Decides nothing. |
 | `js/gels.js` | The eleven *gels* and `DEFAULT_GEL`. |
 | `js/bundled.js` | The *bundled sounds* list and the `default/` path prefix. |
-| `sw.js` | The service worker: network first, cache as fallback. |
+| `sw.js` | The service worker: network first with a 3 s patience, cache as fallback. |
 | `sounds/` | The bundled sound files. |
 | `manifest.webmanifest`, `icon*` | Install metadata. |
 | `e2e/` | The test suite, see [testing.md](testing.md). |
@@ -205,10 +206,16 @@ but nothing in the UI switches boards.
 
 ## Offline (`sw.js`)
 
-Network first with `cache: 'no-cache'`, falling back to the cache, falling back
-to `index.html`. Same-origin GETs only, so the Google Fonts stylesheet is not
-cached and the board falls back to system fonts offline. The `SHELL` list is
-precached on install.
+Network first with `cache: 'no-cache'`, for same-origin GETs. The cache
+answers when the network fails, answers with an error, or has not answered
+within `PATIENCE` (3 s); after one such wait the cache answers at once for
+`SLOW_SPELL` (30 s), while the network still refreshes it behind. Only a `200`
+from the site itself is cached, so an error or a login page never replaces a
+good copy. A navigation the cache does not know gets `index.html`; any other
+miss fails as itself. The `SHELL` list (with the Latin fonts and every icon) is
+precached on install with `cache: 'reload'`, so the HTTP cache cannot hand it
+a stale copy. The fonts are the board's own, so nothing is asked of another
+site.
 
 > [!IMPORTANT]
 > A new file the app loads (a module, a bundled sound) must be added to `SHELL`

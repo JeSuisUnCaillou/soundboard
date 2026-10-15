@@ -61,8 +61,11 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 - Branch on `isNarrow(page)` only where the layout really differs (the book,
   the bottom bar).
 - `page.route` cannot see requests the service worker answers: a test that
-  routes requests needs `test.use({ serviceWorkers: 'block' })`, as the
-  cross-origin test in `board.spec.js` does.
+  routes the page's requests needs `test.use({ serviceWorkers: 'block' })`, as
+  the cross-origin test in `board.spec.js` does. To route the worker's own
+  requests (weak wifi, a server error), use `context.route`:
+  `playwright.config.js` sets `PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS`
+  so that it sees them.
 - Persistence is tested by `page.reload()` and asserting the board came back.
 - Adding sounds, with the pickers deleted as CLAUDE.md says:
 
@@ -90,7 +93,7 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 | --- | --- |
 | `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades and second taps, stop points, a pad stopped while starting, keys, cross-origin sound. |
 | `edit.spec.js` | Building a board: edit mode, the pad sheet, emptying, adding sounds (by the file input and by a drop). |
-| `offline.spec.js` | The service worker: reload with the network off. |
+| `offline.spec.js` | The service worker: reload with the network off, wifi that never answers, a server error, the board's own fonts. |
 
 What is not covered yet is listed in [status.md](status.md#test-coverage).
 
