@@ -97,18 +97,23 @@ test('Stop greys out as soon as everything is fading out', async ({ page }) => {
 test('a pad tapped while it fades out starts again, and keeps playing', async ({ page }) => {
   await openBoard(page);
   const crickets = pad(page, 'Crickets ambiance');
+  const left = async () => {
+    const [m, sec] = (await crickets.locator('.pad__time').textContent()).replace('-', '').split(':');
+    return Number(m) * 60 + Number(sec);
+  };
 
+  // Far enough in that starting again from the top shows on the clock, however
+  // slowly the steps below run.
   await crickets.click();
-  await expect(crickets).toHaveClass(/pad--playing/);
+  await expect.poll(left, { timeout: 15000 }).toBeLessThanOrEqual(21);
   await crickets.click();
   await expect(crickets).not.toHaveClass(/pad--playing/);
 
   await crickets.click();
   await expect(crickets).toHaveClass(/pad--playing/);
   await expect(page.locator('#btnStop')).toBeEnabled();
+  expect(await left()).toBeGreaterThan(22);
   // Well past the end of the 1.5 s fade it interrupted, it is still running.
-  // It comes up from where the fade got to, not from the top, so its clock
-  // says nothing fixed about how long it has run.
   await expectStillPlayingAfter(page, crickets, 3000);
 });
 
