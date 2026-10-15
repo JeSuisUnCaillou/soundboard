@@ -47,7 +47,8 @@ message.
 by the owner over a GitHub workflow (2026-10-15 14:05: "i don't want a github
 workflow, i want a scheduled task"). Its prompt only points to `CLAUDE.md` §
 Periodic review, which holds the count: PRs merged since the newest
-`periodic-review` issue, or after #50 for the first. Counting from the last
+`periodic-review` issue was closed, or numbered above #50 for the first; an
+open one is an interrupted run, resumed rather than counted from. Counting from the last
 issue rather than a modulo of the total means a week with more than 20 merges
 is caught all the same; the review runs up to a week after the 20th merge.
 **Expected impact**: `periodic-review` issues opened, against PRs merged —
@@ -81,7 +82,7 @@ the second periodic review — if not: move the rejected lines into a file under
 **Pillar**: context
 **Evidence**: `CLAUDE.md` names neither review.
 **Remedy**: write — `CLAUDE.md` § Periodic review: the count, the issue, the
-two skills in order, how it closes. `CLAUDE.md` goes from 142 to 158 lines,
+two skills in order, how it closes. `CLAUDE.md` goes from 142 to 160 lines,
 far under the 300 of `how-we-write.md`.
 **Expected impact**: `periodic-review` issues closed with a harness PR and an
 architecture comment linked — baseline none — expected every one — check at

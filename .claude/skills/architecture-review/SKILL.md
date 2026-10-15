@@ -40,10 +40,10 @@ other work (`CLAUDE.md` § Track work in GitHub issues).
    `docs/status.md` is named in the issue, for the PR that fixes it. Done
    when every confirmed finding has its issue or its comment.
 
-6. **Report** in one comment on the `periodic-review` issue (in the thread if
-   none): the issues filed, the choices left to the owner, and every rejected
-   finding with its reason, which the next review reads at step 2. Done when
-   the comment is posted.
+6. **Report** in one comment on the `periodic-review` issue (to the user if
+   run alone): the harness PR, the issues filed, the choices left to the
+   owner, and every rejected finding with its reason, which the next review
+   reads at step 2. Done when the comment is posted.
 
 ## The reviewers
 

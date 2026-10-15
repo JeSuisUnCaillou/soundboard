@@ -147,12 +147,14 @@ Every 20 pull requests merged into `main`, the harness and the whole codebase
 get a review. A weekly scheduled task in the Claude project starts a session
 that follows this section:
 
-1. Count the pull requests merged into `main` since the newest issue labelled
-   `periodic-review` was opened, or after #50 if there is none. Under 20, stop
-   and say so.
-2. Open an issue labelled `periodic-review`, "Periodic review after #n", as
-   the work's issue.
-3. Run `Skill(skill: "harness-engineer")`, then
-   `Skill(skill: "architecture-review")`.
-4. Comment on the issue with the harness PR and the issues filed, and close
-   it. The harness PR waits for the owner.
+1. If an issue labelled `periodic-review` is open, an earlier run was cut
+   short: take it up at the step it reached. Otherwise count the pull
+   requests merged into `main` since the newest one was closed, or numbered
+   above #50 if there is none. Under 20, stop and say so.
+2. Open an issue labelled `periodic-review`, "Periodic review after #n". It is
+   the harness pass's issue too: the pass opens no other, and its PR says
+   `Refs #n`, so merging it leaves this issue to step 4.
+3. Run `Skill(skill: "harness-engineer")` and the review loop on its branch,
+   then `Skill(skill: "architecture-review")`.
+4. Close the issue once the architecture review has posted its report on it.
+   The harness PR waits for the owner.
