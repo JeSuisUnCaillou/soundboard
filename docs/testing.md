@@ -21,6 +21,13 @@ The suite takes about half a minute. `playwright.config.js` starts
 On failure, CI uploads `playwright-report/` and `test-results/` (traces are
 kept on failure) as the `playwright-report` artifact.
 
+To stop a server started by hand, kill it by its port
+(`kill $(lsof -t -i:4173)`), not with `pkill -f serve.js`: in a Claude Code
+session the command's own shell has the pattern in its command line, so
+`pkill -f` kills that shell too. The command then ends with "Exit code 144"
+and nothing after the `pkill` runs, although what ran before it, a push
+included, went through.
+
 ## The setup
 
 | Piece | What it does |
@@ -98,10 +105,11 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 | Spec | Covers |
 | --- | --- |
 | `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades, each second-tap mode (layering up to ×3, and a hit layering by default), tapping back on during a fade out, solo, priming a big board, start and stop points, both kinds of loop, a pad stopped while starting, keys (held, a pad's own, after the volume or a button has the focus), cross-origin sound. |
-| `edit.spec.js` | Building a board: edit mode, the pad sheet (name, level, fades, gel, kept after a reload), Board settings (rows and columns, growing and shrinking), saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), the keyboard in edit mode, hearing a sound from the tree. |
+| `edit.spec.js` | Building a board: edit mode, the pad sheet (name, level, fades, gel, kept after a reload), Board settings (rows and columns, growing and shrinking), saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), dropping a sound on a pad, a pad set up before its sound is open, the keyboard in edit mode, hearing a sound from the tree, the filter. |
 | `kept.spec.js` | Coming back to it: the kept copies of picked sounds after a reload and offline, a folder handle that comes back by itself, Reconnect, and a pad whose sound is missing until it is added. |
 | `offline.spec.js` | The service worker: reload with the network off, wifi that never answers, a server error, the board's own fonts. |
-| `drag.spec.js` | Moving pads in edit mode: by mouse on `desktop`, by a resting finger on `phone` (each `describe` skips the other project). Swapping, moving to an empty place, taking a pad off, and a press or a quick swipe that is not a drag; on `desktop`, a sound dragged from the tree onto an empty or a filled pad. |
+| `drag.spec.js` | Moving pads in edit mode: by mouse on `desktop`, by a resting finger on `phone` (each `describe` skips the other project). Swapping, moving to an empty place, taking a pad off, and a press or a quick swipe that is not a drag; on `desktop`, a sound dragged from the tree onto an empty pad, or onto a filled one that keeps its name and key. |
+| `storage.spec.js` | What is kept between launches: a browser that keeps nothing, a launch whose storage fails once, a kept folder that cannot be asked about, saving when the page is hidden, clearing an abandoned board, the wake lock, a picker dismissed without a cancel event. |
 
 What is not covered yet is listed in [status.md](status.md#test-coverage).
 

@@ -22,18 +22,14 @@ screen wake lock.
 
 | Bug | Issue |
 | --- | --- |
-| Touching the master volume turns off every keyboard shortcut, Escape included | [#12](https://github.com/JeSuisUnCaillou/soundboard/issues/12) |
 | Stop points, loop points and fades to a stop point only work while the tab is visible | [#16](https://github.com/JeSuisUnCaillou/soundboard/issues/16) |
 | Changing columns in Board settings throws pads away or leaves sounds on the wrong pads | [#17](https://github.com/JeSuisUnCaillou/soundboard/issues/17) |
 | Pressing Reconnect during a show cuts every sound dead | [#18](https://github.com/JeSuisUnCaillou/soundboard/issues/18) |
 | Keeping copies of sounds can silently skip some | [#19](https://github.com/JeSuisUnCaillou/soundboard/issues/19) |
-| Save board file ignores what was just typed in Board settings | [#45](https://github.com/JeSuisUnCaillou/soundboard/issues/45) |
-| The toast catches taps and drops meant for the pads beneath it | [#51](https://github.com/JeSuisUnCaillou/soundboard/issues/51) |
-| Smaller fixes from the code review | [#23](https://github.com/JeSuisUnCaillou/soundboard/issues/23) |
 
 ## Test coverage
 
-65 tests, all green: each runs at desktop and phone size, except the 10 drag
+78 tests, all green: each runs at desktop and phone size, except the 10 drag
 tests, which run by mouse on desktop or by finger on phone. Covered: the first
 launch, tapping, Stop, Escape, the master volume, fade and second-tap edge
 cases, every second-tap mode, layering, both kinds of loop, start and stop
@@ -42,13 +38,16 @@ key, keys after a button or the volume has the focus, a cross-origin sound, edit
 mode, renaming a pad and its level, fades and gel (with reload), Board settings
 rows and columns, shrinking the board, the waiting pad, emptying the board,
 adding sounds through the file input, hearing a sound from the tree, the filter,
-dragging a sound from the tree onto a pad, saving a board file and loading it
-back (missing sounds struck through), dropping several sounds or folders at
-once, the kept copies after a reload and offline, Reconnect, a missing sound
-added back, moving pads and taking them off by mouse and by finger, coming back
-offline, opening on weak wifi, keeping a good copy over a server error, asking
-no other site for anything, and setting up a pad, hearing a sound and putting it
-on a pad from the keyboard.
+saving a board file and loading it back (missing sounds struck through),
+dropping several sounds or folders at once, the kept copies after a reload and
+offline, Reconnect, a missing sound added back, moving pads and taking them off
+by mouse and by finger, a tap on a pad under a toast, dragging a sound from the
+tree onto a pad and a pad set up before its sound is open, a browser whose
+storage refuses or fails once, saving when the page is hidden, clearing an
+abandoned board, the screen wake lock, a picker dismissed without a word, coming
+back offline, opening on weak wifi, keeping a good copy over a server error,
+asking no other site for anything, and setting up a pad, hearing a sound and
+putting it on a pad from the keyboard.
 
 Not covered yet: nothing known beyond the suite's limits in
 [testing.md](testing.md#limits) (Chromium only, audio not listened to).
@@ -59,8 +58,8 @@ Not filed as issues yet; open one before working on any of them.
 
 - Remote branches left from merged work (`ccr-*`, `claude/compassionate-gauss-*`,
   `claude/mobile-upload-bug-*`) can be deleted.
-- `store.listBoards` / `deleteBoard` exist but there is no way to switch
-  between boards in the UI. In practice the board is always `default-board`:
+- There is no way to switch between boards in the UI (see
+  [architecture.md](architecture.md#what-is-remembered)). In practice the board is always `default-board`:
   a first launch creates it and stores it as the last board. Only when no
   board loads at all do `absorb` and `blankBoard` make one named after the
   first source.

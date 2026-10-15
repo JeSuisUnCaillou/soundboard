@@ -431,7 +431,7 @@ body[data-editing="on"] .pad__pencil:hover { color: var(--ink); }
 .book__title { margin: 0; font: 700 15px/1 var(--cond); }
 .book__empty { margin: 0; color: var(--ink-faint); font-size: 13px; }
 
-.lib { margin: 0; padding: 0; list-style: none; overflow-y: auto; overflow-x: hidden; min-height: 0; }
+.lib { margin: 0; padding: 0; overflow-y: auto; overflow-x: hidden; min-height: 0; }
 .lib__item {
   display: flex;
   justify-content: space-between;
@@ -689,18 +689,16 @@ select.field option:checked { background: var(--warn); color: #241a07; }
   background: var(--pad);
   font-size: 14px;
   z-index: 6;
+  /* It has nothing to press, and the pad under it may be the next cue. */
+  pointer-events: none;
 }
 .toast[hidden] { display: none; }
 
 /* ───────────────────────── tablets and phones ─────────────────────────
 
-   The board stays a fixed shell at every size: nothing about a show should
-   depend on having scrolled to the right place. On a narrow screen the prompt
-   book slides over the pads instead of sitting beside them, and the grid
-   reflows to whatever columns fit rather than squeezing the authored shape
-   into a phone. */
-
-#btnBook { display: none; }
+   On a narrow screen the book opens over the pads instead of sitting beside
+   them, and the grid keeps the shape it was given, scrolling rather than
+   rearranging itself under the operator. */
 
 @media (max-width: 900px) {
   :root { --book: 100%; }

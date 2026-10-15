@@ -67,11 +67,19 @@ every `/` of the branch name turned into `-`; each pass appends to it.
    merged unreviewed. Chosen by the user on 2026-10-15: "The only thing I
    want to review are medium-big features."
 
+8. **Weigh the leftovers.** List what the work leaves open: questions you
+   asked yourself or the user and did not settle, tasks you put off, edge
+   cases a reviewer raised that this PR does not cover, findings you rejected
+   as out of scope but real. Drop what no longer matters, and say why in a
+   few words; open an issue for each of the others, unless one already
+   exists (search first), saying what and why and linking the PR.
+
 ## What you return
 
 In the reply that hands the work over: shipped or waiting for the user and
 why, how many passes and what they fixed in a line, what was left to the
-user, and a link to the review file. Add the same line to the PR description.
+user, the issues step 8 opened, and a link to the review file. Add the same
+line to the PR description.
 
 ## Guardrails
 
