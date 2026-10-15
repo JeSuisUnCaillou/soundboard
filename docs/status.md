@@ -34,6 +34,7 @@ screen wake lock.
 | The service worker is slow on weak wifi and can cache error pages | [#21](https://github.com/JeSuisUnCaillou/soundboard/issues/21) |
 | Sounds in the tree and pad settings cannot be reached from the keyboard | [#22](https://github.com/JeSuisUnCaillou/soundboard/issues/22) |
 | Smaller fixes from the code review | [#23](https://github.com/JeSuisUnCaillou/soundboard/issues/23) |
+| Sounds added after Empty the board still lay themselves out on the pads (fix in #26) | [#25](https://github.com/JeSuisUnCaillou/soundboard/issues/25) |
 
 ## Test coverage
 
@@ -57,14 +58,6 @@ Not covered yet:
 
 Not filed as issues yet; open one before working on any of them.
 
-- Sounds no longer lay themselves out on the board, except the bundled ones on
-  a first launch, but `App.absorb` in `js/app.js` still places up to
-  `AUTO_PLACE` (10) added sounds when the board has no filled pad, which only
-  happens after **Empty the board**. Text left from the old behaviour: the
-  "Add more sounds" picker blurb ("lands on the first free pads",
-  `openPicker`), the comments on `AUTO_PLACE` and `absorb`, and the header of
-  `js/model.js`, which says the board "grows past" its size (`fitPads` never
-  grows it).
 - Offline, the Google Fonts stylesheet is not available (the service worker
   only caches same-origin files), so the board falls back to system fonts.
 - `sw.js` precaches `icon.svg` but not the PNG icons.

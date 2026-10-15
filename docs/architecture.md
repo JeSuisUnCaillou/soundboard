@@ -162,9 +162,9 @@ wire events, add the bundled sounds, then `restore()`:
 **Adding sounds** always ends in `absorb(added)`: create a board if there is
 none (id = slug of the first source), store handles, save, `primeAll()` (first 48
 pads), `measure()` (three at a time), `keepAwake()`, `keepSounds()`, toast. Added sounds go under Sounds, not
-on pads. (`absorb` still auto-places up to `AUTO_PLACE` sounds on a board with
-no filled pad, a leftover reached only after **Empty the board**; see
-[status.md](status.md#known-loose-ends).)
+on pads; only `firstBoard()` lays sounds out, through `place()`. (Until #26
+merges, `absorb` still auto-places up to `AUTO_PLACE` sounds after **Empty the
+board**: [#25](https://github.com/JeSuisUnCaillou/soundboard/issues/25).)
 
 **Editing**: `setEditing(on)` toggles `body[data-editing]` and the book. In edit
 mode a click on a filled pad still fires it (a listen), a click on a sound in
