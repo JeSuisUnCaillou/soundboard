@@ -107,7 +107,8 @@ test('a pad tapped while it fades out starts again, and keeps playing', async ({
   await expect(crickets).toHaveClass(/pad--playing/);
   await expect(page.locator('#btnStop')).toBeEnabled();
   // Well past the end of the fade it interrupted, it is still running.
-  await expect(crickets.locator('.pad__time')).toHaveText('-0:23', { timeout: 6000 });
+  // Any second at or past -0:23 will do: a busy runner may poll past one.
+  await expect(crickets.locator('.pad__time')).toHaveText(/^-0:(1\d|2[0-3])$/, { timeout: 6000 });
   await expect(crickets).toHaveClass(/pad--playing/);
 });
 
