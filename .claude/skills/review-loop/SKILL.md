@@ -54,15 +54,16 @@ every `/` of the branch name turned into `-`; each pass appends to it.
    reads that line; a branch unchanged since it outside `.claude/reviews/`
    needs no new pass.
 
-7. **Ship a bug fix, hand over the rest.** A PR that fixes a bug with no
-   important change to the app, whose loop converged with nothing left to the
-   user, merges by itself: `enable_pr_auto_merge` with the squash method, so
-   GitHub merges once CI is green; if that is refused, merge it
-   (`merge_pull_request`, squash) on the CI-green event of the PR you watch.
-   Everything else waits for the user: a feature, a change to how the board
-   behaves beyond the bug, the harness (`.claude/`, `CLAUDE.md`, `.github/`),
-   a finding left to them, a loop that did not converge. Chosen by the user on
-   2026-10-15.
+7. **Ship a bug fix, hand over the rest.** A PR ships by itself when all of
+   these hold: it fixes a bug the user or an issue named; its diff touches
+   only `index.html`, `css/`, `js/`, `sw.js`, `e2e/` and its review file; the
+   loop converged with nothing left to the user. Watch the PR
+   (`subscribe_pr_activity`), and on its CI-green event merge it with
+   `merge_pull_request`, squash, and `expectedHeadSha` set to the commit that
+   closed the review file, so a commit pushed after the review is never
+   merged unreviewed. Everything else waits for the user: a feature, a
+   behaviour change beyond the bug, any other file, a loop that did not
+   converge. Chosen by the user on 2026-10-15.
 
 ## What you return
 

@@ -10,7 +10,10 @@ the repository is the site.
    request against `main` and hand over the branch preview: the rules are in
    [CLAUDE.md](../CLAUDE.md). `e2e.yml` runs the suite on the pull request.
 2. The owner merges (squash merge so far: the PR number ends up in the title,
-   `… (#3)`).
+   `… (#3)`). A small bug fix whose review loop converged is merged by Claude
+   on green CI, which publishes it with no one else looking: the rule is in
+   [`.claude/skills/review-loop/SKILL.md`](../.claude/skills/review-loop/SKILL.md),
+   step 7.
 3. The push to `main` runs `pages.yml`: it calls `e2e.yml` first and deploys
    only if the suite passes. Deploys run one at a time and are not cancelled.
 

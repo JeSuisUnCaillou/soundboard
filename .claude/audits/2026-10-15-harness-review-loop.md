@@ -108,9 +108,10 @@ small bug fix "once CI is green and the PR has been reviewed at least once
 (e.g. a /review sub-agent)"; #27's review was written by the merging session
 five seconds before the merge. The user chose on 2026-10-15 13:28 that the
 loop merges bug fixes by itself and nothing else ("Bug fixes only").
-**Remedy**: write — step 7 of the skill: a converged bug fix merges with
-GitHub's squash auto-merge on green CI; features, harness changes and anything
-left to the user wait. `CLAUDE.md` points to it; the merge rule draft PR #44
+**Remedy**: write — step 7 of the skill: a converged bug fix whose diff stays
+in the app's files and `e2e/` is merged on its CI-green event, pinned to the
+reviewed commit with `expectedHeadSha`; features, other files and anything
+left to the user wait. `docs/deployment.md` says who merges. `CLAUDE.md` points to it; the merge rule draft PR #44
 brings in from memory gives way to this pointer.
 **Expected impact**: bug-fix PRs merged by Claude without a converged review
 file, and feature PRs merged by Claude — baseline 1 merged with a one-off
