@@ -9,8 +9,9 @@ the repository is the site.
 1. Work on a branch, with its issue and its end-to-end test, open a pull
    request against `main` and hand over the branch preview: the rules are in
    [CLAUDE.md](../CLAUDE.md). `e2e.yml` runs the suite on the pull request.
-2. The owner merges (squash merge so far: the PR number ends up in the title,
-   `… (#3)`).
+2. The owner merges, or Claude for a small fix, under the rules in
+   [CLAUDE.md](../CLAUDE.md#who-merges): a squash merge, so the PR number ends
+   up in the title, `… (#3)`.
 3. The push to `main` runs `pages.yml`: it calls `e2e.yml` first and deploys
    only if the suite passes. Deploys run one at a time and are not cancelled.
 
