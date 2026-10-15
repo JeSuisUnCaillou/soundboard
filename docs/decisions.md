@@ -24,7 +24,8 @@ is in [architecture.md](architecture.md).
 - **The board belongs to the operator.** A first launch puts the twelve
   bundled sounds on the *Default board*, set up the way an improv show uses
   them, so it can be played from the first minute; after that nothing lays
-  itself out and nothing is set up by name.
+  itself out and nothing is set up by name, unless the operator asks for the
+  default board again on an empty board.
   Added sounds wait under Sounds until the operator puts them on a pad, and
   adding sounds never moves a pad.
 - **A sound's length sets what it is.** Under five seconds it is a *hit* (no

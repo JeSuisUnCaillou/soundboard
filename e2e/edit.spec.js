@@ -48,6 +48,26 @@ test('emptying the board asks twice', async ({ page }) => {
   await expect(page.locator('#toast')).toHaveText('The board is empty. The sounds are still under Sounds.');
 });
 
+test('an empty board offers the default board back, set up as it was', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  const button = page.locator('#btnEmpty');
+
+  await button.click();
+  await button.click();
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(0);
+  await expect(button).toHaveText('Load the default board');
+
+  // Nothing is lost by loading onto an empty board, so it does not ask twice.
+  await button.click();
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(BUNDLED_TITLES.length);
+  await expect(button).toHaveText('Empty the board');
+
+  await pad(page, 'Storm').locator('.pad__pencil').click();
+  await expect(page.locator('#padLoop')).toBeChecked();
+  await expect(page.locator('#padGainOut')).toHaveText('50');
+});
+
 test('sounds added from the file picker land in the folder and can go on a pad', async ({ page }) => {
   // Take away the File System Access pickers, which a test cannot answer, so
   // the board falls back to the plain file input every other browser uses.

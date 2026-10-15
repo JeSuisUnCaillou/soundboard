@@ -8,7 +8,7 @@ import {
   newBoard, newPad, migrate, setCols, setRows, fitPads, filled, slug, move, padByKey, rowCol, padTitle,
   applyLengthDefaults,
 } from './model.js';
-import { bundledPaths, bundledSetup } from './bundled.js';
+import { bundledPaths, bundledSetup, isBundledPath } from './bundled.js';
 import { PadEditor, SetupSheet } from './editor.js';
 import {
   refs, bindRefs, drawGrid, paintPads, drawLibrary,
@@ -589,9 +589,7 @@ class App {
       rows: await store.getMeta('rows'),
     }));
     await store.setMeta('last', this.board.id);
-    await this.place(bundledPaths());
-    // Set up as a show would use them, not only by their length.
-    for (const { pad } of filled(this.board)) Object.assign(pad, bundledSetup(pad.file));
+    await this.layDefault();
     this.redraw();
     this.saveNow();
     this.primeAll();
@@ -853,9 +851,30 @@ class App {
     else refs.btnSetup.before(refs.btnEmpty);
   }
 
+  /** The sounds that come with the app on the first free pads, set up as a show would use them. */
+  async layDefault() {
+    await this.place(bundledPaths());
+    for (const { pad } of filled(this.board)) {
+      if (isBundledPath(pad.file)) Object.assign(pad, bundledSetup(pad.file));
+    }
+  }
+
+  /** An empty board has nothing to empty: the same button lays the default board out on it. */
+  async loadDefault() {
+    await this.layDefault();
+    this.redraw();
+    this.saveNow();
+    this.primeAll();
+    this.measure();
+  }
+
   /** Take every sound off the board, keeping the sounds themselves. Twice, to mean it. */
   emptyBoard() {
     if (!this.board) return;
+    if (!filled(this.board).length) {
+      this.loadDefault();
+      return;
+    }
     if (!this.armed) {
       this.armed = true;
       refs.btnEmpty.textContent = 'Really empty it?';
@@ -878,8 +897,16 @@ class App {
   disarm() {
     clearTimeout(this.armTimer);
     this.armed = false;
-    refs.btnEmpty.textContent = 'Empty the board';
     refs.btnEmpty.classList.remove('btn--danger');
+    this.labelEmpty();
+  }
+
+  labelEmpty() {
+    if (this.armed) return;
+    const empty = !!this.board && !filled(this.board).length;
+    refs.btnEmpty.textContent = empty ? 'Load the default board' : 'Empty the board';
+    refs.btnEmpty.classList.toggle('btn--danger-quiet', !empty);
+    refs.btnEmpty.classList.toggle('btn--quiet', empty);
   }
 
   setEditing(on) {
@@ -913,6 +940,7 @@ class App {
       waiting: this.padWanting,
     });
     drawStop(this.engine);
+    this.labelEmpty();
     if (this.editing) drawLibrary(this.board, this.library, refs.libFilter.value);
     this.paint();
     this.run();

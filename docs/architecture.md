@@ -165,7 +165,9 @@ wire events, add the bundled sounds, then `restore()`:
 **Adding sounds** always ends in `absorb(added)`: create a board if there is
 none (id = slug of the first source), store handles, save, `primeAll()` (first 48
 pads), `measure()` (three at a time), `keepAwake()`, `keepSounds()`, toast. Added sounds go under Sounds, not
-on pads; only `firstBoard()` lays sounds out, through `place()`.
+on pads; only `firstBoard()` and **Load the default board** (`loadDefault()`, what
+`#btnEmpty` does on a board with no filled pad) lay sounds out, both through
+`layDefault()` and `place()`.
 
 **Editing**: `setEditing(on)` toggles `body[data-editing]` and the book. In edit
 mode a click on a filled pad still fires it (a listen), a click on a sound in
