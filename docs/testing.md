@@ -2,7 +2,9 @@
 
 The board is covered by [Playwright](https://playwright.dev) end-to-end tests
 in `e2e/`, run in Chromium at desktop and phone size against the site as it is
-served. The rule that every change in behaviour comes with a test is in
+served. Both projects run the full Chromium in its new headless mode
+(`channel: 'chromium'`), not Playwright's separate headless shell, which now
+and then crashed between tests (#78). The rule that every change in behaviour comes with a test is in
 [CLAUDE.md](../CLAUDE.md#end-to-end-tests); this file is how to write and run
 them.
 
