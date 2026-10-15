@@ -1,0 +1,12 @@
+{
+  "name": "soundboard",
+  "private": true,
+  "type": "module",
+  "description": "Development tooling only: the board itself has no dependencies and no build.",
+  "scripts": {
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}
