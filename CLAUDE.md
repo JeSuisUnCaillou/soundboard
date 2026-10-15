@@ -59,9 +59,10 @@ language.
 Work is tracked in the repository's GitHub issues. Before starting a piece of
 work, find its issue or open one that says what and why. Reference it from the
 pull request (`Closes #n`) so merging closes it. Something found along the way
-and not done goes in a new issue, not in a TODO comment. When an issue opens or
-closes a gap listed in `docs/status.md`, update that table. When you suggest
-work, say which suggestions already have an issue.
+and not done goes in a new issue, not in a TODO comment; the review loop's
+step 8 weighs these leftovers when the work ends. When an issue opens or closes
+a gap listed in `docs/status.md`, update that table. When you suggest work, say
+which suggestions already have an issue.
 
 ## End-to-end tests
 

@@ -64,3 +64,30 @@ features. Reviewers: bugs and architect.
 No blocking finding: the loop stops here.
 
 Reviewed head: 70b5f3442e5679a23034f2651a9c84969cb30edc
+
+# PR #69, pass 1
+
+Head reviewed: 8ef8baf, leftovers weighed at the end of the work. Reviewers:
+bugs and architect.
+
+- bugs: no finding.
+- architect: the kinds of leftovers were listed in both `CLAUDE.md` and step 8,
+  already differently. Text, not blocking; fixed in 3371c68, `CLAUDE.md` points
+  to step 8.
+
+No blocking finding: the loop stops here.
+
+Reviewed head: 3371c682dafb25f772d8bba7c106da3ad87af0c2
+
+# PR #69, pass 2
+
+Head reviewed: dcdd5b8, after the leftovers sweep fixed `docs/status.md`.
+Reviewers: bugs and architect.
+
+- bugs: `docs/architecture.md` § Keys still said a focused master slider turns
+  every shortcut off (#12, fixed in #27). Text, not blocking; fixed in c47bede.
+- architect: no finding.
+
+No blocking finding: the loop stops here.
+
+Reviewed head: c47bede68c72169aaf94b04d00b059fd8ceaee72

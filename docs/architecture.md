@@ -193,11 +193,10 @@ and `beforeunload`. `keepSounds()` copies every loaded sound (pads first) into
 IndexedDB, skipping bundled ones and unchanged ones, deleting copies of sounds
 no longer loaded; on `QuotaExceededError` it stops trying for the session.
 
-**Keys** (`onKey`): ignored in an open dialog, in a field, or with a modifier.
+**Keys** (`onKey`): ignored in an open dialog, in a field that takes typing
+(`TYPED`: not a slider, checkbox or button), or with a modifier.
 Space = `stop()` (each live pad on its own fade out); Escape = cut all; a pad
-key fires that pad, ignoring auto-repeat. Because of the field rule, keyboard
-focus left on the master slider turns every shortcut off, Escape included
-([#12](https://github.com/JeSuisUnCaillou/soundboard/issues/12)).
+key fires that pad, ignoring auto-repeat.
 
 ## What is remembered
 

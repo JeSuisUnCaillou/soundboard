@@ -22,7 +22,6 @@ screen wake lock.
 
 | Bug | Issue |
 | --- | --- |
-| Touching the master volume turns off every keyboard shortcut, Escape included | [#12](https://github.com/JeSuisUnCaillou/soundboard/issues/12) |
 | Stop points, loop points and fades to a stop point only work while the tab is visible | [#16](https://github.com/JeSuisUnCaillou/soundboard/issues/16) |
 | Changing columns in Board settings throws pads away or leaves sounds on the wrong pads | [#17](https://github.com/JeSuisUnCaillou/soundboard/issues/17) |
 | Pressing Reconnect during a show cuts every sound dead | [#18](https://github.com/JeSuisUnCaillou/soundboard/issues/18) |
@@ -52,7 +51,7 @@ Not covered yet:
 | Gap | Issue |
 | --- | --- |
 | Playback modes, Reconnect and the kept copies | [#24](https://github.com/JeSuisUnCaillou/soundboard/issues/24) |
-| Dropping a folder on the window, the library filter | none |
+| The library filter | [#71](https://github.com/JeSuisUnCaillou/soundboard/issues/71) |
 
 ## Known loose ends
 
