@@ -21,6 +21,13 @@ The suite takes about half a minute. `playwright.config.js` starts
 On failure, CI uploads `playwright-report/` and `test-results/` (traces are
 kept on failure) as the `playwright-report` artifact.
 
+To stop a server started by hand, kill it by its port
+(`kill $(lsof -t -i:4173)`), not with `pkill -f serve.js`: in a Claude Code
+session the command's own shell has the pattern in its command line, so
+`pkill -f` kills that shell too. The command then ends with "Exit code 144"
+and nothing after the `pkill` runs, although what ran before it, a push
+included, went through.
+
 ## The setup
 
 | Piece | What it does |
