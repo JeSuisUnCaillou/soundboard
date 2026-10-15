@@ -1,4 +1,4 @@
-// Building a board: edit mode, the pad sheet, emptying, adding sounds.
+// Building a board: edit mode, the pad sheet, Board settings, emptying, adding sounds.
 
 import { test, expect, BUNDLED_TITLES, openBoard, pad, showSounds, silentWav } from './helpers.js';
 
@@ -96,4 +96,70 @@ test('sounds added to an emptied board wait under Sounds instead of filling pads
   await expect(page.locator('#lib .lib__item', { hasText: 'door slam' })).toBeVisible();
   await expect(page.locator('#lib .lib__item', { hasText: 'phone ring' })).toBeVisible();
   await expect(page.locator('#grid .pad--filled')).toHaveCount(0);
+});
+
+test('Enter saves the pad sheet from the name, and presses whatever button has the focus', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  const sheet = page.locator('#padEditor');
+
+  await pad(page, 'Gunshot').locator('.pad__pencil').click();
+  await page.locator('#padName').fill('Pistol');
+  await page.locator('#padCancel').focus();
+  await page.keyboard.press('Enter');
+  await expect(sheet).toBeHidden();
+  await expect(pad(page, 'Gunshot')).toBeVisible();
+  await expect(pad(page, 'Pistol')).toHaveCount(0);
+
+  await pad(page, 'Gunshot').locator('.pad__pencil').click();
+  await page.locator('#padName').fill('Pistol');
+  await page.keyboard.press('Enter');
+  await expect(sheet).toBeHidden();
+  await expect(pad(page, 'Pistol')).toBeVisible();
+});
+
+test('Escape leaves Board settings without changing the board, and Done keeps the change', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  const sheet = page.locator('#setup');
+  const pads = page.locator('#grid .pad');
+  await expect(pads).toHaveCount(9);
+
+  await page.locator('#btnSetup').click();
+  await page.locator('#setRows').fill('4');
+  await page.keyboard.press('Escape');
+  await expect(sheet).toBeHidden();
+  await expect(pads).toHaveCount(9);
+
+  await page.locator('#btnSetup').click();
+  await expect(page.locator('#setRows')).toHaveValue('3');
+  await page.locator('#setRows').fill('4');
+  await page.locator('#setupDone').click();
+  await expect(sheet).toBeHidden();
+  await expect(pads).toHaveCount(12);
+});
+
+test('a key loaded in capitals from a board file is still taken from its pad when another pad wants it', async ({ page }) => {
+  await openBoard(page);
+  const board = {
+    version: 3,
+    cols: 3,
+    rows: 3,
+    pads: [
+      { file: 'default/gunshot.mp3', name: 'Shot', key: 'Q' },
+      { file: 'default/sexy.mp3', name: 'Song', key: 'w' },
+    ],
+  };
+  await page.locator('#importFile').setInputFiles({
+    name: 'show.soundboard.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(board)),
+  });
+  await expect(pad(page, 'Shot')).toBeVisible();
+
+  await page.locator('#btnEdit').click();
+  await pad(page, 'Song').locator('.pad__pencil').click();
+  await page.locator('#padKey').fill('q');
+  await page.locator('#padSave').click();
+  await expect(page.locator('#toast')).toHaveText('Q was taken, so it moved to this pad.');
 });
