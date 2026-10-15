@@ -92,7 +92,7 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 | Spec | Covers |
 | --- | --- |
 | `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades and second taps, stop points (also in a hidden tab), a pad stopped while starting, keys, cross-origin sound, Reconnect during a cue. |
-| `edit.spec.js` | Building a board: edit mode, the pad sheet, Board settings (resizing too), loading a board file, emptying, adding sounds, a sound that cannot be kept. |
+| `edit.spec.js` | Building a board: edit mode, the pad sheet, Board settings (resizing too), loading a board file, emptying, adding sounds, keeping copies of sounds. |
 | `offline.spec.js` | The service worker: reload with the network off. |
 
 What is not covered yet is listed in [status.md](status.md#test-coverage).

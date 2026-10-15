@@ -34,7 +34,8 @@ screen wake lock.
 launch, tapping, Stop, Escape, the master volume, fade and second-tap edge
 cases, stop points (also with the tab hidden), a pad stopped while it is still starting, held keys, a cross-origin sound, edit mode, renaming a pad
 (with reload), emptying the board, adding sounds through the file input,
-resizing the board, Reconnect during a cue, a sound that cannot be kept, and
+resizing the board, Reconnect during a cue, keeping sounds added mid-copy and
+skipping one that cannot be kept, and
 coming back offline.
 
 Not covered yet:
@@ -42,9 +43,9 @@ Not covered yet:
 | Gap | Issue |
 | --- | --- |
 | Saving a board file and loading it back; missing files struck through | [#5](https://github.com/JeSuisUnCaillou/soundboard/issues/5) |
-| Pad settings beyond the name (key, loop, second-tap modes, trims, solo, level, gel) and Board settings rows / columns | [#6](https://github.com/JeSuisUnCaillou/soundboard/issues/6) |
+| Pad settings beyond the name (key, loop, second-tap modes, trims, solo, level, gel) and Board settings rows / columns beyond one resize that keeps every pad | [#6](https://github.com/JeSuisUnCaillou/soundboard/issues/6) |
 | Moving and removing pads by mouse and by finger | [#7](https://github.com/JeSuisUnCaillou/soundboard/issues/7) |
-| Playback modes, Reconnect and the kept copies | [#24](https://github.com/JeSuisUnCaillou/soundboard/issues/24) |
+| Playback modes, a refused Reconnect, and a browser out of room for the kept copies | [#24](https://github.com/JeSuisUnCaillou/soundboard/issues/24) |
 | Dropping a folder on the window, the library filter, the waiting pad | none |
 
 ## Known loose ends

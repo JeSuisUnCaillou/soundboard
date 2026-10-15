@@ -678,6 +678,7 @@ class App {
         const rec = have.get(path);
         if (rec && rec.size === file.size && rec.lastModified === (file.lastModified || 0)) continue;
         await store.putSound(id, path, file);
+        this.unkept?.delete(path); // kept after all: say so again if it fails later
         copied += 1;
       } catch (err) {
         if (err && err.name === 'QuotaExceededError') {
