@@ -20,7 +20,11 @@ screen wake lock.
 
 ## Known bugs
 
-None open.
+- [#84](https://github.com/JeSuisUnCaillou/soundboard/issues/84): a smaller
+  board says how many sounds came off, not which ones.
+- [#103](https://github.com/JeSuisUnCaillou/soundboard/issues/103): on a
+  phone, "Add more sounds" says the sounds are picked again each launch,
+  though the board keeps them.
 
 ## Test coverage
 
