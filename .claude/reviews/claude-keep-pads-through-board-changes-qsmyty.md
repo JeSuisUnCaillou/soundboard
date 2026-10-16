@@ -25,3 +25,14 @@ Head reviewed: e027bdc
 No blocking finding: the loop converged.
 
 Reviewed head: 41a804479e0e69fda6581d0d53d0a50a4136219b
+
+# Pass 4
+
+Head reviewed: a9ec1cc (a CI failure fixed after the loop closed: showSounds raced the tree reopening after a reload on a phone)
+
+- bugs: no finding; every caller of showSounds is in edit mode.
+- architect: docs/testing.md did not say showSounds waits for edit mode: fixed in 571844c.
+
+No blocking finding.
+
+Reviewed head: 571844cd8d67e03190aa48b594b00014291e725b
