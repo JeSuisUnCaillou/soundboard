@@ -676,6 +676,86 @@ test('a wider or narrower board keeps every pad at its row and column', async ({
   await expect(pad(page, 'Hero')).toHaveAttribute('aria-label', /row 4 column 2/);
 });
 
+test('a column or a row is added in one tap at the edge of the board, and stays after a reload', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+
+  await page.locator('#btnAddCol').click();
+  await expect(page.locator('#grid .pad')).toHaveCount(16);
+  await expect(page.locator('#grid .pad').nth(3)).toHaveAttribute('aria-label', /row 1 column 4/);
+  await expect(pad(page, 'Sting')).toHaveAttribute('aria-label', /row 2 column 1/);
+
+  await page.locator('#btnAddRow').click();
+  await expect(page.locator('#grid .pad')).toHaveCount(20);
+  await expect(page.locator('#grid .pad').last()).toHaveAttribute('aria-label', /row 5 column 4/);
+  await expect(pad(page, 'Happy')).toHaveAttribute('aria-label', /row 4 column 3/);
+
+  await page.reload();
+  await expect(page.locator('#grid .pad')).toHaveCount(20);
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(BUNDLED_TITLES.length);
+});
+
+test('removing a column with sounds on it asks twice, and they come back as they were when it is added again', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  const drop = page.locator('#btnDropCol');
+
+  await drop.click();
+  await expect(drop).toHaveText('Really remove it?');
+  await expect(page.locator('#grid .pad')).toHaveCount(12);
+
+  await drop.click();
+  await expect(page.locator('#toast')).toHaveText(
+    'Phone, Crickets, Romance and Happy came off the board. Back on a pad, they come back as they were.',
+  );
+  await expect(page.locator('#grid .pad')).toHaveCount(8);
+  await expect(drop).toHaveText('Remove column');
+
+  await page.locator('#btnAddCol').click();
+  await expect(page.locator('#grid .pad--filled')).toHaveCount(BUNDLED_TITLES.length);
+  await expect(pad(page, 'Happy')).toHaveAttribute('aria-label', /row 4 column 3/);
+});
+
+test('an empty row goes in one tap, and a row with sounds on it waits for the second', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  const drop = page.locator('#btnDropRow');
+  await page.locator('#btnAddRow').click();
+  await expect(page.locator('#grid .pad')).toHaveCount(15);
+
+  // Nothing is lost with the empty fifth row, so nothing is asked.
+  await drop.click();
+  await expect(page.locator('#grid .pad')).toHaveCount(12);
+  await expect(drop).toHaveText('Remove row');
+
+  // The fourth row holds Sad, Hero and Happy: one tap only asks.
+  await drop.click();
+  await expect(drop).toHaveText('Really remove it?');
+  await expect(page.locator('#grid .pad')).toHaveCount(12);
+  // Left alone, the question goes back to being the button.
+  await expect(drop).toHaveText('Remove row', { timeout: 6000 });
+  await expect(page.locator('#grid .pad')).toHaveCount(12);
+});
+
+test('the edges that grow and shrink the board show only while editing, and stop at its limits', async ({ page }) => {
+  await openBoard(page);
+  await expect(page.locator('#btnAddCol')).toBeHidden();
+  await expect(page.locator('#btnAddRow')).toBeHidden();
+
+  await page.locator('#btnEdit').click();
+  await expect(page.locator('#btnAddCol')).toBeVisible();
+  await expect(page.locator('#btnDropRow')).toBeVisible();
+
+  await page.locator('#btnSetup').click();
+  await page.locator('#setCols').fill('1');
+  await page.locator('#setRows').fill('12');
+  await page.locator('#setupDone').click();
+  await expect(page.locator('#btnDropCol')).toBeDisabled();
+  await expect(page.locator('#btnAddRow')).toBeDisabled();
+  await expect(page.locator('#btnAddCol')).toBeEnabled();
+  await expect(page.locator('#btnDropRow')).toBeEnabled();
+});
+
 test('sounds added while others are being kept are kept too, past one that cannot be', async ({ page }) => {
   await page.addInitScript(() => {
     delete window.showOpenFilePicker;

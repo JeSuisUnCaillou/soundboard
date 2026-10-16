@@ -12,8 +12,8 @@ _Last reviewed: 2026-10-16._
 Everything the [README](../README.md) describes is built and live, apart from
 the known bugs below: the default board on a first launch, adding folders and
 files by picker or drop, the library tree with filter, pad settings (name, gel,
-level, fades, loop, trims, second tap, solo), board settings (size,
-default fades, save and load a board file), moving and removing pads by mouse
+level, fades, loop, trims, second tap, solo), the board's size (from its
+edges or from board settings), board settings (default fades, save and load a board file), moving and removing pads by mouse
 and by finger, Stop / Space / Escape, the master volume, kept copies and
 Reconnect, offline through the service worker, install as an app, and the
 screen wake lock.
@@ -38,7 +38,9 @@ kinds of loop, start and stop points (also with the tab hidden), solo, a pad
 stopped while it is still starting, no pad answering a key, Space and Escape
 after a button or the volume has the focus, a cross-origin sound, edit mode,
 renaming a pad and its level, fades and gel (with reload), Board settings rows and columns
-(pads keeping their row and column, wider and narrower), shrinking the board and
+(pads keeping their row and column, wider and narrower), adding a row or a column
+from the edge, removing one (asking twice when it has sounds, at once when empty),
+the edges shown only while editing and stopping at one and twelve, shrinking the board and
 naming what came off, growing it back (across a reload), a sound put back set
 up as it was, an emptied board growing empty, the waiting pad, emptying the board,
 adding sounds through the file input, hearing a sound from the tree, the filter,

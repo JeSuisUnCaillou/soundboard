@@ -10,7 +10,7 @@ export const refs = {};
 
 export function bindRefs() {
   const ids = [
-    'rail', 'stage', 'grid', 'stageEmpty', 'btnAddEmpty', 'book', 'lib', 'libEmpty', 'libFilter',
+    'rail', 'stage', 'grid', 'btnAddCol', 'btnDropCol', 'btnAddRow', 'btnDropRow', 'stageEmpty', 'btnAddEmpty', 'book', 'lib', 'libEmpty', 'libFilter',
     'btnReconnect', 'btnAdd', 'btnEdit', 'btnEmpty', 'btnSetup',
     'browse', 'btnBrowse', 'btnBrowseDone',
     'picker', 'pickerTitle', 'pickerBlurb', 'pickerNote', 'pickerKeys', 'pickerClose',

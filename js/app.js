@@ -5,7 +5,7 @@ import { Library, CAN_PERSIST } from './library.js';
 import { Engine, probeDuration } from './engine.js';
 import { store, prefs } from './store.js';
 import {
-  newBoard, newPad, migrate, resize, fitPads, filled, slug, move, rowCol, padTitle,
+  newBoard, newPad, migrate, resize, MAX_COLS, MAX_ROWS, fitPads, filled, slug, move, rowCol, padTitle,
   applyLengthDefaults, giveSound, remember, recall, forgetPlaces,
 } from './model.js';
 import { bundledPaths, bundledSetup, isBundledPath } from './bundled.js';
@@ -41,6 +41,13 @@ function padOf(node) {
   if (pen) return refs.grid.querySelector(`.pad[data-i="${pen.dataset.i}"]`);
   return node.closest('.pad');
 }
+
+// The buttons that ask again before they undo work (`App.arm`).
+const ARMS = {
+  empty: { ref: 'btnEmpty', ask: 'Really empty it?' },
+  cols: { ref: 'btnDropCol', ask: 'Really remove it?', label: 'Remove column' },
+  rows: { ref: 'btnDropRow', ask: 'Really remove it?', label: 'Remove row' },
+};
 
 class App {
   constructor() {
@@ -129,6 +136,10 @@ class App {
     refs.btnEdit.addEventListener('click', () => this.setEditing(!this.editing));
     refs.btnEmpty.addEventListener('click', () => this.emptyBoard());
     refs.btnSetup.addEventListener('click', () => this.board && this.setup.open(this.board));
+    refs.btnAddCol.addEventListener('click', () => this.growOrShrink('cols', 1));
+    refs.btnDropCol.addEventListener('click', () => this.growOrShrink('cols', -1));
+    refs.btnAddRow.addEventListener('click', () => this.growOrShrink('rows', 1));
+    refs.btnDropRow.addEventListener('click', () => this.growOrShrink('rows', -1));
 
     refs.btnBrowse.addEventListener('click', () => setBook(true));
     refs.btnBrowseDone.addEventListener('click', () => setBook(false));
@@ -839,7 +850,7 @@ class App {
       ? asked
       : this.board.pads.findIndex((pad) => !pad || !pad.file);
     if (free === -1) {
-      toast('Every pad is taken. Add rows in Board settings, or tap a pad to replace what is on it.');
+      toast('Every pad is taken. Add a row under the pads, or tap a pad to replace what is on it.');
       return;
     }
     this.wantSound(-1);
@@ -853,6 +864,33 @@ class App {
   applySetup({ cols, rows, fadeIn, fadeOut }) {
     if (!this.board) return;
     this.board.defaults = { fadeIn, fadeOut };
+    this.resizeTo(cols, rows);
+  }
+
+  /**
+   * The edges round the grid while editing: one tap adds a column on the
+   * right or a row at the bottom; removing the last one asks again first when
+   * it has sounds on it.
+   */
+  growOrShrink(which, by) {
+    if (!this.board) return;
+    const { cols, rows } = this.board;
+    if (by < 0) {
+      const last = which === 'cols'
+        ? (i) => i % cols === cols - 1
+        : (i) => Math.floor(i / cols) === rows - 1;
+      const sounds = filled(this.board).filter(({ i }) => last(i)).length;
+      if (sounds && this.armed !== which) {
+        this.arm(which);
+        return;
+      }
+    }
+    this.disarm();
+    if (which === 'cols') this.resizeTo(cols + by, rows);
+    else this.resizeTo(cols, rows + by);
+  }
+
+  resizeTo(cols, rows) {
     // Every pad keeps its row and column. A smaller board names what it has
     // no room for; those pads are remembered, and come back to their places
     // when the board grows to hold them again.
@@ -996,12 +1034,8 @@ class App {
       this.loadDefault();
       return;
     }
-    if (!this.armed) {
-      this.armed = true;
-      refs.btnEmpty.textContent = 'Really empty it?';
-      refs.btnEmpty.classList.add('btn--danger');
-      clearTimeout(this.armTimer);
-      this.armTimer = setTimeout(() => this.disarm(), 4000);
+    if (this.armed !== 'empty') {
+      this.arm('empty');
       return;
     }
     this.disarm();
@@ -1019,15 +1053,31 @@ class App {
     toast('The board is empty. The sounds are still under Sounds.');
   }
 
+  /**
+   * A button that undoes work asks again: its first tap turns it into the
+   * question, a second within four seconds does it. One asks at a time.
+   */
+  arm(what) {
+    this.disarm();
+    this.armed = what;
+    const btn = ARMS[what];
+    refs[btn.ref].textContent = btn.ask;
+    refs[btn.ref].classList.add('btn--danger');
+    this.armTimer = setTimeout(() => this.disarm(), 4000);
+  }
+
   disarm() {
     clearTimeout(this.armTimer);
-    this.armed = false;
-    refs.btnEmpty.classList.remove('btn--danger');
-    this.labelEmpty();
+    const btn = ARMS[this.armed];
+    this.armed = null;
+    if (!btn) return;
+    refs[btn.ref].classList.remove('btn--danger');
+    if (btn.label) refs[btn.ref].textContent = btn.label;
+    else this.labelEmpty();
   }
 
   labelEmpty() {
-    if (this.armed) return;
+    if (this.armed === 'empty') return;
     const empty = !!this.board && !filled(this.board).length;
     refs.btnEmpty.textContent = empty ? 'Load the default board' : 'Empty the board';
     refs.btnEmpty.classList.toggle('btn--danger-quiet', !empty);
@@ -1072,6 +1122,10 @@ class App {
     drawEdges();
     drawStop(this.engine);
     this.labelEmpty();
+    refs.btnAddCol.disabled = this.board.cols >= MAX_COLS;
+    refs.btnDropCol.disabled = this.board.cols <= 1;
+    refs.btnAddRow.disabled = this.board.rows >= MAX_ROWS;
+    refs.btnDropRow.disabled = this.board.rows <= 1;
     if (this.editing) drawLibrary(this.board, this.library, refs.libFilter.value);
     this.paint();
     this.run();

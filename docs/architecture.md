@@ -9,7 +9,7 @@ why things are the way they are is in [decisions.md](decisions.md).
 
 | File | Owns |
 | --- | --- |
-| `index.html` | The shell: the rail, the grid, the *book*, the transport, and the three `<dialog>` sheets (`#picker`, `#padEditor`, `#setup`). Every element the code or a test finds has an `id` here. |
+| `index.html` | The shell: the rail, the grid with its two *edges* (`.frame`: `#btnAddCol`/`#btnDropCol` on the right, `#btnAddRow`/`#btnDropRow` underneath, shown only while editing), the *book*, the transport, and the three `<dialog>` sheets (`#picker`, `#padEditor`, `#setup`). Every element the code or a test finds has an `id` here. |
 | `css/fonts.css`, `fonts/` | IBM Plex, served with the board (Latin and Latin Extended; licence in `fonts/OFL.txt`). |
 | `css/app.css` | All styling. BEM-ish classes (`pad--playing`, `lib__item--used`). Layout breakpoints at 900px (*narrow*: the book opens over the board) and 560px (pads at least 84px wide, so four columns fit a phone 386px wide or more), and `pointer: coarse` for touch. |
 | `js/app.js` | The `App` class: owns the open board and the edit state, wires every event (taps, keys, drags, drops, pickers), saves, restores, keeps the screen awake. The only module that decides things. |
@@ -218,6 +218,12 @@ dropping on `#book`, or anywhere on `#transport` while `#browse` shows in it,
 takes the pad off. Whichever of the two the layout shows is marked
 `.drop--ready` for as long as a pad is in hand, and `.drop--off` while the pad
 is over it. Sounds dragged from the tree use HTML5 drag and drop with the `application/x-soundboard-path` type.
+
+The edges round the grid change its size a step at a time
+(`growOrShrink`): an add is one tap; removing the last column or row, when it
+holds a sound, first *arms* its button (`arm`), as **Empty the board** is armed,
+and only a second tap within four seconds removes it. One button is armed at a
+time (`ARMS`, `disarm`). Both edges and Board settings end in `resizeTo`.
 
 Everything in edit mode is a button the keyboard reaches. A tree row holds
 two: `.lib__play` (hear it) and `.lib__add` (the **+**). The pencil is a

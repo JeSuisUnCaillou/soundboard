@@ -176,6 +176,47 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
 }
 .stage__empty[hidden] { display: none; }
 
+/* The pads, and while editing the two edges that grow and shrink them: a
+   column of buttons on the right, where a new column goes, and a row of them
+   underneath, where a new row goes. */
+.frame {
+  display: grid;
+  grid-template: "grid" 1fr / minmax(0, 1fr);
+  gap: var(--gap);
+  height: 100%;
+}
+body[data-editing="on"] .frame {
+  grid-template:
+    "grid cols" 1fr
+    "rows ." auto / minmax(0, 1fr) auto;
+}
+.frame > .grid { grid-area: grid; }
+.edge { display: none; gap: var(--gap); }
+body[data-editing="on"] .edge { display: flex; }
+.grid[hidden] ~ .edge { display: none; }
+.edge--cols { grid-area: cols; flex-direction: column; width: 48px; }
+.edge--rows { grid-area: rows; }
+.edge--rows .btn { min-height: 44px; }
+.edge .btn {
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  border-style: dashed;
+  background: none;
+  color: var(--ink-dim);
+  font-size: 13px;
+}
+.edge .btn:hover:not(:disabled) { color: var(--ink); }
+/* Adding is the long side, so it is found without looking; removing is the
+   short end, beyond it. */
+.edge__add { flex: 1; }
+.edge__drop { flex: none; }
+.edge .edge__drop { color: color-mix(in oklab, var(--alert) 45%, var(--ink)); }
+.edge--cols .btn { writing-mode: vertical-rl; min-height: 0; padding: 12px 0; }
+.edge--rows .edge__drop { min-width: 9em; }
+.edge--cols .edge__drop { min-height: 9em; }
+.edge .btn--danger { border-style: solid; color: color-mix(in oklab, var(--alert) 70%, var(--ink)); }
+
 .grid[hidden] { display: none; }
 .grid {
   display: grid;
