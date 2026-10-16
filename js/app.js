@@ -1,11 +1,11 @@
-// Soundboard — wiring. Holds the open board, answers taps and keys, and keeps
+// Soundboard — wiring. Holds the open board, answers taps, Space and Escape, and keeps
 // the drawing in step with what the audio engine is actually doing.
 
 import { Library, CAN_PERSIST } from './library.js';
 import { Engine, probeDuration } from './engine.js';
 import { store, prefs } from './store.js';
 import {
-  newBoard, newPad, migrate, resize, fitPads, filled, slug, move, padByKey, rowCol, padTitle,
+  newBoard, newPad, migrate, resize, fitPads, filled, slug, move, rowCol, padTitle,
   applyLengthDefaults, giveSound,
 } from './model.js';
 import { bundledPaths, bundledSetup, isBundledPath } from './bundled.js';
@@ -20,9 +20,9 @@ const PATH_TYPE = 'application/x-soundboard-path';
 // Below this width the sounds list slides over the pads instead of sitting beside them.
 const NARROW = window.matchMedia('(max-width: 900px)');
 
-// Fields that take typing, where a letter is a letter and not a pad. A slider,
-// a checkbox or a button keeps the focus after a click but takes no text, so
-// the show's keys still work while one is focused.
+// Fields that take typing, where a space is a space and not Stop. A slider, a
+// checkbox or a button keeps the focus after a click but takes no text, so
+// Space and Escape still work while one is focused.
 const TYPED = 'textarea, select, '
   + 'input:not([type=range]):not([type=checkbox]):not([type=radio])'
   + ':not([type=button]):not([type=submit]):not([type=reset]):not([type=color]):not([type=file])';
@@ -407,15 +407,6 @@ class App {
       e.preventDefault();
       this.engine.stopAll({ fade: 0 });
       say('Everything cut');
-      return;
-    }
-    // A held key is one tap, not a pad flicking on and off with the repeat.
-    if (e.key.length === 1 && !e.repeat) {
-      const hit = padByKey(this.board, e.key);
-      if (hit) {
-        e.preventDefault();
-        this.tap(hit.i);
-      }
     }
   }
 

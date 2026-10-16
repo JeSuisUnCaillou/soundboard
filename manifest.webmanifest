@@ -1,7 +1,7 @@
 {
   "name": "Soundboard — sound cues for the stage",
   "short_name": "Soundboard",
-  "description": "Fire sound cues from a folder on your own machine. A grid of pads with fades, loops and keys. Nothing is uploaded.",
+  "description": "Fire sound cues from a folder on your own machine. A grid of pads with fades and loops, played by touch. Nothing is uploaded.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",

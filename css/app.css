@@ -175,8 +175,8 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   position: relative;
   display: grid;
   grid-template:
-    "name name" 1fr
-    "time key " auto / 1fr auto;
+    "name" 1fr
+    "time" auto / 1fr;
   gap: 2px;
   min-width: 0;
   padding: 9px 10px 11px;
@@ -254,17 +254,6 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   color: rgba(255, 255, 255, 0.72);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   font-variant-numeric: tabular-nums;
-}
-.pad__key:empty { display: none; }
-.pad__key {
-  grid-area: key;
-  justify-self: end;
-  padding: 1px 5px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 3px;
-  font: 400 11px/1.4 var(--mono);
-  color: rgba(255, 255, 255, 0.72);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 .pad__lamp {
   position: absolute;
@@ -666,8 +655,7 @@ kbd {
   min-width: 0;
 }
 .field:focus { border-color: var(--warn); }
-.field--num, .field--tiny { width: 5.5em; flex: none; font-family: var(--mono); }
-.field--tiny { width: 4.2em; text-align: center; }
+.field--num { width: 5.5em; flex: none; font-family: var(--mono); }
 .field--search { font-size: 14px; }
 select.field[size] { padding: 3px; font-family: var(--mono); font-size: 13px; }
 select.field option { padding: 3px 5px; }
@@ -769,7 +757,6 @@ select.field option:checked { background: var(--warn); color: #241a07; }
 
 @media (max-width: 560px) {
   .grid { grid-template-columns: repeat(var(--cols, 4), minmax(96px, 1fr)); grid-auto-rows: minmax(76px, 1fr); }
-  .pad__key { display: none; }
   .go { gap: 10px; }
   .stop__btn { flex: 1; }
 

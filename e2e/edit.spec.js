@@ -436,7 +436,7 @@ test('a board saved with the crickets under their old name still plays them', as
   await expect(night).toHaveClass(/pad--playing/);
 });
 
-test('a key loaded in capitals from a board file is still taken from its pad when another pad wants it', async ({ page }) => {
+test('a board file saved when pads had keys loads, and its pads answer to touch alone', async ({ page }) => {
   await openBoard(page);
   const board = {
     version: 3,
@@ -452,14 +452,19 @@ test('a key loaded in capitals from a board file is still taken from its pad whe
     mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(board)),
   });
-  await expect(pad(page, 'Shot')).toBeVisible();
+  const song = pad(page, 'Song');
+  await expect(song).toBeVisible();
+  await expect(page.locator('#grid .pad__key')).toHaveCount(0);
+
+  await page.keyboard.press('w');
+  await page.keyboard.press('q');
+  await expect(page.locator('#grid .pad--playing')).toHaveCount(0);
+  await song.click();
+  await expect(song).toHaveClass(/pad--playing/);
 
   await page.locator('#btnEdit').click();
   await pencil(page, 'Song').click();
-  await page.locator('#padKey').fill('q');
-  await page.locator('#padSave').click();
-  await expect(page.locator('#toast')).toHaveText('Q was taken, so it moved to this pad.');
-  await expect(pad(page, 'Shot').locator('.pad__key')).toHaveText('');
+  await expect(page.locator('#padKey')).toHaveCount(0);
 });
 
 test('a board file saved from Board settings holds the size just typed there', async ({ page }) => {
@@ -687,7 +692,6 @@ test('a board saved to a file loads back as it was, with missing sounds struck t
   // One pad set up away from its defaults, and a board of another size.
   await pencil(page, 'Gunshot').click();
   await page.locator('#padName').fill('Pistol');
-  await page.locator('#padKey').fill('g');
   await page.locator('#padFadeIn').fill('2');
   await page.locator('#padFadeOut').fill('4');
   await page.locator('#padGels .gel[aria-label^="Primary Red"]').click();
@@ -709,6 +713,8 @@ test('a board saved to a file loads back as it was, with missing sounds struck t
   const board = JSON.parse(await readFile(await (await download).path(), 'utf8'));
   expect(board.cols).toBe(4);
   expect(board.rows).toBe(2);
+  // Pads are played by touch, so the file carries no keys.
+  expect(board.pads.filter((p) => p && 'key' in p)).toEqual([]);
 
   // The file travels to a machine where one of its sounds is not open.
   const crickets = board.pads.find((p) => p && p.file.includes('crickets'));
@@ -742,7 +748,6 @@ test('a board saved to a file loads back as it was, with missing sounds struck t
   await expect(pad(page, 'Thunder')).toHaveClass(/pad--missing/);
   const pistol = pad(page, 'Pistol');
   await expect(pistol).not.toHaveClass(/pad--missing/);
-  await expect(pistol.locator('.pad__key')).toHaveText('g');
 
   await pencil(page, 'Pistol').click();
   await expect(page.locator('#padFadeIn')).toHaveValue('2');

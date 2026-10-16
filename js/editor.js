@@ -32,10 +32,7 @@ export class PadEditor {
     el('padHear').addEventListener('click', () => {
       if (this.state && this.state.pad.file) this.onHear(this.state.pad.file);
     });
-    el('padKey').addEventListener('input', (e) => {
-      e.target.value = e.target.value.trim().slice(0, 1).toLowerCase();
-    });
-    // Enter in the name or the key saves, as a form does. Anywhere else it
+    // Enter in the name saves, as a form does. Anywhere else it
     // belongs to what has the focus: Cancel cancels, a gel is picked, a
     // number field keeps it.
     this.dlg.addEventListener('keydown', (e) => {
@@ -57,7 +54,6 @@ export class PadEditor {
     el('padHear').disabled = !pad.file || missing;
     el('padName').value = pad.name;
     el('padName').dataset.auto = pad.name ? '' : '1';
-    el('padKey').value = pad.key || '';
     el('padGain').value = Math.round((pad.gain ?? 1) * 100);
     el('padGainOut').textContent = String(Math.round((pad.gain ?? 1) * 100));
     el('padFadeIn').value = pad.fadeIn;
@@ -77,7 +73,7 @@ export class PadEditor {
   }
 
   save() {
-    const { board, i, pad } = this.state;
+    const { i, pad } = this.state;
     const file = pad.file;
     if (!file) {
       toast('This pad has no sound yet. Put one on it from the folder.');
@@ -99,21 +95,10 @@ export class PadEditor {
       loop: el('padLoop').checked,
       tap: el('padTap').value,
       solo: el('padSolo').checked,
-      key: el('padKey').value.trim().slice(0, 1).toLowerCase(),
       // What is set here stands, whatever the sound's length turns out to be.
       settled: true,
     };
     if (end != null && end <= start) toast('The stop point has to come after the start point, so it was cleared.');
-
-    // Two pads on one key would make the board unpredictable under the hand.
-    if (next.key) {
-      const clash = board.pads.findIndex((p, j) => p && j !== i && p.key === next.key);
-      if (clash !== -1) {
-        board.pads[clash] = { ...board.pads[clash], key: '' };
-        toast(`${next.key.toUpperCase()} was taken, so it moved to this pad.`);
-      }
-    }
-
 
     this.dlg.close();
     this.onSave(i, next);

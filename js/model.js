@@ -16,14 +16,6 @@ export const BOARD_VERSION = 3;
 export const MAX_COLS = 12;
 export const MAX_ROWS = 12;
 
-// Keys sit under the fingers in the same shape as the pads above them.
-const KEY_ROWS = [
-  ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='],
-  ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']'],
-  ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', "'", '\\'],
-  ['z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', '`', '#'],
-];
-
 export function newBoard({ id, cols = 3, rows = 4 }) {
   const board = {
     version: BOARD_VERSION,
@@ -98,7 +90,6 @@ export function newPad(board, i, file) {
     trimEnd: null,
     tap: 'fadeout',
     solo: false,
-    key: defaultKey(board, i),
     duration: 0,
     settled: false,
   };
@@ -135,19 +126,6 @@ export function filled(board) {
 
 export function rowCol(board, i) {
   return { row: Math.floor(i / board.cols), col: i % board.cols };
-}
-
-export function defaultKey(board, i) {
-  const { row, col } = rowCol(board, i);
-  const taken = new Set(board.pads.filter(Boolean).map((p) => p.key).filter(Boolean));
-  const key = KEY_ROWS[row] && KEY_ROWS[row][col];
-  return key && !taken.has(key) ? key : '';
-}
-
-export function padByKey(board, key) {
-  const lower = key.toLowerCase();
-  const i = board.pads.findIndex((p) => p && p.file && p.key && p.key.toLowerCase() === lower);
-  return i === -1 ? null : { i, pad: board.pads[i] };
 }
 
 export function move(board, from, to) {
@@ -219,7 +197,6 @@ function migratePad(board, i, raw, version) {
   pad.trimEnd = Number.isFinite(raw.trimEnd) && raw.trimEnd > pad.trimStart ? raw.trimEnd : null;
   pad.tap = ['fadeout', 'restart', 'pause', 'overlay', 'ignore'].includes(raw.tap) ? raw.tap : 'fadeout';
   pad.solo = !!raw.solo;
-  pad.key = typeof raw.key === 'string' ? raw.key.slice(0, 1).toLowerCase() : '';
   pad.duration = clampNum(raw.duration, 0, 1e5, 0);
   pad.settled = !!raw.settled;
   return pad;

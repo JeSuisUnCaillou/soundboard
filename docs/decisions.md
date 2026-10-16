@@ -38,9 +38,11 @@ is in [architecture.md](architecture.md).
   as usual.
 - **Stop fades, Escape cuts.** Stop (and Space) takes each pad out on its own
   fade out; Escape silences everything instantly.
-- **A held key is one tap.** Key repeat must not flicker a pad.
-- **Keys sit under the fingers in the shape of the pads.** Row one is `1..=`,
-  then `q..]`, `a..\`, `z..#`.
+- **The pads are played by touch.** The board runs from a phone or a tablet,
+  so a pad has no key: a key nobody sees is a pad fired by mistake, and a
+  touch screen has none to press. Space and Escape stay, for a keyboard that
+  happens to be there. (The owner, 2026-10-16: "we are always going to use the
+  touch screen".)
 - **Gels mean something once chosen.** Every pad starts the same blue; colour
   is the operator's code for a group, a scene, an act.
 - **The screen stays awake** while a board is open, and the board says so if

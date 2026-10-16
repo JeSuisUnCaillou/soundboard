@@ -15,7 +15,7 @@ why things are the way they are is in [decisions.md](decisions.md).
 | `js/app.js` | The `App` class: owns the open board and the edit state, wires every event (taps, keys, drags, drops, pickers), saves, restores, keeps the screen awake. The only module that decides things. |
 | `js/engine.js` | `Engine`: Web Audio. One *channel* per pad, extra *voices* for layering and previews, fades, the per-frame `tick()`. Also `probeDuration()`. |
 | `js/library.js` | `Library`: every sound the board can reach, from every *source*, keyed by path. Folder walking, pickers, drops, dedup, blob URLs. |
-| `js/model.js` | The board and pad data: `newBoard`, `newPad`, `migrate`, resizing, keys, `applyLengthDefaults`, `giveSound`, formatting helpers. Pure functions, no DOM. |
+| `js/model.js` | The board and pad data: `newBoard`, `newPad`, `migrate`, resizing, `applyLengthDefaults`, `giveSound`, formatting helpers. Pure functions, no DOM. |
 | `js/store.js` | `store` (IndexedDB) and `prefs` (localStorage). |
 | `js/editor.js` | `PadEditor` (the pad sheet) and `SetupSheet` (Board settings). Read fields, validate, hand the result back to `App` through callbacks. |
 | `js/ui.js` | Drawing only: `drawGrid`, `paintPads` (per frame), `drawLibrary` (the tree), `drawStop`, `setPanel`, `setBook`, `toast`, `say`. Decides nothing. |
@@ -61,7 +61,6 @@ A pad:
 | `trimStart`, `trimEnd` | 0, null | Start and stop points in seconds; `trimEnd` must be after `trimStart` or it is `null`. |
 | `tap` | `fadeout` | *Second tap*: `fadeout`, `restart`, `pause`, `overlay`, `ignore`. |
 | `solo` | false | Fade everything else out when this starts. |
-| `key` | from position | One lowercase character (`migrate` lowercases an imported one). Kept unique by `PadEditor.save`; `migrate` does not dedupe keys in an imported board. |
 | `duration` | 0 | Measured length in seconds; 0 until measured. |
 | `settled` | false | Saved from the pad sheet: its length, or a new sound's, no longer sets anything (`applyLengthDefaults`, `giveSound`). |
 
@@ -80,9 +79,8 @@ change of both never loses pads at a halfway size. Changing `cols` re-wraps the
 same array, so pads keep their order and their index (and so their engine
 *channel*), not their row and column.
 
-**Keys** default from the pad's position on a keyboard-shaped grid (`KEY_ROWS`:
-`1..=`, `q..]`, `a..\`, `z..#`), skipping keys already taken. Saving a key that
-another pad holds takes it from that pad (`PadEditor.save`).
+Pads have no key. A `key` from an older board file or store is dropped by
+`migratePad`, and a board saved now carries none.
 
 **Length decides the kind** (`applyLengthDefaults`): under `SHORT_SOUND` (5 s)
 a sound is a *hit* (tap set to `overlay`, fade in 0); otherwise a *cue* (gel
@@ -223,8 +221,8 @@ is told once per file.
 
 **Keys** (`onKey`): ignored in an open dialog, in a field that takes typing
 (`TYPED`: not a slider, checkbox or button), or with a modifier.
-Space = `stop()` (each live pad on its own fade out); Escape = cut all; a pad
-key fires that pad, ignoring auto-repeat.
+Space = `stop()` (each live pad on its own fade out); Escape = cut all. No key
+fires a pad.
 
 ## What is remembered
 

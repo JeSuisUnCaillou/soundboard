@@ -1,7 +1,7 @@
 // The operator's browser, kept open between commands, so a show can be played
 // one move at a time: act, look at the screen, decide the next move.
 //
-//   node stage.mjs open [--phone] [--fresh] [--out DIR]   start it (run in the background)
+//   node stage.mjs open [--phone|--tablet] [--fresh] [--out DIR]   start it (in the background)
 //   node stage.mjs do '<js>'                               act, then take a screenshot
 //   node stage.mjs close                                   shut it down
 //
@@ -39,7 +39,7 @@ if (cmd === 'open') await open();
 else if (cmd === 'do') await send({ code: rest.join(' ') });
 else if (cmd === 'close') await send({ close: true });
 else {
-  console.error('usage: stage.mjs open [--phone] [--fresh] [--out DIR] | do <js> | close');
+  console.error('usage: stage.mjs open [--phone|--tablet] [--fresh] [--out DIR] | do <js> | close');
   process.exit(2);
 }
 
@@ -75,7 +75,9 @@ async function open() {
   process.on('exit', () => site.kill());
   while (!(await reachable(`http://localhost:${SITE}/`))) await sleep(0.2);
 
-  const device = flag('--phone') ? devices['Pixel 7'] : devices['Desktop Chrome'];
+  const device = flag('--phone') ? devices['Pixel 7']
+    : flag('--tablet') ? devices['Galaxy Tab S9 landscape']
+      : devices['Desktop Chrome'];
   const { defaultBrowserType, ...look } = device;
   const context = await chromium.launchPersistentContext(profile, {
     ...look,

@@ -49,7 +49,7 @@ Let at least three of these happen during a run:
 - A sound in the library will not play.
 - The volume is far too loud for the hall, mid-cue.
 - The board is too small for tonight's show.
-- An unlabelled key is pressed by mistake.
+- A finger lands on the pad beside the one it meant.
 
 ## The feedback
 
