@@ -492,8 +492,11 @@ class App {
     say(`${this.library.entries.size} sounds open`);
   }
 
-  /** Sounds on the first free pads, in order, for as many as there are pads. */
-  async place(paths) {
+  /**
+   * Sounds on the first free pads, in order, for as many as there are pads.
+   * `fresh` sets them up anew, forgetting what they had before.
+   */
+  async place(paths, { fresh = false } = {}) {
     const onBoard = new Set(filled(this.board).map(({ pad }) => pad.file));
     const taking = [];
     for (const path of paths) {
@@ -504,7 +507,7 @@ class App {
       onBoard.add(path);
     }
     // Measured together, so the whole lot is drawn once, in the right colours.
-    const pads = await Promise.all(taking.map(({ i, path }) => this.padFor(i, path)));
+    const pads = await Promise.all(taking.map(({ i, path }) => this.padFor(i, path, { fresh })));
     taking.forEach(({ i }, n) => {
       this.board.pads[i] = pads[n];
     });
@@ -776,10 +779,11 @@ class App {
    * A pad for a sound, measured before it is drawn: a pad that arrives blue and
    * turns green a moment later is the board correcting itself in front of the
    * operator, which is worse than taking the moment first. A sound that has
-   * been on the board before comes back set up as it was.
+   * been on the board before comes back set up as it was, unless `fresh`.
    */
-  async padFor(i, path) {
-    const pad = recall(this.board, path) || newPad(this.board, i, path);
+  async padFor(i, path, { fresh = false } = {}) {
+    const kept = recall(this.board, path);
+    const pad = (!fresh && kept) || newPad(this.board, i, path);
     pad.duration = await this.lengthOf(path) || pad.duration;
     applyLengthDefaults(this.board, pad);
     return pad;
@@ -933,7 +937,7 @@ class App {
 
   /** The sounds that come with the app on the first free pads, set up as a show would use them. */
   async layDefault() {
-    await this.place(bundledPaths());
+    await this.place(bundledPaths(), { fresh: true });
     for (const { pad } of filled(this.board)) {
       if (isBundledPath(pad.file)) Object.assign(pad, bundledSetup(pad.file));
     }

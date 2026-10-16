@@ -86,7 +86,8 @@ when it left the board. `App.setPad` remembers whatever a pad loses (taken
 off, emptied, or given another sound), and `emptyBoard` remembers every pad,
 dropping the places a resize noted (`forgetPlaces`) so an emptied board stays
 empty when it grows. `App.padFor` takes a sound's memory back (`recall`)
-before making a new pad, so the sound returns as it was. A sound dropped on a
+before making a new pad, so the sound returns as it was; **Load the default
+board** asks for fresh pads (`place(paths, { fresh: true })`). A sound dropped on a
 filled pad keeps that pad's settings (`giveSound`) and leaves its own memory
 for the next time it is put on a pad. It is saved and exported with the board, and `migrate` reads each
 entry through `migratePad`.

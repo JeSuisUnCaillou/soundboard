@@ -53,6 +53,11 @@ test('an empty board offers the default board back, set up as it was', async ({ 
   await openBoard(page);
   await page.locator('#btnEdit').click();
   const button = page.locator('#btnEmpty');
+  // Set up otherwise first: the default board is the default board, not what Storm had.
+  await pencil(page, 'Storm').click();
+  await page.locator('#padTap').selectOption('pause');
+  await page.locator('#padSave').click();
+  await expect(page.locator('#padEditor')).toBeHidden();
 
   await button.click();
   await button.click();
@@ -67,6 +72,7 @@ test('an empty board offers the default board back, set up as it was', async ({ 
   await pencil(page, 'Storm').click();
   await expect(page.locator('#padLoop')).toBeChecked();
   await expect(page.locator('#padGainOut')).toHaveText('50');
+  await expect(page.locator('#padTap')).toHaveValue('fadeout');
 });
 
 test('sounds added from the file picker land in the folder and can go on a pad', async ({ page }) => {
