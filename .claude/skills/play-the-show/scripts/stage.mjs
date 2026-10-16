@@ -22,9 +22,10 @@ import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
-const CONTROL = 4180;
-const SITE = 4174;
-const TOKEN = join(tmpdir(), 'soundboard-stage.token');
+// STAGE_PORT moves a stage to ports of its own, so two can play side by side.
+const CONTROL = Number(process.env.STAGE_PORT || 4180);
+const SITE = CONTROL - 6;
+const TOKEN = join(tmpdir(), `soundboard-stage-${CONTROL}.token`);
 const REPO = fileURLToPath(new URL('../../../..', import.meta.url));
 
 const [cmd, ...rest] = process.argv.slice(2);

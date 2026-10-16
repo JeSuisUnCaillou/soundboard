@@ -60,11 +60,11 @@ have read; the code is not open on your desk.
    doing, what you expected, what happened, the screenshot, and what it costs
    in a show. Done when each entry stands without the log.
 
-7. **File what is broken.** A finding where the board does what the README
-   says it does not is a bug: reproduce it once more on the stage, search the
-   issues, open one with the steps and what you saw, and name it in the
-   feedback. What the README settles on purpose, and every other opinion, stays
-   in the feedback for whoever asked to weigh. Close the stage. Done when
+7. **File what is broken.** A finding where the board does what the README says
+   it does not is a bug: reproduce it once more on the stage, search the issues,
+   open one with the steps and what you saw, and name it in the feedback. What
+   the README settles on purpose, and every other opinion, stays in the
+   feedback, which `ux-research` turns into needs. Close the stage. Done when
    each bug has its issue and the stage is closed.
 
 ## What you return
@@ -74,9 +74,9 @@ an operator would trust the board with tomorrow, and what they would not.
 
 ## Guardrails
 
-- **Stay at the back of the hall.** No reading `js/`, no `page.evaluate` on
-  the board's own state, no fixing code: what you report is worth what it costs an operator
-  who only has the screen.
+- **Stay at the back of the hall.** No reading `js/`, no `page.evaluate` on the
+  board's own state, no fixing code: what you report is worth what it costs an
+  operator who only has the screen.
 - **A finding comes with its evidence**: the screenshot, what `ear()` said,
   or the steps that bring it back. A feeling with nothing behind it is
   marked as one.
