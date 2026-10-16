@@ -35,12 +35,14 @@ it from context, and define new terms here, not elsewhere.
 | **Stop** | Fade out everything playing, each pad on its own fade out. Also Space. | `#btnStop`, `App.stop` |
 | **Cut** | Silence everything at once. Escape. | `engine.stopAll({ fade: 0 })` |
 | **Live** | Playing and not yet told to stop. What a pad's look, Stop and a tap all go by. | `Engine.live` |
-| **Released** | Told to stop; may still be fading out, but the pad already looks stopped. | `voice.released` |
+| **Released** | Told to stop; may still be fading out. The pad is no longer lit as playing; while its sound fades it is *fading*. | `voice.released` |
+| **Fading** | A pad released while its sound is still heard: its light goes down with the sound, and a tap brings the sound back from where it is. | `state: 'fading'`, `.pad--fading`, `--level`, `.lamp--fading` |
+| **Double tap** | Two taps on a pad within 300 ms. They count as one tap. | `DOUBLE_TAP`, `App.tap` |
 | **Channel** | The kept `<audio>` + gain node of one pad. | `Engine.channels` |
 | **Voice** | Any playing `<audio>` + gain: a channel, a layer or a preview. | `Engine.active` |
 | **Prime** | Create a pad's channel and buffer its file ahead of time. | `Engine.prime`, `App.primeAll` |
 | **Measure** | Read a sound's length once, through a throwaway `<audio>`. | `probeDuration`, `App.measure`, `Library.lengthOf` |
-| **Lamp** / **travel** / **countdown** | The green light, the progress bar along the bottom and the time left on a playing pad. | `.pad__lamp`, `.lamp--go`, `.pad__travel`, `.pad__time` |
+| **Lamp** / **travel** / **countdown** | The green light, the progress bar along the bottom and the time left on a playing pad. The lamp dims on a fading pad. | `.pad__lamp`, `.lamp--go`, `.lamp--fading`, `.pad__travel`, `.pad__time` |
 | **Toast** | The short message at the bottom of the screen. Tests assert on it. | `toast()`, `#toast` |
 | **Board file** | A board exported as JSON (`<id>.soundboard.json`) from Board settings. | `App.exportBoard`, `importBoard` |
 | **Shell** | The files the service worker precaches so the board runs offline. | `SHELL` in `sw.js` |

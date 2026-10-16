@@ -1,6 +1,6 @@
 // Running the show: the first board, firing pads, stopping them.
 
-import { test, expect, BUNDLED_TITLES, isNarrow, openBoard, pad, pencil, showSounds, silentWav } from './helpers.js';
+import { test, expect, BUNDLED_TITLES, isNarrow, openBoard, pad, pencil, showSounds, silentWav, tapAgain } from './helpers.js';
 
 test('the first launch lays out the sounds that ship with the board', async ({ page }) => {
   await openBoard(page);
@@ -95,7 +95,7 @@ test('Space and Escape still work after the master volume is touched', async ({ 
   await page.keyboard.press('Escape');
   await expect(page.locator('#grid .pad--playing')).toHaveCount(0);
 
-  await crickets.click();
+  await tapAgain(page, crickets);
   await expect(crickets).toHaveClass(/pad--playing/);
   await master.click();
   await page.keyboard.press(' ');
@@ -135,37 +135,83 @@ test('Stop greys out as soon as everything is fading out', async ({ page }) => {
   await expect(page.locator('#grid .pad--playing')).toHaveCount(0);
 });
 
-test('a pad tapped while it fades out starts again, and keeps playing', async ({ page }) => {
+test('a pad tapped while it fades out comes back from where it is, and keeps playing', async ({ page }) => {
   await openBoard(page);
   const crickets = pad(page, 'Crickets');
   const left = () => secondsLeft(crickets);
 
-  // Far enough in that starting again from the top shows on the clock, however
-  // slowly the steps below run.
+  // Far enough in that starting again from the top would show on the clock,
+  // however slowly the steps below run.
   await crickets.click();
   await expect.poll(left, { timeout: 15000 }).toBeLessThanOrEqual(21);
-  await crickets.click();
+  await tapAgain(page, crickets);
   await expect(crickets).not.toHaveClass(/pad--playing/);
+  await expect(crickets).toHaveClass(/pad--fading/);
 
-  await crickets.click();
+  await tapAgain(page, crickets);
   await expect(crickets).toHaveClass(/pad--playing/);
+  await expect(crickets).not.toHaveClass(/pad--fading/);
   await expect(page.locator('#btnStop')).toBeEnabled();
-  expect(await left()).toBeGreaterThan(22);
+  expect(await left()).toBeLessThanOrEqual(21);
   // Well past the end of the 3 s fade it interrupted, it is still running.
   await expectStillPlayingAfter(page, crickets, 4500);
 });
 
-test('a pad tapped after Stop, during the fade, starts again', async ({ page }) => {
+test('a pad tapped after Stop, during the fade, comes back from where it is', async ({ page }) => {
   await openBoard(page);
   const crickets = pad(page, 'Crickets');
+  const left = () => secondsLeft(crickets);
 
   await crickets.click();
-  await expect(crickets).toHaveClass(/pad--playing/);
+  await expect.poll(left, { timeout: 15000 }).toBeLessThanOrEqual(21);
   await page.locator('#btnStop').click();
   await expect(crickets).not.toHaveClass(/pad--playing/);
+  await expect(crickets).toHaveClass(/pad--fading/);
 
-  await crickets.click();
+  await tapAgain(page, crickets);
   await expect(crickets).toHaveClass(/pad--playing/);
+  expect(await left()).toBeLessThanOrEqual(21);
+});
+
+test('a pad told to stop shows its sound fading, its light going down with it', async ({ page }) => {
+  await openBoard(page);
+  // No fade in, so it is at its full level when it is told to stop.
+  await setUpPad(page, 'Romance', { padFadeIn: '0', padFadeOut: '4' });
+  const romance = pad(page, 'Romance');
+  const level = () => romance.evaluate((el) => Number(el.style.getPropertyValue('--level')));
+
+  await romance.click();
+  await expect(romance).toHaveClass(/pad--playing/);
+  await expect(romance.locator('.pad__lamp')).toHaveClass(/lamp--go/);
+  await page.locator('#btnStop').click();
+
+  // Not playing, so Stop has nothing left to do, but still heard.
+  await expect(page.locator('#btnStop')).toBeDisabled();
+  await expect(romance).not.toHaveClass(/pad--playing/);
+  await expect(romance).toHaveClass(/pad--fading/);
+  await expect(romance.locator('.pad__lamp')).toHaveClass(/lamp--fading/);
+  await expect(romance.locator('.pad__time')).toHaveText(/^-/);
+  const first = await level();
+  expect(first).toBeGreaterThan(0);
+  await expect.poll(level).toBeLessThan(first - 0.1);
+
+  // Once the fade is over, it is stopped like any other pad.
+  await expect(romance).not.toHaveClass(/pad--fading/, { timeout: 8000 });
+  await expect(romance.locator('.pad__lamp')).toHaveClass(/lamp--off/);
+});
+
+test('two taps on a pad a fraction of a second apart count as one', async ({ page }) => {
+  await openBoard(page);
+  const storm = pad(page, 'Storm');
+
+  // A cue fades out on a second tap; a nervous double tap must only start it.
+  await storm.dblclick();
+  await expect(storm).toHaveClass(/pad--playing/);
+  await expectStillPlayingAfter(page, storm, 1500);
+
+  // A second tap the operator means still fades it out.
+  await tapAgain(page, storm);
+  await expect(storm).not.toHaveClass(/pad--playing/);
 });
 
 /**
@@ -208,10 +254,10 @@ test('a pad tapped back on while it fades out comes up from where the fade got t
     .toBeGreaterThan(-1);
   const which = await page.evaluate(() => window.__levels.findIndex((e) => e.param.value > 0.9));
 
-  await suspense.click();
+  await tapAgain(page, suspense);
   await expect(suspense).not.toHaveClass(/pad--playing/);
   const before = await page.evaluate((n) => window.__levels[n].calls.length, which);
-  await suspense.click();
+  await tapAgain(page, suspense);
   await expect(suspense).toHaveClass(/pad--playing/);
 
   // Coming back on, the pad never drops to silence on the way.
@@ -278,7 +324,7 @@ test('a pad tapped while it fades in stops', async ({ page }) => {
 
   await crickets.click();
   await expect(crickets).toHaveClass(/pad--playing/);
-  await crickets.click();
+  await tapAgain(page, crickets);
   await expect(crickets).not.toHaveClass(/pad--playing/);
   await expect(page.locator('#btnStop')).toBeDisabled();
 });
@@ -293,7 +339,7 @@ test('a pad fading towards its stop point still answers a tap by stopping', asyn
   await expect.poll(() => secondsLeft(crickets), { timeout: 4000 }).toBeLessThanOrEqual(2);
   await expect(crickets).toHaveClass(/pad--playing/);
 
-  await crickets.click();
+  await tapAgain(page, crickets);
   await expect(crickets).not.toHaveClass(/pad--playing/);
   await expect(page.locator('#btnStop')).toBeDisabled();
 });
@@ -334,7 +380,7 @@ test('a looping pad with a stop point and a fade out goes round, not out', async
   await expect(crickets).toHaveClass(/pad--playing/);
   await expectStillPlayingAfter(page, crickets, 4500);
 
-  await crickets.click();
+  await tapAgain(page, crickets);
   await expect(crickets).not.toHaveClass(/pad--playing/);
 });
 
@@ -519,12 +565,12 @@ test.describe('a pad stopped while its sound is still starting', () => {
 
     // Escape lands while the sound is still starting.
     await page.evaluate(() => { window.__slowPlay = true; });
-    await crickets.click();
+    await tapAgain(page, crickets);
     await page.keyboard.press('Escape');
     await page.evaluate(() => { window.__slowPlay = false; });
     await expect(crickets).not.toHaveClass(/pad--playing/);
 
-    await crickets.click();
+    await tapAgain(page, crickets);
     await expect(crickets).toHaveClass(/pad--playing/);
     await expect.poll(level, { timeout: 5000 }).toBeGreaterThan(0.001);
     await expect(page.locator('#toast')).not.toContainText('would not play');
@@ -606,7 +652,7 @@ test.describe('a second tap', () => {
     const crickets = pad(page, 'Crickets');
     await crickets.click();
     await expect(crickets).toHaveClass(/pad--playing/);
-    await crickets.click();
+    await tapAgain(page, crickets);
     await expect(crickets).not.toHaveClass(/pad--playing/);
     await expect(page.locator('#btnStop')).toBeDisabled();
   });
@@ -620,7 +666,7 @@ test.describe('a second tap', () => {
     // Far enough in that starting over shows on the clock.
     await crickets.click();
     await expect.poll(left, { timeout: 15000 }).toBeLessThanOrEqual(21);
-    await crickets.click();
+    await tapAgain(page, crickets);
     await expect.poll(left).toBeGreaterThan(22);
     await expect(crickets).toHaveClass(/pad--playing/);
   });
@@ -633,13 +679,13 @@ test.describe('a second tap', () => {
 
     await crickets.click();
     await expect.poll(left, { timeout: 15000 }).toBeLessThanOrEqual(24);
-    await crickets.click();
+    await tapAgain(page, crickets);
     await expect(crickets).toHaveClass(/pad--paused/);
     await expect(crickets).not.toHaveClass(/pad--playing/);
     const held = await left();
     expect(held).toBeLessThanOrEqual(24);
 
-    await crickets.click();
+    await tapAgain(page, crickets);
     await expect(crickets).toHaveClass(/pad--playing/);
     await expect(crickets).not.toHaveClass(/pad--paused/);
     // From where it was held, not from the top.
@@ -653,10 +699,10 @@ test.describe('a second tap', () => {
 
     await crickets.click();
     await expect(crickets).toHaveClass(/pad--playing/);
-    await crickets.click();
+    await tapAgain(page, crickets);
     await expect(crickets).toHaveClass(/pad--playing/);
     await expect(crickets.locator('.pad__stack')).toHaveText('×2');
-    await crickets.click();
+    await tapAgain(page, crickets);
     await expect(crickets.locator('.pad__stack')).toHaveText('×3');
 
     await page.locator('#btnStop').click();
@@ -673,7 +719,7 @@ test.describe('a second tap', () => {
     await crickets.click();
     await expect.poll(left, { timeout: 15000 }).toBeLessThanOrEqual(24);
     const before = await left();
-    await crickets.click();
+    await tapAgain(page, crickets);
     await expect(crickets).toHaveClass(/pad--playing/);
     await expect(crickets.locator('.pad__stack')).toHaveCount(0);
     // It runs on from where it was rather than starting over.

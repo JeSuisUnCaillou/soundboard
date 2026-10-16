@@ -56,6 +56,7 @@ how `board.spec.js` tests a sound served cross-origin.
 | `makeRoom(page)` | In edit mode, take Sting off the full first board so a sound can go on it. |
 | `showSounds(page)` | Open the book wherever the layout keeps it (**Browse files** on phone), unless it is open already. |
 | `isNarrow(page)` | Viewport ≤ 900px. |
+| `tapAgain(page, pad)` | Tap a pad again once the board would no longer take it for the same tap (`DOUBLE_TAP`, 300 ms). A test taps far faster than a hand, so every second tap a test means goes through it. |
 | `silentWav(seconds, rate)` | A WAV buffer made in the test, for adding sounds. Never commit test audio. |
 
 `board.spec.js` also has a local `setUpPad(page, title, fields)` that enters
@@ -66,7 +67,7 @@ Move it to `helpers.js` when a second spec needs it.
 
 The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 
-- What to assert on: `pad--playing`, `pad--paused`, `pad--missing`, `pad--broken`,
+- What to assert on: `pad--playing`, `pad--paused`, `pad--fading`, `pad--missing`, `pad--broken`,
   `pad--waiting`, `lib__item--used`, `#toast` text, `aria-pressed`,
   `disabled`. A fade that must finish is waited for by asserting its end state.
 - Branch on `isNarrow(page)` only where the layout really differs (the book,
@@ -117,7 +118,7 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 
 | Spec | Covers |
 | --- | --- |
-| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades, each second-tap mode (layering up to ×3), tapping back on during a fade out, solo, priming a big board, start and stop points (also in a hidden tab), both kinds of loop, a pad stopped while starting, no pad answering a key, Space and Escape after the volume or a button has the focus, cross-origin sound, Reconnect during a cue. |
+| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades, each second-tap mode (layering up to ×3), a fading pad's light and tapping it back from where it is, two quick taps taken as one, solo, priming a big board, start and stop points (also in a hidden tab), both kinds of loop, a pad stopped while starting, no pad answering a key, Space and Escape after the volume or a button has the focus, cross-origin sound, Reconnect during a cue. |
 | `edit.spec.js` | Building a board: edit mode, the pad sheet (name, level, fades, gel, kept after a reload), Board settings (rows and columns, growing and shrinking, both at once), saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), dropping a sound on a pad (empty or filled), a pad set up before its sound is open, keeping copies of sounds, the keyboard in edit mode, hearing a sound from the tree, the filter. |
 | `kept.spec.js` | Coming back to it: the kept copies of picked sounds after a reload and offline, a folder handle that comes back by itself, Reconnect refused, and a browser out of room for the copies. |
 | `offline.spec.js` | The service worker: reload with the network off, wifi that never answers, a server error, the board's own fonts. |

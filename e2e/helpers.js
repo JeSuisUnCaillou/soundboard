@@ -18,6 +18,10 @@ export const test = base.extend({
       Object.defineProperty(navigator, 'wakeLock', {
         value: { request: async () => sentinel() },
       });
+      // When a pad was last tapped, for tapAgain().
+      addEventListener('click', (e) => {
+        if (e.target.closest && e.target.closest('#grid .pad')) window.__tappedAt = performance.now();
+      }, true);
     });
     await use(page);
   },
@@ -35,6 +39,23 @@ export const BUNDLED_TITLES = [
 /** A pad on the board, found by the name it shows. */
 export function pad(page, title) {
   return page.locator('#grid .pad--filled', { hasText: title });
+}
+
+/**
+ * The board takes two taps on a pad closer than this many milliseconds as one
+ * (DOUBLE_TAP in js/app.js).
+ */
+export const DOUBLE_TAP = 300;
+
+/**
+ * Tap a pad again, as a second tap the operator means: after the moment in
+ * which the board would take it for the same tap. A test taps far faster than
+ * a hand does.
+ */
+export async function tapAgain(page, padEl) {
+  await expect.poll(() => page.evaluate(() => performance.now() - (window.__tappedAt ?? -Infinity)))
+    .toBeGreaterThan(DOUBLE_TAP);
+  await padEl.click();
 }
 
 /**

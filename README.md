@@ -131,6 +131,13 @@ are there to mean something once one is chosen — a group, a scene, an act. The
 playing out, each sound on its own fade; `Esc` cuts the lot dead the moment you
 hit it.
 
+A stop can be taken back. A pad told to stop, by Stop or by its own second
+tap, loses its colour as its sound fades, its light going down with the sound
+for as long as the hall can still hear it; tap it during the fade and the sound
+comes back from where it is, not from the top. Two taps a fraction of a second
+apart count as one, so a nervous double tap starts a cue rather than starting
+it and fading it straight out.
+
 The pads are played by touch, or by a click: they have no keys. Where there is
 a keyboard, two keys stand in for the buttons:
 
