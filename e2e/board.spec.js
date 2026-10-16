@@ -779,6 +779,16 @@ test.describe('a glance at the board', () => {
     const whistle = pad(page, 'Whistle');
     await expect(whistle.locator('.pad__time')).toHaveText('0.6s');
     await expect(whistle).toHaveAttribute('aria-label', /^whistle, 0\.6s,/i);
+
+    // Playing, its clock counts down in tenths too. Looped, so it goes on
+    // long enough to be read.
+    await page.locator('#btnEdit').click();
+    await setUpPad(page, 'Whistle', { padLoop: true });
+    await whistle.click();
+    await expect(whistle).toHaveClass(/pad--playing/);
+    await expect(whistle.locator('.pad__time')).toHaveText(/^-0\.[1-6]s$/);
+    await page.keyboard.press('Escape');
+    await expect(whistle).not.toHaveClass(/pad--playing/);
   });
 
   test('a looping pad is marked as one', async ({ page }) => {
