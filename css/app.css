@@ -214,7 +214,7 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
 }
 /* Hover must not undo a lit pad: the ink on one is dark, and a hover that
    takes the light away leaves dark on dark. */
-.pad--filled:not(.pad--playing):not(.pad--paused):hover { background: color-mix(in oklab, var(--gel) 18%, var(--pad)); }
+.pad--filled:not(.pad--playing):not(.pad--paused):not(.pad--fading):hover { background: color-mix(in oklab, var(--gel) 18%, var(--pad)); }
 .pad--playing:hover { background: color-mix(in oklab, var(--gel) 56%, #241a13); }
 .pad--paused:hover { background: color-mix(in oklab, var(--gel) 36%, var(--pad)); }
 .pad--empty { color: var(--ink-faint); border-style: dashed; background: none; }
@@ -325,6 +325,16 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   border-color: color-mix(in oklab, var(--gel) 60%, var(--line));
 }
 .pad--paused .pad__travel { opacity: 0.6; }
+
+/* A pad told to stop while its sound still fades out: lit as it was, dimming
+   with the sound (--level, 1 down to 0), so the operator can see the hall
+   still hears it, and that a tap would bring it back. */
+.pad--fading {
+  --lit: color-mix(in oklab, var(--gel) 45%, #241a13);
+  background: color-mix(in oklab, var(--lit) calc(var(--level, 0) * 100%), var(--pad));
+  border-color: color-mix(in oklab, var(--gel) calc(var(--level, 0) * 100%), var(--line));
+}
+.pad--fading .pad__travel { opacity: calc(0.3 + 0.7 * var(--level, 0)); }
 
 
 /* A pad whose file is not in the open folder: shown, but plainly not ready. */
@@ -443,6 +453,10 @@ body[data-editing="on"] .pad__pencil:hover { color: var(--ink); }
 }
 .lamp--go { --lamp: var(--go); --lamp-glow: color-mix(in oklab, var(--go) 65%, transparent); }
 .lamp--off { --lamp: color-mix(in oklab, var(--ink) 14%, transparent); --lamp-glow: transparent; }
+.lamp--fading {
+  --lamp: color-mix(in oklab, var(--go) calc(var(--level, 0) * 100%), color-mix(in oklab, var(--ink) 14%, transparent));
+  --lamp-glow: color-mix(in oklab, var(--go) calc(var(--level, 0) * 65%), transparent);
+}
 
 /* ───────────────────────── the folder's sounds ───────────────────────── */
 
@@ -842,6 +856,6 @@ body[data-editing="on"] .pad--filled { touch-action: none; }
   /* iOS zooms the page when a field under 16px takes focus. */
   .field, select.field[size] { font-size: 16px; }
   /* A finger has no hover; the pad under it should look like itself. */
-  .pad--filled:not(.pad--playing):not(.pad--paused):hover { background: color-mix(in oklab, var(--gel) 14%, var(--pad)); }
+  .pad--filled:not(.pad--playing):not(.pad--paused):not(.pad--fading):hover { background: color-mix(in oklab, var(--gel) 14%, var(--pad)); }
   .pad--playing:hover { background: color-mix(in oklab, var(--gel) 45%, #241a13); }
 }

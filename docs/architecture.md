@@ -155,7 +155,14 @@ made once per path, and revoked when a real file replaces the copy behind it.
 - `live(i)` = active voices that are not `released`. It is the single source
   of truth for "is this pad playing" — the pad's look, the Stop button, Stop and
   Space, and what a tap does all read it. A tap on a pad with nothing live
-  starts it, even if a released voice is still fading out.
+  brings its channel back if a release is still fading it out
+  (`start(i, pad, { back: true })`: no seek, the gain held where the fade got
+  to and ramped back up over the fade in, or set at once with none), and
+  otherwise starts it.
+- `state(i)` is what the pad shows: its live voices, or else its channel
+  still fading after a release, as `state: 'fading'` with a `level` from 1
+  down to 0 at 60 dB under the pad's level (`_loudness`). `paintPads` draws it
+  as `.pad--fading` with `--level` on the pad, and the lamp as `.lamp--fading`.
 - `fire(i, pad)` implements the *second tap* modes. `start()` handles `solo`
   (every other voice released on its own pad's fade out), seeks to
   `trimStart`, sets the gain to the floor or the level (or holds it where it
@@ -248,6 +255,10 @@ copies of sounds no longer loaded; on `QuotaExceededError` it stops trying for t
 Called while a pass is running, it runs one more pass after it (`keepAgain`). A
 file that cannot be read is skipped, the rest are still kept, and the operator
 is told once per file.
+
+**Taps** (`tap(i)`): a tap on a pad within `DOUBLE_TAP` (300 ms) of the last
+one on that pad is dropped, so a nervous double tap is one tap. Space and
+Escape are not held to it.
 
 **Keys** (`onKey`): ignored in an open dialog, in a field that takes typing
 (`TYPED`: not a slider, checkbox or button), or with a modifier.

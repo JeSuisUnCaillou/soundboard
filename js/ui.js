@@ -151,17 +151,21 @@ export function paintPads(board, engine) {
     // The pad was filled after this element was drawn empty; the redraw that
     // gives it a lamp and a clock is already on its way.
     if (!el.classList.contains('pad--filled')) continue;
-    // A pad that has been told to stop looks stopped at once, even though the
-    // sound takes its fade to go: the operator has already moved on.
+    // A pad told to stop is no longer lit as playing, but while the hall
+    // still hears its fade its light goes down with the sound.
     const live = engine.state(i);
     const playing = !!live && live.state === 'playing';
     const paused = !!live && live.state === 'paused';
+    const fading = !!live && live.state === 'fading';
 
     el.classList.toggle('pad--playing', playing);
     el.classList.toggle('pad--paused', paused);
+    el.classList.toggle('pad--fading', fading);
+    if (fading) el.style.setProperty('--level', live.level.toFixed(3));
+    else el.style.removeProperty('--level');
 
     const lampEl = el.querySelector('.pad__lamp');
-    lampEl.className = `lamp pad__lamp ${playing ? 'lamp--go' : 'lamp--off'}`;
+    lampEl.className = `lamp pad__lamp ${playing ? 'lamp--go' : fading ? 'lamp--fading' : 'lamp--off'}`;
 
     const len = (pad.trimEnd || (live && live.duration) || pad.duration) - (pad.trimStart || 0);
     const done = live ? Math.max(0, live.position - (pad.trimStart || 0)) : 0;
