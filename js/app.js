@@ -6,7 +6,7 @@ import { Engine, probeDuration } from './engine.js';
 import { store, prefs } from './store.js';
 import {
   newBoard, newPad, migrate, resize, fitPads, filled, slug, move, rowCol, padTitle,
-  applyLengthDefaults, giveSound,
+  applyLengthDefaults, giveSound, remember, recall, forgetPlaces,
 } from './model.js';
 import { bundledPaths, bundledSetup, isBundledPath } from './bundled.js';
 import { PadEditor, SetupSheet } from './editor.js';
@@ -26,6 +26,12 @@ const NARROW = window.matchMedia('(max-width: 900px)');
 const TYPED = 'textarea, select, '
   + 'input:not([type=range]):not([type=checkbox]):not([type=radio])'
   + ':not([type=button]):not([type=submit]):not([type=reset]):not([type=color]):not([type=file])';
+
+/** Names as a sentence says them: "A, B and C", or the first four and how many more. */
+function listOf(names) {
+  const shown = names.length > 5 ? [...names.slice(0, 4), `${names.length - 4} more`] : names;
+  return shown.length === 1 ? shown[0] : `${shown.slice(0, -1).join(', ')} and ${shown.at(-1)}`;
+}
 
 /** The pad under a node: the pad itself, or the pad whose pencil it is. */
 function padOf(node) {
@@ -486,8 +492,11 @@ class App {
     say(`${this.library.entries.size} sounds open`);
   }
 
-  /** Sounds on the first free pads, in order, for as many as there are pads. */
-  async place(paths) {
+  /**
+   * Sounds on the first free pads, in order, for as many as there are pads.
+   * `fresh` sets them up anew, forgetting what they had before.
+   */
+  async place(paths, { fresh = false } = {}) {
     const onBoard = new Set(filled(this.board).map(({ pad }) => pad.file));
     const taking = [];
     for (const path of paths) {
@@ -498,7 +507,7 @@ class App {
       onBoard.add(path);
     }
     // Measured together, so the whole lot is drawn once, in the right colours.
-    const pads = await Promise.all(taking.map(({ i, path }) => this.padFor(i, path)));
+    const pads = await Promise.all(taking.map(({ i, path }) => this.padFor(i, path, { fresh })));
     taking.forEach(({ i }, n) => {
       this.board.pads[i] = pads[n];
     });
@@ -739,6 +748,8 @@ class App {
 
   setPad(i, pad) {
     if (i === this.padWanting && pad) this.padWanting = -1;
+    const was = this.board.pads[i];
+    if (was && was.file && (!pad || pad.file !== was.file)) remember(this.board, was);
     this.board.pads[i] = pad;
     fitPads(this.board);
     this.engine.stop(i, { fade: 0 });
@@ -767,11 +778,13 @@ class App {
   /**
    * A pad for a sound, measured before it is drawn: a pad that arrives blue and
    * turns green a moment later is the board correcting itself in front of the
-   * operator, which is worse than taking the moment first.
+   * operator, which is worse than taking the moment first. A sound that has
+   * been on the board before comes back set up as it was, unless `fresh`.
    */
-  async padFor(i, path) {
-    const pad = newPad(this.board, i, path);
-    pad.duration = await this.lengthOf(path);
+  async padFor(i, path, { fresh = false } = {}) {
+    const kept = recall(this.board, path);
+    const pad = (!fresh && kept) || newPad(this.board, i, path);
+    pad.duration = await this.lengthOf(path) || pad.duration;
     applyLengthDefaults(this.board, pad);
     return pad;
   }
@@ -808,18 +821,22 @@ class App {
   applySetup({ cols, rows, fadeIn, fadeOut }) {
     if (!this.board) return;
     this.board.defaults = { fadeIn, fadeOut };
-    // The pads keep their order and re-wrap. A smaller board has fewer places
-    // to wrap them into, and says what it could not keep. Columns and rows
-    // change together: fitted halfway, with fewer columns but the old rows,
-    // the board would drop pads its new size has room for.
+    // Every pad keeps its row and column. A smaller board names what it has
+    // no room for; those pads are remembered, and come back to their places
+    // when the board grows to hold them again.
     const was = { cols: this.board.cols, rows: this.board.rows };
-    const lost = resize(this.board, cols, rows);
+    const { lost, back } = resize(this.board, cols, rows);
     if (this.board.cols !== was.cols) this.write(() => store.setMeta('cols', this.board.cols));
     if (this.board.rows !== was.rows) this.write(() => store.setMeta('rows', this.board.rows));
-    if (lost) {
+    // A pad's channel is its index, which a change of columns moves.
+    if (lost.length || back || this.board.cols !== was.cols) {
+      this.padWanting = -1;
       this.engine.reset();
       this.primeAll();
-      toast(`${lost} sound${lost === 1 ? '' : 's'} came off the board. They are still under Sounds.`);
+    }
+    if (lost.length) {
+      toast(`${listOf(lost.map(padTitle))} came off the board. `
+        + (lost.length === 1 ? 'Back on a pad, it comes back as it was.' : 'Back on a pad, they come back as they were.'));
     }
     this.redraw();
     this.saveNow();
@@ -920,7 +937,7 @@ class App {
 
   /** The sounds that come with the app on the first free pads, set up as a show would use them. */
   async layDefault() {
-    await this.place(bundledPaths());
+    await this.place(bundledPaths(), { fresh: true });
     for (const { pad } of filled(this.board)) {
       if (isBundledPath(pad.file)) Object.assign(pad, bundledSetup(pad.file));
     }
@@ -953,6 +970,10 @@ class App {
     this.disarm();
     this.engine.stopAll({ fade: 0 });
     this.engine.reset();
+    // Every sound keeps its settings for when it is put back, but an emptied
+    // board is empty: growing it later puts nothing back by itself.
+    forgetPlaces(this.board);
+    for (const { pad } of filled(this.board)) remember(this.board, pad);
     this.board.pads = [];
     fitPads(this.board);
     this.redraw();
