@@ -148,7 +148,8 @@ a keyboard, two keys stand in for the buttons:
 you gave it: a six-column board is six columns wide everywhere, scrolling rather
 than rearranging itself under the operator. A side of the board that goes on
 past the edge of the screen fades out there, so a column out of sight is never a
-surprise; a phone held upright shows four columns whole. While editing, Stop and the volume
+surprise; a phone held upright, from about 390px across
+(most phones now), shows four columns whole. While editing, Stop and the volume
 give their place to **Browse files**, which opens the folder over the whole
 screen — the pads and the files are never half each — and **Back to the pads**
 closes it. A pad comes away under the finger as soon as it moves, and dropped
