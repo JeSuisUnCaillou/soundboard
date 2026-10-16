@@ -21,13 +21,14 @@ node $S do "await pad('Storm').click(); await wait(2); return await ear()"
 node $S close
 ```
 
-`open` starts `e2e/serve.js` on port 4173 if nothing answers there, and keeps
-the browser profile in `<dir>/profile`. Each `do` prints what its code
-returns, what the board logged since the last command, and the screenshot it
-took after: **read the screenshot**, it is your eyes. Look before each move:
-the board remembers edit mode across a reload, so a press of Edit board may
-take you out of it. A move that cannot be made fails after five seconds.
-Only one stage is open at a time; to switch device, `close`, then `open`
+`open` serves this checkout with `e2e/serve.js` on port 4174, stopped again
+by `close`, and keeps the browser profile in `<dir>/profile`. Each `do`
+prints what its code returns, what the board logged since the last command,
+and the screenshot it took after: **read the screenshot**, it is your eyes.
+Look before each move: the board remembers edit mode across a reload, so a
+press of Edit board may take you out of it. A move that cannot be made fails
+after five seconds. Only one stage is open at a time; to switch device,
+`close`, then `open`
 again with or without `--phone`.
 
 ## What `do` gives you

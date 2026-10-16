@@ -16,13 +16,15 @@
 
 import { createServer, request } from 'node:http';
 import { spawn } from 'node:child_process';
-import { mkdirSync, rmSync, appendFileSync } from 'node:fs';
+import { mkdirSync, rmSync, appendFileSync, readFileSync, writeFileSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 const CONTROL = 4180;
-const SITE = 4173;
+const SITE = 4174;
+const TOKEN = join(tmpdir(), 'soundboard-stage.token');
 const REPO = fileURLToPath(new URL('../../../..', import.meta.url));
 
 const [cmd, ...rest] = process.argv.slice(2);
@@ -41,16 +43,36 @@ else {
 }
 
 async function open() {
+  // The control port is taken first: a second stage stops here, before it
+  // launches a browser on a profile the first one holds.
+  const server = createServer();
+  await new Promise((done) => {
+    server.once('error', () => {
+      console.error(`A stage is already open on port ${CONTROL}: close it first.`);
+      process.exit(1);
+    });
+    server.listen(CONTROL, '127.0.0.1', done);
+  });
+  // Only this checkout's shell can drive the stage: the token is in a file
+  // only this user reads, and a web page cannot send the header without asking.
+  const token = randomBytes(16).toString('hex');
+  writeFileSync(TOKEN, token, { mode: 0o600 });
+
   const { chromium, devices } = await import(join(REPO, 'node_modules/@playwright/test/index.mjs'));
   const out = resolve(option('--out', join(tmpdir(), 'soundboard-stage')));
   const profile = join(out, 'profile');
   if (flag('--fresh')) rmSync(profile, { recursive: true, force: true });
   mkdirSync(join(out, 'shots'), { recursive: true });
 
-  if (!(await reachable(`http://localhost:${SITE}/`))) {
-    spawn('node', [join(REPO, 'e2e/serve.js'), String(SITE)], { stdio: 'ignore', detached: true }).unref();
-    while (!(await reachable(`http://localhost:${SITE}/`))) await sleep(0.2);
+  // The stage serves this checkout itself, on a port of its own, so it never
+  // plays a show on a server another clone or the test suite left running.
+  if (await reachable(`http://localhost:${SITE}/`)) {
+    console.error(`Something already answers on port ${SITE}: stop it first.`);
+    process.exit(1);
   }
+  const site = spawn('node', [join(REPO, 'e2e/serve.js'), String(SITE)], { stdio: 'ignore' });
+  process.on('exit', () => site.kill());
+  while (!(await reachable(`http://localhost:${SITE}/`))) await sleep(0.2);
 
   const device = flag('--phone') ? devices['Pixel 7'] : devices['Desktop Chrome'];
   const { defaultBrowserType, ...look } = device;
@@ -84,11 +106,19 @@ async function open() {
   const AsyncFunction = (async () => {}).constructor;
   let shot = 0;
 
-  const server = createServer(async (req, res) => {
-    const body = JSON.parse(await text(req));
+  server.on('request', async (req, res) => {
+    if (req.headers['x-stage-token'] !== token) return void res.writeHead(403).end();
+    let body;
+    try {
+      body = JSON.parse(await text(req));
+    } catch {
+      return void res.writeHead(400).end('not a command\n');
+    }
     if (body.close) {
       res.end('closed\n');
       await context.close();
+      site.kill();
+      rmSync(TOKEN, { force: true });
       server.close();
       return;
     }
@@ -110,7 +140,7 @@ async function open() {
     }
     res.end(lines.join('\n') + '\n');
   });
-  server.listen(CONTROL, '127.0.0.1', () => console.log(`stage open on ${look.viewport.width}px, profile ${profile}`));
+  console.log(`stage open on ${look.viewport.width}px, profile ${profile}`);
 }
 
 // Runs in the page before the board does. What a test would stub, the
@@ -156,7 +186,11 @@ function stagecraft() {
 }
 
 async function send(body) {
-  const req = request({ host: '127.0.0.1', port: CONTROL, method: 'POST', path: '/' });
+  let token = '';
+  try {
+    token = readFileSync(TOKEN, 'utf8');
+  } catch { /* no stage open: the request below says so */ }
+  const req = request({ host: '127.0.0.1', port: CONTROL, method: 'POST', path: '/', headers: { 'x-stage-token': token } });
   req.on('error', () => {
     console.error('The stage is not open: run `stage.mjs open` in the background first.');
     process.exit(1);
