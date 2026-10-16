@@ -8,4 +8,8 @@ Head reviewed: fb40631
 
 No blocking finding: one pass.
 
-Reviewed head: b251e28a81541c16711058137514eba0e36168e6
+# Pass 2
+
+Head: a33340d, main (#120) merged in. Conflicts only in docs/status.md (test count, now 95) and docs/testing.md (spec table rows, each side kept); no code of this branch changed. Suite: 172 passed. No finding.
+
+Reviewed head: a33340d1b8c28c30abf68ee06429a22ff323faaf
