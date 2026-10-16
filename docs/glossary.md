@@ -9,6 +9,7 @@ it from context, and define new terms here, not elsewhere.
 | **Board** | The grid of pads for a show, with its size, master level and default fades. One is open at a time. | `board` object, `model.js` `newBoard` |
 | **Default board** | The board a first launch opens, holding the bundled sounds. Its id is `default-board`. | `App.firstBoard` |
 | **Pad** | One cell of the board that holds a sound and how to play it. Empty pads are `null` or have no `file`. | `pad` object, `model.js` `newPad`; `.pad`, `.pad--filled`, `.pad--empty` |
+| **Remembered** | A sound that left the board, kept with the settings its pad had (and, if a resize took it off, its row and column), so it comes back as it was. | `board.remembered`, `model.js` `remember`, `recall` |
 | **Pad title** | What a pad shows: its own name, or the file's pretty name. Tests find pads by it. | `padTitle`, `prettyName` |
 | **Sound** | An audio file the board can reach, by its library path. | `Library.entries` |
 | **Path** | A sound's identity: its folder-relative path including the folder's own name, e.g. `Show/Act 1/rain.wav`. Pads point at paths, so a board travels with its folder. | `pad.file`, entry `path` |

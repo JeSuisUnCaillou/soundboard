@@ -45,6 +45,7 @@ A board, as stored and as exported (`model.js`, `BOARD_VERSION = 3`):
   master: 0.8,                  // 0..1
   defaults: { fadeIn: 1, fadeOut: 1.5 },   // seconds, for new pads
   pads: [pad | null, ...],      // exactly cols * rows long; index = row * cols + col
+  remembered: { [path]: { pad, row?, col? } },  // sounds that left the board
 }
 ```
 
@@ -73,11 +74,21 @@ door into the app for a board from storage or from a file, so never trust a
 board that has not been through it.
 
 **Size is fixed.** `fitPads` pads or truncates `pads` to `cols * rows`; nothing
-grows a board. Shrinking returns how many filled pads fell off, and the app
-toasts it. `resize` sets columns and rows together before fitting, so a
-change of both never loses pads at a halfway size. Changing `cols` re-wraps the
-same array, so pads keep their order and their index (and so their engine
-*channel*), not their row and column.
+grows a board. `resize` builds a new array and puts every pad at the row and
+column it had; a pad outside the new size is *remembered* with its place, and
+returned in `lost`, which the app names in a toast. A later `resize` that has
+room for a remembered place, still empty, puts that pad back (`back`).
+Changing `cols` moves pads to other indexes, so the app resets the engine and
+primes again: a pad's *channel* is its index.
+
+**Remembered sounds.** `board.remembered` holds, by path, the pad a sound had
+when it left the board. `App.setPad` remembers whatever a pad loses (taken
+off, emptied, or given another sound), and `emptyBoard` remembers every pad,
+dropping the places a resize noted so an emptied board stays empty when it
+grows. `App.padFor` takes a sound's memory back (`recall`) before making a new
+pad, so the sound returns as it was; a sound put on a pad any other way
+forgets it. It is saved and exported with the board, and `migrate` reads each
+entry through `migratePad`.
 
 Pads have no key. A `key` from an older board file or store is dropped by
 `migratePad`, and a board saved now carries none.

@@ -19,8 +19,16 @@ is in [architecture.md](architecture.md).
   browser offers them, not a requirement.
 - **Reconnecting is an offer, not a toll gate.** If the browser wants
   permission again, the board plays from its copies meanwhile.
-- **The board is exactly the size it was set to.** Nothing grows it. A smaller
-  board says what it could not keep, and those sounds stay in the folder.
+- **The board is exactly the size it was set to.** Nothing grows it. A resize
+  keeps every pad at its row and column, the way a cue sheet stays in its
+  rows; a smaller board names the pads it could not keep, and those sounds
+  stay in the folder.
+- **A pad's settings belong to its sound.** A sound that leaves the board, by
+  a resize, a drag off, *Empty this pad* or *Empty the board*, is remembered
+  with its name, gel, level, fades, loop and second tap, and brings them back
+  when it is put on a pad again. A board grown back puts what a resize took
+  off back in its place. (The owner, 2026-10-16, on
+  [#106](https://github.com/JeSuisUnCaillou/soundboard/issues/106).)
 - **The board belongs to the operator.** A first launch puts the twelve
   bundled sounds on the *Default board*, set up the way an improv show uses
   them, so it can be played from the first minute; after that nothing lays
