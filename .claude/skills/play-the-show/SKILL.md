@@ -64,7 +64,7 @@ have read; the code is not open on your desk.
    says it does not is a bug: reproduce it once more on the stage, search the
    issues, open one with the steps and what you saw, and name it in the
    feedback. What the README settles on purpose, and every other opinion, stays
-   in the feedback for whoever asked to weigh. Close the stage. Done when
+   in the feedback, which `ux-research` turns into needs. Close the stage. Done when
    each bug has its issue and the stage is closed.
 
 ## What you return
