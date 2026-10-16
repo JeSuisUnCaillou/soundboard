@@ -54,7 +54,7 @@ how `board.spec.js` tests a sound served cross-origin.
 | `pencil(page, title)` | The button that opens that pad's settings in edit mode, by its label. |
 | `BUNDLED_TITLES` | The twelve pad titles of the Default board, in board order; how each pad is set up is in `BUNDLED` (`js/bundled.js`). The first board is full, so a test that adds a sound clears a pad first. |
 | `makeRoom(page)` | In edit mode, take Sting off the full first board so a sound can go on it. |
-| `showSounds(page)` | Open the book wherever the layout keeps it (**Browse files** on phone), unless it is open already. |
+| `showSounds(page)` | Open the book wherever the layout keeps it (**Browse files** on phone), unless it is open already. It waits for edit mode first, so a test turns **Edit board** on before it. |
 | `isNarrow(page)` | Viewport ≤ 900px. |
 | `silentWav(seconds, rate)` | A WAV buffer made in the test, for adding sounds. Never commit test audio. |
 
