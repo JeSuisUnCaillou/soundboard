@@ -56,13 +56,13 @@ class App {
     this.engine.onbroken = (i, broken) => {
       this.redraw();
       if (!this.board) return;
-      const file = this.board.pads[i]?.file;
+      // Each file's trouble is said once while it is on the board (redraw
+      // forgets the files taken off it). A move or a smaller board primes
+      // every pad again, and the same file failing again is not news.
       if (!broken) {
-        this.toldBroken.delete(file);
+        this.toldBroken.delete(this.board.pads[i]?.file);
         return;
       }
-      // Each file's trouble is said once. A move or a smaller board primes
-      // every pad again, and the same file failing again is not news.
       const all = filled(this.board).filter(({ i: at, pad }) => this.engine.wontLoad(at, pad));
       if (all.every(({ pad }) => this.toldBroken.has(pad.file))) return;
       for (const { pad } of all) this.toldBroken.add(pad.file);
@@ -270,15 +270,6 @@ class App {
     });
   }
 
-  /**
-   * Dragging a pad somewhere else. Pointer events rather than HTML5 drag and
-   * drop, which does not exist under a finger.
-   *
-   * The whole pad is a handle, under a mouse or a finger: press anywhere but
-   * the pencil and move, and the pad comes with you; press and release without
-   * moving and it simply plays. While editing, a filled pad does not scroll the
-   * board (its touch-action is none); the empty places and the gaps do.
-   */
   /** The names fit and the edges are marked again whenever the board changes size. */
   wireStage() {
     refs.stage.addEventListener('scroll', () => drawEdges(), { passive: true });
@@ -297,6 +288,15 @@ class App {
     document.fonts?.ready.then(() => fitNames());
   }
 
+  /**
+   * Dragging a pad somewhere else. Pointer events rather than HTML5 drag and
+   * drop, which does not exist under a finger.
+   *
+   * The whole pad is a handle, under a mouse or a finger: press anywhere but
+   * the pencil and move, and the pad comes with you; press and release without
+   * moving and it simply plays. While editing, a filled pad does not scroll the
+   * board (its touch-action is none); the empty places and the gaps do.
+   */
   wirePadDragging() {
     let drag = null;
     let armed = null;        // pressed, not yet a drag
@@ -1030,6 +1030,9 @@ class App {
     refs.stageEmpty.hidden = !!this.board;
     refs.grid.hidden = !this.board;
     if (!this.board) return;
+    // A file taken off the board and put back on is news again if it fails.
+    const onBoard = new Set(filled(this.board).map(({ pad }) => pad.file));
+    for (const file of this.toldBroken) if (!onBoard.has(file)) this.toldBroken.delete(file);
     drawGrid(this.board, {
       editing: this.editing,
       missing: (path) => !this.library.has(path),

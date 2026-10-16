@@ -171,6 +171,31 @@ test('a pad that will not load is said once, not again each time the pads are se
   expect(await page.evaluate(() => window.said)).toEqual(['3 sounds came off the board. They are still under Sounds.']);
 });
 
+test('a pad that will not load is said again once its sound has been off the board', async ({ page }) => {
+  await addFiles(page, [notASound('thunder.wav')]);
+  const row = page.locator('#lib .lib__item', { hasText: 'thunder' });
+  await row.locator('.lib__add').click();
+  await expect(pad(page, 'Thunder')).toHaveClass(/pad--broken/);
+  await expect(page.locator('#toast')).toHaveText(/will not load/);
+
+  // Off the board, and back on in another place: Gunshot's, now the first free one.
+  for (const title of ['Thunder', 'Gunshot']) {
+    await pencil(page, title).click();
+    await page.locator('#padClear').click();
+    await expect(pad(page, title)).toHaveCount(0);
+  }
+  await page.evaluate(() => {
+    window.said = [];
+    new MutationObserver(() => window.said.push(document.getElementById('toast').textContent))
+      .observe(document.getElementById('toast'), { childList: true, characterData: true, subtree: true });
+  });
+
+  await showSounds(page);
+  await row.locator('.lib__add').click();
+  await expect(page.locator('#grid .pad').first()).toHaveClass(/pad--broken/);
+  await expect.poll(() => page.evaluate(() => window.said.some((t) => /will not load/.test(t)))).toBe(true);
+});
+
 test('a pad that would not load is itself again once given a sound that does', async ({ page }) => {
   test.skip(isNarrow(page), 'On a phone the tree covers the board, so nothing is dragged onto a pad.');
   await addFiles(page, [notASound('thunder.wav'), { name: 'wind.wav', mimeType: 'audio/wav', buffer: silentWav(10) }]);

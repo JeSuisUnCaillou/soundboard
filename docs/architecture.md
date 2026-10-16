@@ -11,7 +11,7 @@ why things are the way they are is in [decisions.md](decisions.md).
 | --- | --- |
 | `index.html` | The shell: the rail, the grid, the *book*, the transport, and the three `<dialog>` sheets (`#picker`, `#padEditor`, `#setup`). Every element the code or a test finds has an `id` here. |
 | `css/fonts.css`, `fonts/` | IBM Plex, served with the board (Latin and Latin Extended; licence in `fonts/OFL.txt`). |
-| `css/app.css` | All styling. BEM-ish classes (`pad--playing`, `lib__item--used`). Layout breakpoints at 900px (*narrow*: the book opens over the board) and 560px (pads at least 84px wide, so four columns fit a phone held upright), and `pointer: coarse` for touch. |
+| `css/app.css` | All styling. BEM-ish classes (`pad--playing`, `lib__item--used`). Layout breakpoints at 900px (*narrow*: the book opens over the board) and 560px (pads at least 84px wide, so four columns fit a phone 386px wide or more), and `pointer: coarse` for touch. |
 | `js/app.js` | The `App` class: owns the open board and the edit state, wires every event (taps, keys, drags, drops, pickers), saves, restores, keeps the screen awake. The only module that decides things. |
 | `js/engine.js` | `Engine`: Web Audio. One *channel* per pad, extra *voices* for layering and previews, fades, the per-frame `tick()`. Also `probeDuration()`. |
 | `js/library.js` | `Library`: every sound the board can reach, from every *source*, keyed by path. Folder walking, pickers, drops, dedup, blob URLs. |
@@ -220,7 +220,8 @@ rounded up. A looping pad has `.pad--loop`, which puts the loop mark before its
 clock. The toast lies over `#rail`, as tall as it, never over the pads; it lets
 taps through (`pointer-events: none`). `onbroken` remembers in `toldBroken`
 which files it has said will not load, so a move or a resize that primes the
-pads again says nothing new; a file that loads is forgotten there.
+pads again says nothing new; a file that loads, or that is no longer on any
+pad at a redraw, is forgotten there.
 
 **Saving**: `queueSave()` debounces 500 ms, only for the master volume and
 measured lengths; `saveNow()` on every other change (a save left for the page
