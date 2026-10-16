@@ -52,7 +52,7 @@ is in [architecture.md](architecture.md).
   the second tap is dropped; after that it does what the pad's second tap
   says. A pad whose second tap layers is the exception: every tap fires at
   once, as fast as the operator taps. (The owner, 2026-10-16, on #107, and on
-  layering pads: "hyper réactifs".)
+  layering pads: they must be extremely responsive.)
 - **Stop fades, Escape cuts.** Stop (and Space) takes each pad out on its own
   fade out; Escape silences everything instantly.
 - **The pads are played by touch.** The board runs from a phone or a tablet,
