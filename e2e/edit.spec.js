@@ -172,9 +172,9 @@ test('a pad that will not load is said once, not again each time the pads are se
   await page.locator('#btnSetup').click();
   await page.locator('#setRows').fill('3');
   await page.locator('#setupDone').click();
-  await expect(page.locator('#toast')).toHaveText('3 sounds came off the board. They are still under Sounds.');
+  await expect(page.locator('#toast')).toHaveText('Sad, Hero and Happy came off the board. Back on a pad, they come back as they were.');
   await expect(thunder).toHaveClass(/pad--broken/);
-  expect(await page.evaluate(() => window.said)).toEqual(['3 sounds came off the board. They are still under Sounds.']);
+  expect(await page.evaluate(() => window.said)).toEqual(['Sad, Hero and Happy came off the board. Back on a pad, they come back as they were.']);
 });
 
 test('a pad that will not load is said again once its sound has been off the board', async ({ page }) => {
