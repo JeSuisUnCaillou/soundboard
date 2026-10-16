@@ -73,7 +73,7 @@ export class PadEditor {
   }
 
   save() {
-    const { board, i, pad } = this.state;
+    const { i, pad } = this.state;
     const file = pad.file;
     if (!file) {
       toast('This pad has no sound yet. Put one on it from the folder.');
@@ -99,8 +99,6 @@ export class PadEditor {
       settled: true,
     };
     if (end != null && end <= start) toast('The stop point has to come after the start point, so it was cleared.');
-
-
 
     this.dlg.close();
     this.onSave(i, next);

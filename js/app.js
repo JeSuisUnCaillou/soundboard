@@ -1,4 +1,4 @@
-// Soundboard — wiring. Holds the open board, answers taps and keys, and keeps
+// Soundboard — wiring. Holds the open board, answers taps, Space and Escape, and keeps
 // the drawing in step with what the audio engine is actually doing.
 
 import { Library, CAN_PERSIST } from './library.js';
@@ -20,9 +20,9 @@ const PATH_TYPE = 'application/x-soundboard-path';
 // Below this width the sounds list slides over the pads instead of sitting beside them.
 const NARROW = window.matchMedia('(max-width: 900px)');
 
-// Fields that take typing, where a letter is a letter and not a pad. A slider,
-// a checkbox or a button keeps the focus after a click but takes no text, so
-// the show's keys still work while one is focused.
+// Fields that take typing, where a space is a space and not Stop. A slider, a
+// checkbox or a button keeps the focus after a click but takes no text, so
+// Space and Escape still work while one is focused.
 const TYPED = 'textarea, select, '
   + 'input:not([type=range]):not([type=checkbox]):not([type=radio])'
   + ':not([type=button]):not([type=submit]):not([type=reset]):not([type=color]):not([type=file])';

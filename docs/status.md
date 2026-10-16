@@ -5,7 +5,7 @@ Where the board stands, at a glance. Work itself is tracked in
 here: this file says what exists and where the gaps are, and links to the
 issue that carries each gap. Update it when a gap opens or closes.
 
-_Last reviewed: 2026-10-15._
+_Last reviewed: 2026-10-16._
 
 ## What works
 
@@ -35,8 +35,8 @@ a board file with the crickets' old name, tapping, Stop, Escape, the master
 volume, fade and second-tap edge cases, every second-tap mode, layering, both
 kinds of loop, start and stop points (also with the tab hidden), solo, a pad
 stopped while it is still starting, no pad answering a key, Space and Escape
-after a button or the volume has the focus, a cross-origin sound, edit mode, renaming a
-pad and its level, fades and gel (with reload), Board settings rows and columns
+after a button or the volume has the focus, a cross-origin sound, edit mode,
+renaming a pad and its level, fades and gel (with reload), Board settings rows and columns
 (both at once too), shrinking the board, the waiting pad, emptying the board,
 adding sounds through the file input, hearing a sound from the tree, the filter,
 saving a board file and loading it back (missing sounds struck through, an old
