@@ -137,3 +137,12 @@ What is not covered yet is listed in [status.md](status.md#test-coverage).
   and `kept.spec.js` return one from a stubbed `showDirectoryPicker` and stub
   `queryPermission` / `requestPermission` to make the board ask again.
 - Audio is not listened to: "playing" means the pad shows `pad--playing`.
+
+## Playing a show
+
+The suite checks what is written down. What nobody thought to write down is
+found by using the board as an operator does, with an audience in: the
+`play-the-show` skill (`.claude/skills/play-the-show/`) prepares a board for
+an imagined improv show, plays the show and changes the board between shows,
+in a Chromium kept open between moves, with a meter on what reaches the
+speakers. It files the bugs it finds and leaves its feedback to whoever asked.
