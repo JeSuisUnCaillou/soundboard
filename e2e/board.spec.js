@@ -190,7 +190,7 @@ test('a pad told to stop shows its sound fading, its light going down with it', 
   await expect(romance).not.toHaveClass(/pad--playing/);
   await expect(romance).toHaveClass(/pad--fading/);
   await expect(romance.locator('.pad__lamp')).toHaveClass(/lamp--fading/);
-  await expect(romance.locator('.pad__time')).toHaveText(/^-/);
+  await expect(romance.locator('.pad__time')).toHaveText(/^\d+:\d\d$/);
   const first = await level();
   expect(first).toBeGreaterThan(0);
   await expect.poll(level).toBeLessThan(first - 0.1);
@@ -350,7 +350,7 @@ test('a pad fading towards its stop point still answers a tap by stopping', asyn
  * only and a busy machine can poll straight past.
  */
 async function secondsLeft(padEl) {
-  const [m, sec] = (await padEl.locator('.pad__time').textContent()).replace('-', '').split(':');
+  const [m, sec] = (await padEl.locator('.pad__time').textContent()).split(':');
   return Number(m) * 60 + Number(sec);
 }
 
@@ -643,7 +643,7 @@ test('Reconnect in the middle of a cue cuts nothing', async ({ page }) => {
   await expect(rain).not.toHaveClass(/pad--playing/);
   await rain.click();
   await expect(rain).toHaveClass(/pad--playing/);
-  await expect(rain.locator('.pad__time')).toHaveText(/^-0:4[0-5]$/);
+  await expect(rain.locator('.pad__time')).toHaveText(/^0:4[0-5]$/);
 });
 
 test.describe('a second tap', () => {
@@ -832,7 +832,7 @@ test.describe('a glance at the board', () => {
     await setUpPad(page, 'Whistle', { padLoop: true });
     await whistle.click();
     await expect(whistle).toHaveClass(/pad--playing/);
-    await expect(whistle.locator('.pad__time')).toHaveText(/^-0\.[1-6]s$/);
+    await expect(whistle.locator('.pad__time')).toHaveText(/^0\.[1-6]s$/);
     await page.keyboard.press('Escape');
     await expect(whistle).not.toHaveClass(/pad--playing/);
   });
