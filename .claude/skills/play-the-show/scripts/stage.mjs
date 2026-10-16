@@ -16,7 +16,7 @@
 
 import { createServer, request } from 'node:http';
 import { spawn } from 'node:child_process';
-import { mkdirSync, rmSync, appendFileSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, appendFileSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -105,7 +105,9 @@ async function open() {
     note: (text) => appendFileSync(join(out, 'log.md'), `- ${new Date().toISOString().slice(11, 19)} ${text}\n`),
   };
   const AsyncFunction = (async () => {}).constructor;
-  let shot = 0;
+  // Numbering goes on from the last stage on this --out, so the next day's
+  // screenshots never overwrite the first day's.
+  let shot = readdirSync(join(out, 'shots')).filter((f) => /^\d+\.png$/.test(f)).length;
 
   server.on('request', async (req, res) => {
     if (req.headers['x-stage-token'] !== token) return void res.writeHead(403).end();

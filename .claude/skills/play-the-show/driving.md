@@ -103,3 +103,5 @@ for reading or changing the board's own state.
   Safari. Reconnect is not reachable from here.
 - The screen wake lock is granted by the stage; headless Chromium refuses it.
 - It is Chromium only. What an iPhone does differently is said, not played.
+- Playwright's Chromium has no AAC: an `.m4a` comes up "will not load" here
+  and plays in Chrome. Make the library's sounds MP3, WAV or OGG.
