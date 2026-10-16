@@ -38,7 +38,7 @@ it from context, and define new terms here, not elsewhere.
 | **Live** | Playing and not yet told to stop. What a pad's look, Stop and a tap all go by. | `Engine.live` |
 | **Released** | Told to stop; may still be fading out. The pad is no longer lit as playing; while its sound fades it is *fading*. | `voice.released` |
 | **Fading** | A pad released while its sound is still heard: its light goes down with the sound, and a tap brings the sound back from where it is. | `state: 'fading'`, `.pad--fading`, `--level`, `.lamp--fading` |
-| **Double tap** | Two taps on a pad within 300 ms. They count as one tap. | `DOUBLE_TAP`, `App.tap` |
+| **Double tap** | Two taps on a pad within 300 ms. They count as one tap, except on a pad that layers. | `DOUBLE_TAP`, `App.tap` |
 | **Channel** | The kept `<audio>` + gain node of one pad. | `Engine.channels` |
 | **Voice** | Any playing `<audio>` + gain: a channel, a layer or a preview. | `Engine.active` |
 | **Prime** | Create a pad's channel and buffer its file ahead of time. | `Engine.prime`, `App.primeAll` |

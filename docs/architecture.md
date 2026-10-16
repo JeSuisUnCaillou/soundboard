@@ -257,7 +257,8 @@ file that cannot be read is skipped, the rest are still kept, and the operator
 is told once per file.
 
 **Taps** (`tap(i)`): a tap on a pad within `DOUBLE_TAP` (300 ms) of the last
-one on that pad is dropped, so a nervous double tap is one tap. Space and
+one on that pad is dropped, so a nervous double tap is one tap, except on a
+pad whose second tap is `overlay`, which answers every tap. Space and
 Escape are not held to it.
 
 **Keys** (`onKey`): ignored in an open dialog, in a field that takes typing

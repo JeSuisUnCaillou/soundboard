@@ -214,6 +214,16 @@ test('two taps on a pad a fraction of a second apart count as one', async ({ pag
   await expect(storm).not.toHaveClass(/pad--playing/);
 });
 
+test('a pad that layers answers every tap at once, however fast', async ({ page }) => {
+  await openBoard(page);
+  await setUpPad(page, 'Crickets', { padTap: 'overlay' });
+  const crickets = pad(page, 'Crickets');
+
+  // Three taps as fast as a hand drums them: three copies, none dropped.
+  await crickets.click({ clickCount: 3 });
+  await expect(crickets.locator('.pad__stack')).toHaveText('×3');
+});
+
 /**
  * Note every level the board sets on a gain node: a set is a jump, a ramp a
  * fade towards a level. Each node's level is kept in window.__levels, in the
