@@ -1,15 +1,10 @@
-# Pass 1
+# Pass 1 (PR #130, layering pads skip the double-tap window)
 
-Head reviewed: fb40631
+Head reviewed: cea1a3f
 
-- engine.js: "fading after a stop" tested twice, in fire() and state(): fixed in b251e28 (`_fadingOut(i)`), not blocking.
-- architecture.md said a take-back always ramps over the fade in, but a pad with no fade in is set at once: doc fixed in b251e28, not blocking.
-- App.tapped is keyed by pad index, so a moved pad might share a 300 ms window: rejected, pads move only in edit mode and the window is a fraction of a second.
+- decisions.md quoted the owner in French against CLAUDE.md § English only: fixed in 3ed4a11, not blocking.
+- A second tap that lands while a pad's very first tap is still unlocking audio restarts the channel instead of layering: rejected, a race older than the branch (the 300 ms window hid it), on the first tap of a session only.
 
 No blocking finding: one pass.
 
-# Pass 2
-
-Head: a33340d, main (#120) merged in. Conflicts only in docs/status.md (test count, now 95) and docs/testing.md (spec table rows, each side kept); no code of this branch changed. Suite: 172 passed. No finding.
-
-Reviewed head: a33340d1b8c28c30abf68ee06429a22ff323faaf
+Reviewed head: 3ed4a11d71858e5c33d3e9974608ea16ad87c8c1
