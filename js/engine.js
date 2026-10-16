@@ -127,7 +127,7 @@ export class Engine {
     if (!this.live(i).length) {
       // A sound told to stop and still fading out is a stop the operator is
       // taking back: it comes back from where it is, not from the top.
-      if (ch && ch.released && ch.state !== 'idle') return this.start(i, pad, { back: true });
+      if (this._fadingOut(i)) return this.start(i, pad, { back: true });
       return this.start(i, pad);
     }
 
@@ -243,9 +243,15 @@ export class Engine {
   state(i) {
     const live = this.live(i);
     if (live.length) return { ...this._shown(live[0].voice), stack: live.length };
-    const ch = this.channels.get(i);
-    if (!ch || !ch.released || ch.state === 'idle') return null;
+    const ch = this._fadingOut(i);
+    if (!ch) return null;
     return { ...this._shown(ch), state: 'fading', level: this._loudness(ch), stack: 1 };
+  }
+
+  /** The pad's channel, if it was told to stop and is still heard fading out. */
+  _fadingOut(i) {
+    const ch = this.channels.get(i);
+    return ch && ch.released && ch.state !== 'idle' ? ch : null;
   }
 
   _shown(voice) {

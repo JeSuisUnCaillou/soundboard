@@ -144,7 +144,8 @@ made once per path, and revoked when a real file replaces the copy behind it.
   Space, and what a tap does all read it. A tap on a pad with nothing live
   brings its channel back if a release is still fading it out
   (`start(i, pad, { back: true })`: no seek, the gain held where the fade got
-  to and ramped back up over the fade in), and otherwise starts it.
+  to and ramped back up over the fade in, or set at once with none), and
+  otherwise starts it.
 - `state(i)` is what the pad shows: its live voices, or else its channel
   still fading after a release, as `state: 'fading'` with a `level` from 1
   down to 0 at 60 dB under the pad's level (`_loudness`). `paintPads` draws it
