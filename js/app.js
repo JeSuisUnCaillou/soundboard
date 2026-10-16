@@ -19,6 +19,8 @@ const PATH_TYPE = 'application/x-soundboard-path';
 
 // Below this width the sounds list slides over the pads instead of sitting beside them.
 const NARROW = window.matchMedia('(max-width: 900px)');
+// Milliseconds within which a second tap on a pad is the same tap.
+const DOUBLE_TAP = 300;
 
 // Fields that take typing, where a space is a space and not Stop. A slider, a
 // checkbox or a button keeps the focus after a click but takes no text, so
@@ -51,6 +53,7 @@ class App {
     this.pendingHandles = null;
     this.wakeLock = null;
     this.padWanting = -1;      // the empty pad that asked for a sound
+    this.tapped = new Map();   // pad index -> when it was last tapped
 
     this.engine.onchange = () => {
       drawStop(this.engine);
@@ -905,6 +908,11 @@ class App {
       toast(`“${pad.file}” is not in the open folder.`);
       return;
     }
+    // Two taps closer than this are one nervous tap, not a second tap: a cue
+    // tapped twice in a panic must start, not start and fade straight out.
+    const now = performance.now();
+    if (now - (this.tapped.get(i) ?? -Infinity) < DOUBLE_TAP) return;
+    this.tapped.set(i, now);
     try {
       await this.engine.fire(i, pad);
       say(padTitle(pad));

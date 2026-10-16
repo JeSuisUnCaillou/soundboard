@@ -26,12 +26,13 @@ screen wake lock.
 
 ## Test coverage
 
-93 tests, all green: each runs at desktop and phone size, except the 12 drag
+95 tests, all green: each runs at desktop and phone size, except the 12 drag
 tests, which run by mouse on desktop or by finger on phone, and the 6 that drag a
 sound from the tree, which run on desktop only. Covered: the first
 launch and its improv board, the default board loaded back onto an empty board,
 a board file with the crickets' old name, tapping, Stop, Escape, the master
-volume, fade and second-tap edge cases, every second-tap mode, layering, both
+volume, fade and second-tap edge cases, a fading pad's light and taking a stop
+back, two quick taps taken as one, every second-tap mode, layering, both
 kinds of loop, start and stop points (also with the tab hidden), solo, a pad
 stopped while it is still starting, no pad answering a key, Space and Escape
 after a button or the volume has the focus, a cross-origin sound, edit mode,

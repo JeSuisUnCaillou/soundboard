@@ -124,9 +124,12 @@ export class Engine {
   /** What tapping the pad does, given what it is doing now. */
   async fire(i, pad) {
     const ch = this.channels.get(i);
-    // A sound already told to stop is on its way out: tapping it again starts
-    // it afresh rather than stopping it a second time.
-    if (!this.live(i).length) return this.start(i, pad);
+    if (!this.live(i).length) {
+      // A sound told to stop and still fading out is a stop the operator is
+      // taking back: it comes back from where it is, not from the top.
+      if (this._fadingOut(i)) return this.start(i, pad, { back: true });
+      return this.start(i, pad);
+    }
 
     switch (pad.tap) {
       case 'restart':
@@ -143,7 +146,7 @@ export class Engine {
     }
   }
 
-  async start(i, pad, { fadeIn, layer = false } = {}) {
+  async start(i, pad, { fadeIn, layer = false, back = false } = {}) {
     await this.unlock();
     // Everything else goes out on its own fade out, as Stop takes it.
     if (pad.solo) await this.stopAll({ own: true, except: i });
@@ -164,7 +167,7 @@ export class Engine {
     const level = clamp01(pad.gain ?? 1);
     const fade = Math.max(0, fadeIn ?? pad.fadeIn ?? 0);
     voice.el.loop = !!pad.loop && !pad.trimEnd && !pad.trimStart;
-    await seek(voice.el, pad.trimStart || 0);
+    if (!(back && sounding)) await seek(voice.el, pad.trimStart || 0);
     if (fade <= 0) this._set(voice.gain, level);
     else this._set(voice.gain, sounding ? voice.gain.gain.value : FLOOR);
 
@@ -232,19 +235,42 @@ export class Engine {
   }
 
   /**
-   * What a pad shows: the voices nobody has told to stop. One that has been
-   * told is still fading out, but the operator has already moved on.
+   * What a pad shows: the voices nobody has told to stop, or else its own
+   * sound still fading out after it was told, with how loud it still is
+   * (level, 1 at the pad's level down to 0 well before the fade ends). The
+   * hall still hears that one, and a tap brings it back.
    */
   state(i) {
     const live = this.live(i);
-    if (!live.length) return null;
-    const { voice } = live[0];
+    if (live.length) return { ...this._shown(live[0].voice), stack: live.length };
+    const ch = this._fadingOut(i);
+    if (!ch) return null;
+    return { ...this._shown(ch), state: 'fading', level: this._loudness(ch), stack: 1 };
+  }
+
+  /** The pad's channel, if it was told to stop and is still heard fading out. */
+  _fadingOut(i) {
+    const ch = this.channels.get(i);
+    return ch && ch.released && ch.state !== 'idle' ? ch : null;
+  }
+
+  _shown(voice) {
     return {
       state: voice.state,
       position: voice.el.currentTime,
       duration: Number.isFinite(voice.el.duration) ? voice.el.duration : 0,
-      stack: live.length,
     };
+  }
+
+  /**
+   * How loud a voice is against its pad's level, as the ear hears it: the
+   * fade is even in decibels, so the light goes down with it evenly, and is
+   * out once the sound is 60 dB down, where the hall no longer hears it.
+   */
+  _loudness(voice) {
+    const full = Math.max(clamp01(voice.pad?.gain ?? 1), FLOOR);
+    const db = 20 * Math.log10(Math.max(voice.gain.gain.value, FLOOR) / full);
+    return clamp01(1 + db / 60);
   }
 
   /** Every voice still sounding, fading out or not; the channel first. */

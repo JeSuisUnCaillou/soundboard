@@ -40,10 +40,17 @@ is in [architecture.md](architecture.md).
   fade in, layers on a second tap, blue); otherwise a *cue* (green). It only
   sets defaults the operator has not touched, and it is decided before the pad
   is drawn so a pad never changes colour in front of them.
-- **A pad told to stop looks stopped at once**, even while its sound fades:
-  the operator has already moved on. Tapping it again starts it afresh. A fade
-  towards the pad's own stop point is *not* a stop, and the pad answers a tap
-  as usual.
+- **A stop can be taken back while it fades.** A pad told to stop is no
+  longer lit as playing, but while the hall still hears its fade its light
+  goes down with the sound, and a tap during the fade brings the sound back
+  from where it is, not from the top. A fade towards the pad's own stop point
+  is *not* a stop, and the pad answers a tap as usual. (The owner, 2026-10-16,
+  on #107: two operators read a fading pad as silent, and two had a Stop
+  taken back by the MC inside the fade.)
+- **Two taps a fraction of a second apart are one tap.** A nervous double tap
+  starts a cue; it does not start it and fade it straight out. Within 300 ms
+  the second tap is dropped; after that it does what the pad's second tap
+  says. (The owner, 2026-10-16, on #107.)
 - **Stop fades, Escape cuts.** Stop (and Space) takes each pad out on its own
   fade out; Escape silences everything instantly.
 - **The pads are played by touch.** The board runs from a phone or a tablet,
