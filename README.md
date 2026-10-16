@@ -127,7 +127,12 @@ for a hard scene change.
 
 **Running the show.** Tap a pad to fire it. A pad that is playing lights up in
 its own colour, the way a lamp does, with a green light, a countdown and a travel
-bar along its bottom edge — the board itself says what is running. A sound's
+bar along its bottom edge — the board itself says what is running. A pad that
+loops wears a loop mark beside its clock, which then counts to the end of one
+pass rather than to the end of the cue; a sound under a second gives its length
+in tenths (`0.6s`), not `0:00`. Names wrap between words only: a word too long
+for its pad is set smaller rather than broken in two. Messages appear over the
+top bar, never over the pads, and a pad's trouble is said once. A sound's
 own length picks where it starts from: under five seconds it is a hit — a shot,
 a door, a slap — so it comes up blue, starts at full level with no fade in, and
 a second tap layers another copy on top; anything longer is a cue that runs, and
@@ -153,7 +158,9 @@ a keyboard, two keys stand in for the buttons:
 
 **On a tablet or a phone.** The board is the whole screen, and it keeps the shape
 you gave it: a six-column board is six columns wide everywhere, scrolling rather
-than rearranging itself under the operator. While editing, Stop and the volume
+than rearranging itself under the operator. A side of the board that goes on
+past the edge of the screen fades out there, so a column out of sight is never a
+surprise; most phones held upright show four columns whole. While editing, Stop and the volume
 give their place to **Browse files**, which opens the folder over the whole
 screen — the pads and the files are never half each — and **Back to the pads**
 closes it. A pad comes away under the finger as soon as it moves, and dropped

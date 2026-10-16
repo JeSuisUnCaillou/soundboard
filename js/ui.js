@@ -2,7 +2,7 @@
 // calls in to redraw. Pad text is set as text, never markup, because the words
 // come from filenames on someone else's disk.
 
-import { fmtTime, filled, rowCol, padTitle } from './model.js';
+import { fmtLength, filled, rowCol, padTitle } from './model.js';
 import { GELS, gelHex } from './gels.js';
 import { prefs } from './store.js';
 
@@ -10,7 +10,7 @@ export const refs = {};
 
 export function bindRefs() {
   const ids = [
-    'grid', 'stageEmpty', 'btnAddEmpty', 'book', 'lib', 'libEmpty', 'libFilter',
+    'rail', 'stage', 'grid', 'stageEmpty', 'btnAddEmpty', 'book', 'lib', 'libEmpty', 'libFilter',
     'btnReconnect', 'btnAdd', 'btnEdit', 'btnEmpty', 'btnSetup',
     'browse', 'btnBrowse', 'btnBrowseDone',
     'picker', 'pickerTitle', 'pickerBlurb', 'pickerNote', 'pickerKeys', 'pickerClose',
@@ -55,11 +55,13 @@ export function drawGrid(board, { editing, missing = () => false, broken = () =>
         el.classList.add('pad--broken');
         el.title = `${pad.file} will not load`;
       }
+      // A loop goes round: its clock counts to the end of a pass, not of the sound.
+      if (pad.loop) el.classList.add('pad--loop');
       el.style.setProperty('--gel', gelHex(pad.gel));
       el.append(
         lamp('pad__lamp'),
         span('pad__name', padTitle(pad)),
-        span('pad__time', pad.duration ? fmtTime(pad.duration) : ''),
+        span('pad__time', pad.duration ? fmtLength(pad.duration) : ''),
         span('pad__travel', ''),
       );
       pen = pencil(i, padTitle(pad));
@@ -86,9 +88,57 @@ export function drawGrid(board, { editing, missing = () => false, broken = () =>
   });
 }
 
+// The smallest a pad's name is set, to fit a long word on its own line. Below
+// it the word is read more slowly than it would be broken.
+const NAME_FLOOR = 11;
+
+/**
+ * Names break between words only. A word too long for its pad is set smaller
+ * until it fits, and so is a name with more lines than the pad has room for:
+ * "Applaudi / ssements" is read twice, a smaller "Applaudissements" once. Only
+ * a word that does not fit even at the floor is broken. Run after every draw
+ * and whenever the pads change size, since a name's size follows its pad's.
+ */
+export function fitNames() {
+  const names = [...refs.grid.querySelectorAll('.pad__name')];
+  // Every name back to its own size first, then measured together: one layout
+  // for the board rather than one per pad.
+  for (const el of names) {
+    el.style.fontSize = '';
+    el.classList.remove('pad__name--break');
+  }
+  // Both sizes are whole pixels, so a name that fits can read a pixel over.
+  const over = (el) => el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1;
+  for (const el of names.filter(over)) {
+    let size = parseFloat(getComputedStyle(el).fontSize);
+    for (let n = 0; n < 8 && size > NAME_FLOOR && over(el); n++) {
+      const ratio = Math.min(el.clientWidth / el.scrollWidth, Math.sqrt(el.clientHeight / el.scrollHeight), 0.95);
+      size = Math.max(NAME_FLOOR, Math.floor(size * ratio * 2) / 2);
+      el.style.fontSize = `${size}px`;
+    }
+    if (el.scrollWidth > el.clientWidth + 1) el.classList.add('pad__name--break');
+  }
+}
+
+/**
+ * Marks each side of the board that goes on past the edge of the screen. The
+ * board keeps its shape on a phone and scrolls, and a column out of sight with
+ * nothing to say it is there is a cue that is not called.
+ */
+export function drawEdges() {
+  const s = refs.stage;
+  if (!s) return;
+  const slack = 2;
+  s.classList.toggle('stage--more-left', s.scrollLeft > slack);
+  s.classList.toggle('stage--more-right', s.scrollLeft + s.clientWidth < s.scrollWidth - slack);
+  s.classList.toggle('stage--more-up', s.scrollTop > slack);
+  s.classList.toggle('stage--more-down', s.scrollTop + s.clientHeight < s.scrollHeight - slack);
+}
+
 function padLabel(pad, row, col) {
   const bits = [padTitle(pad)];
-  if (pad.duration) bits.push(fmtTime(pad.duration));
+  if (pad.duration) bits.push(fmtLength(pad.duration));
+  if (pad.loop) bits.push('loops');
   bits.push(`row ${row + 1} column ${col + 1}`);
   return bits.join(', ');
 }
@@ -122,8 +172,8 @@ export function paintPads(board, engine) {
     el.style.setProperty('--travel', live && len > 0 ? Math.min(1, done / len) : 0);
 
     const time = el.querySelector('.pad__time');
-    if (live && len > 0) time.textContent = `-${fmtTime(Math.max(0, len - done))}`;
-    else time.textContent = pad.duration ? fmtTime(pad.duration) : '';
+    if (live && len > 0) time.textContent = `-${fmtLength(Math.max(0, len - done))}`;
+    else time.textContent = pad.duration ? fmtLength(pad.duration) : '';
 
     let stack = el.querySelector('.pad__stack');
     if (live && live.stack > 1) {
@@ -299,6 +349,8 @@ export function toast(message) {
     return;
   }
   refs.toast.textContent = message;
+  // As tall as the rail it covers, which wraps to two lines on a phone.
+  refs.toast.style.minHeight = refs.rail ? `${refs.rail.offsetHeight}px` : '';
   refs.toast.hidden = false;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {

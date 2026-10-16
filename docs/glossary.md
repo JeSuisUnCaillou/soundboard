@@ -44,7 +44,9 @@ it from context, and define new terms here, not elsewhere.
 | **Prime** | Create a pad's channel and buffer its file ahead of time. | `Engine.prime`, `App.primeAll` |
 | **Measure** | Read a sound's length once, through a throwaway `<audio>`. | `probeDuration`, `App.measure`, `Library.lengthOf` |
 | **Lamp** / **travel** / **countdown** | The green light, the progress bar along the bottom and the time left on a playing pad. The lamp dims on a fading pad. | `.pad__lamp`, `.lamp--go`, `.lamp--fading`, `.pad__travel`, `.pad__time` |
-| **Toast** | The short message at the bottom of the screen. Tests assert on it. | `toast()`, `#toast` |
+| **Toast** | The short message, said over the top rail and never over the pads. Tests assert on it. | `toast()`, `#toast` |
+| **Edge fade** | A side of the board that goes on past the screen's edge fades out there. | `drawEdges`, `.stage--more-right` (and `-left`, `-up`, `-down`) |
+| **Loop mark** | The circling arrow before a looping pad's clock, which counts to the end of one pass. | `.pad--loop` |
 | **Board file** | A board exported as JSON (`<id>.soundboard.json`) from Board settings. | `App.exportBoard`, `importBoard` |
 | **Shell** | The files the service worker precaches so the board runs offline. | `SHELL` in `sw.js` |
 | **Operator** | The person running sound for the show. The docs and the UI copy are written for them. | |

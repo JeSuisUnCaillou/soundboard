@@ -154,6 +154,54 @@ test('several pads that will not load are counted in one message', async ({ page
   await expect(page.locator('#toast')).toHaveText('2 pads will not load, so they will not play.');
 });
 
+test('a pad that will not load is said once, not again each time the pads are set up', async ({ page }) => {
+  await addFiles(page, [notASound('thunder.wav')]);
+  await page.locator('#lib .lib__item', { hasText: 'thunder' }).locator('.lib__add').click();
+  const thunder = pad(page, 'Thunder');
+  await expect(thunder).toHaveClass(/pad--broken/);
+  await expect(page.locator('#toast')).toHaveText(/will not load/);
+
+  // Every message from here on.
+  await page.evaluate(() => {
+    window.said = [];
+    new MutationObserver(() => window.said.push(document.getElementById('toast').textContent))
+      .observe(document.getElementById('toast'), { childList: true, characterData: true, subtree: true });
+  });
+
+  // A smaller board sets every pad up again; Thunder fails again, and that is not news.
+  await page.locator('#btnSetup').click();
+  await page.locator('#setRows').fill('3');
+  await page.locator('#setupDone').click();
+  await expect(page.locator('#toast')).toHaveText('Sad, Hero and Happy came off the board. Back on a pad, they come back as they were.');
+  await expect(thunder).toHaveClass(/pad--broken/);
+  expect(await page.evaluate(() => window.said)).toEqual(['Sad, Hero and Happy came off the board. Back on a pad, they come back as they were.']);
+});
+
+test('a pad that will not load is said again once its sound has been off the board', async ({ page }) => {
+  await addFiles(page, [notASound('thunder.wav')]);
+  const row = page.locator('#lib .lib__item', { hasText: 'thunder' });
+  await row.locator('.lib__add').click();
+  await expect(pad(page, 'Thunder')).toHaveClass(/pad--broken/);
+  await expect(page.locator('#toast')).toHaveText(/will not load/);
+
+  // Off the board, and back on in another place: Gunshot's, now the first free one.
+  for (const title of ['Thunder', 'Gunshot']) {
+    await pencil(page, title).click();
+    await page.locator('#padClear').click();
+    await expect(pad(page, title)).toHaveCount(0);
+  }
+  await page.evaluate(() => {
+    window.said = [];
+    new MutationObserver(() => window.said.push(document.getElementById('toast').textContent))
+      .observe(document.getElementById('toast'), { childList: true, characterData: true, subtree: true });
+  });
+
+  await showSounds(page);
+  await row.locator('.lib__add').click();
+  await expect(page.locator('#grid .pad').first()).toHaveClass(/pad--broken/);
+  await expect.poll(() => page.evaluate(() => window.said.some((t) => /will not load/.test(t)))).toBe(true);
+});
+
 test('a pad that would not load is itself again once given a sound that does', async ({ page }) => {
   test.skip(isNarrow(page), 'On a phone the tree covers the board, so nothing is dragged onto a pad.');
   await addFiles(page, [notASound('thunder.wav'), { name: 'wind.wav', mimeType: 'audio/wav', buffer: silentWav(10) }]);
@@ -916,34 +964,25 @@ test('a sound dropped on a filled pad leaves its own settings for the next time 
   await expect(pad(page, 'Pistol')).toBeVisible();
 });
 
-test('a pad under a toast still answers a tap', async ({ page }) => {
+test('a message covers no pad, and the button under it still answers a tap', async ({ page }) => {
   await openBoard(page);
   await page.locator('#btnEdit').click();
-  // Emptying the board says so in a toast, and leaves empty pads under it.
+  // Emptying the board says so in a toast.
   await page.locator('#btnEmpty').click();
   await page.locator('#btnEmpty').click();
   const toast = page.locator('#toast');
   await expect(toast).toHaveText('The board is empty. The sounds are still under Sounds.');
 
-  // Find a pad the toast covers, and tap it where the toast is.
   const over = await toast.boundingBox();
   const pads = page.locator('#grid .pad');
-  let target = null;
-  let at = null;
-  for (let i = 0; i < await pads.count() && !target; i++) {
-    if (!(await pads.nth(i).evaluate((el) => el.classList.contains('pad--empty')))) continue;
+  for (let i = 0; i < await pads.count(); i++) {
     const box = await pads.nth(i).boundingBox();
-    const left = Math.max(box.x, over.x);
-    const right = Math.min(box.x + box.width, over.x + over.width);
-    const top = Math.max(box.y, over.y);
-    const bottom = Math.min(box.y + box.height, over.y + over.height);
-    if (right - left > 4 && bottom - top > 4) {
-      target = pads.nth(i);
-      at = { x: (left + right) / 2, y: (top + bottom) / 2 };
-    }
+    expect(box.y, `pad ${i} is below the message`).toBeGreaterThanOrEqual(over.y + over.height - 1);
   }
-  expect(target, 'the toast covers an empty pad').not.toBeNull();
 
-  await page.mouse.click(at.x, at.y);
-  await expect(target).toHaveClass(/pad--waiting/);
+  // It lies over the top bar, whose buttons are still there to press.
+  const setup = await page.locator('#btnSetup').boundingBox();
+  expect(setup.y).toBeLessThan(over.y + over.height);
+  await page.mouse.click(setup.x + setup.width / 2, setup.y + setup.height / 2);
+  await expect(page.locator('#setup')).toBeVisible();
 });

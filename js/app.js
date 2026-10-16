@@ -12,7 +12,7 @@ import { bundledPaths, bundledSetup, isBundledPath } from './bundled.js';
 import { PadEditor, SetupSheet } from './editor.js';
 import {
   refs, bindRefs, drawGrid, paintPads, drawLibrary,
-  drawStop, setPanel, setBook, markPreview, say, toast,
+  drawStop, setPanel, setBook, markPreview, say, toast, fitNames, drawEdges,
 } from './ui.js';
 
 const PATH_TYPE = 'application/x-soundboard-path';
@@ -53,6 +53,7 @@ class App {
     this.pendingHandles = null;
     this.wakeLock = null;
     this.padWanting = -1;      // the empty pad that asked for a sound
+    this.toldBroken = new Set(); // files already said not to load, this session
     this.tapped = new Map();   // pad index -> when it was last tapped
 
     this.engine.onchange = () => {
@@ -63,8 +64,17 @@ class App {
     };
     this.engine.onbroken = (i, broken) => {
       this.redraw();
-      if (!broken || !this.board) return;
+      if (!this.board) return;
+      // Each file's trouble is said once while it is on the board (redraw
+      // forgets the files taken off it). A move or a smaller board primes
+      // every pad again, and the same file failing again is not news.
+      if (!broken) {
+        this.toldBroken.delete(this.board.pads[i]?.file);
+        return;
+      }
       const all = filled(this.board).filter(({ i: at, pad }) => this.engine.wontLoad(at, pad));
+      if (all.every(({ pad }) => this.toldBroken.has(pad.file))) return;
+      for (const { pad } of all) this.toldBroken.add(pad.file);
       if (all.length === 1) toast(`“${padTitle(all[0].pad)}” will not load, so it will not play.`);
       else if (all.length) toast(`${all.length} pads will not load, so they will not play.`);
     };
@@ -247,6 +257,7 @@ class App {
     });
 
     this.wirePadDragging();
+    this.wireStage();
 
     // A folder dropped anywhere on the window opens it.
     document.addEventListener('dragover', (e) => {
@@ -266,6 +277,24 @@ class App {
         toast(`That could not be read: ${err.message}`);
       }
     });
+  }
+
+  /** The names fit and the edges are marked again whenever the board changes size. */
+  wireStage() {
+    refs.stage.addEventListener('scroll', () => drawEdges(), { passive: true });
+    let sized = null;
+    const sizes = new ResizeObserver(() => {
+      cancelAnimationFrame(sized);
+      sized = requestAnimationFrame(() => {
+        fitNames();
+        drawEdges();
+      });
+    });
+    sizes.observe(refs.stage);
+    sizes.observe(refs.grid);
+    // A name measured in the stand-in font before the board's own has loaded
+    // is measured again in it.
+    document.fonts?.ready.then(() => fitNames());
   }
 
   /**
@@ -1030,12 +1059,17 @@ class App {
     refs.stageEmpty.hidden = !!this.board;
     refs.grid.hidden = !this.board;
     if (!this.board) return;
+    // A file taken off the board and put back on is news again if it fails.
+    const onBoard = new Set(filled(this.board).map(({ pad }) => pad.file));
+    for (const file of this.toldBroken) if (!onBoard.has(file)) this.toldBroken.delete(file);
     drawGrid(this.board, {
       editing: this.editing,
       missing: (path) => !this.library.has(path),
       broken: (i) => this.engine.wontLoad(i, this.board.pads[i]),
       waiting: this.padWanting,
     });
+    fitNames();
+    drawEdges();
     drawStop(this.engine);
     this.labelEmpty();
     if (this.editing) drawLibrary(this.board, this.library, refs.libFilter.value);

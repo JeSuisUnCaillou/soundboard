@@ -26,6 +26,7 @@
   --gel: #c9bdb0;
 
   --speaker: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 6h2.6L8.6 3v10L5.1 10H2.5z' fill='%23000'/%3E%3Cpath d='M10.8 6.1c1 1 1 2.8 0 3.8M13 4c1.8 1.8 1.8 6.2 0 8' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  --loop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13 8a5 5 0 1 1-1.5-3.6' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M12.6 1.2v3.7H8.9z' fill='%23000'/%3E%3C/svg%3E");
   --pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M11.6 1.1l3.3 3.3-8.3 8.3-4.3.9.9-4.3zM10.2 2.5l3.3 3.3' fill='none' stroke='%23000' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");
 
   --sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
@@ -143,7 +144,24 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   min-height: 0;
   min-width: 0;
   overflow: auto;
+  /* A side of the board that goes on past the screen's edge fades out there:
+     the pads half seen say there is more, and which way. Each side is a
+     gradient of its own, all four kept where they overlap. */
+  --fade-l: 0px; --fade-r: 0px; --fade-u: 0px; --fade-d: 0px;
+  --edges:
+    linear-gradient(to right, transparent, #000 var(--fade-l)),
+    linear-gradient(to left, transparent, #000 var(--fade-r)),
+    linear-gradient(to bottom, transparent, #000 var(--fade-u)),
+    linear-gradient(to top, transparent, #000 var(--fade-d));
+  -webkit-mask-image: var(--edges);
+  mask-image: var(--edges);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
 }
+.stage--more-left { --fade-l: 44px; }
+.stage--more-right { --fade-r: 44px; }
+.stage--more-up { --fade-u: 36px; }
+.stage--more-down { --fade-d: 36px; }
 
 .stage__empty {
   display: flex;
@@ -230,7 +248,11 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   line-clamp: 3;
-  overflow-wrap: anywhere;
+  /* Between words only. A word too long for the pad is set smaller instead
+     (fitNames in ui.js), and only broken when even that is not enough. */
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
   /* Never taller than the row it was given, whatever the name is. */
   min-height: 0;
   max-height: 100%;
@@ -248,12 +270,26 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
   .pad__name { -webkit-line-clamp: 1; line-clamp: 1; }
 }
 
+.pad__name--break { overflow-wrap: anywhere; }
+
 .pad__time {
   grid-area: time;
   font: 400 12px/1 var(--mono);
   color: rgba(255, 255, 255, 0.72);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   font-variant-numeric: tabular-nums;
+}
+/* A loop is marked where its clock is, since that clock is counting to the end
+   of one pass, not to the end of the sound. */
+.pad--loop .pad__time::before {
+  content: "";
+  display: inline-block;
+  width: 11px; height: 11px;
+  margin-right: 5px;
+  vertical-align: -1px;
+  background: currentColor;
+  -webkit-mask: var(--loop) center / contain no-repeat;
+  mask: var(--loop) center / contain no-repeat;
 }
 .pad__lamp {
   position: absolute;
@@ -686,18 +722,24 @@ select.field option:checked { background: var(--warn); color: #241a07; }
 }
 .gel[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--console) inset; }
 
+/* Messages are said over the top rail, never over the pads: a message over a
+   pad hides whether it lit, and over the clocks it hides the time left. The
+   rail's own buttons stay pressable through it, since it has nothing to press. */
 .toast {
   position: fixed;
-  left: 50%; bottom: calc(var(--transport) + 16px);
-  transform: translateX(-50%);
-  padding: 9px 15px;
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--warn);
-  border-radius: var(--radius);
-  background: var(--pad);
+  top: 0; left: 0; right: 0;
+  min-height: var(--rail);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+  border-bottom: 1px solid var(--line);
+  box-shadow: inset 0 -3px 0 var(--warn);
+  background: var(--console);
   font-size: 14px;
-  z-index: 6;
-  /* It has nothing to press, and the pad under it may be the next cue. */
+  line-height: 1.3;
+  text-align: center;
+  z-index: 8;
   pointer-events: none;
 }
 .toast[hidden] { display: none; }
@@ -757,9 +799,7 @@ select.field option:checked { background: var(--warn); color: #241a07; }
   .rail { align-items: center; }
   .rail__actions { order: 2; width: auto; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
 
-  /* The transport is taller here, and a toast pinned above it would guess at
-     how much taller. Over the pads it never collides with anything. */
-  .toast { top: 50%; bottom: auto; transform: translate(-50%, -50%); max-width: calc(100vw - 32px); }
+  .toast { font-size: 13.5px; }
   .transport {
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas: "go master";
@@ -770,7 +810,9 @@ select.field option:checked { background: var(--warn); color: #241a07; }
 }
 
 @media (max-width: 560px) {
-  .grid { grid-template-columns: repeat(var(--cols, 4), minmax(96px, 1fr)); grid-auto-rows: minmax(76px, 1fr); }
+  /* Four columns fit across most phones held upright; a fifth goes past the edge,
+     and the edge says so. */
+  .grid { grid-template-columns: repeat(var(--cols, 4), minmax(84px, 1fr)); grid-auto-rows: minmax(76px, 1fr); }
   .go { gap: 10px; }
   .stop__btn { flex: 1; }
 

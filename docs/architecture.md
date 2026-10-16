@@ -11,14 +11,14 @@ why things are the way they are is in [decisions.md](decisions.md).
 | --- | --- |
 | `index.html` | The shell: the rail, the grid, the *book*, the transport, and the three `<dialog>` sheets (`#picker`, `#padEditor`, `#setup`). Every element the code or a test finds has an `id` here. |
 | `css/fonts.css`, `fonts/` | IBM Plex, served with the board (Latin and Latin Extended; licence in `fonts/OFL.txt`). |
-| `css/app.css` | All styling. BEM-ish classes (`pad--playing`, `lib__item--used`). Layout breakpoints at 900px (*narrow*: the book opens over the board) and 560px, and `pointer: coarse` for touch. |
+| `css/app.css` | All styling. BEM-ish classes (`pad--playing`, `lib__item--used`). Layout breakpoints at 900px (*narrow*: the book opens over the board) and 560px (pads at least 84px wide, so four columns fit a phone 386px wide or more), and `pointer: coarse` for touch. |
 | `js/app.js` | The `App` class: owns the open board and the edit state, wires every event (taps, keys, drags, drops, pickers), saves, restores, keeps the screen awake. The only module that decides things. |
 | `js/engine.js` | `Engine`: Web Audio. One *channel* per pad, extra *voices* for layering and previews, fades, the per-frame `tick()`. Also `probeDuration()`. |
 | `js/library.js` | `Library`: every sound the board can reach, from every *source*, keyed by path. Folder walking, pickers, drops, dedup, blob URLs. |
 | `js/model.js` | The board and pad data: `newBoard`, `newPad`, `migrate`, resizing, `applyLengthDefaults`, `giveSound`, formatting helpers. Pure functions, no DOM. |
 | `js/store.js` | `store` (IndexedDB) and `prefs` (localStorage). |
 | `js/editor.js` | `PadEditor` (the pad sheet) and `SetupSheet` (Board settings). Read fields, validate, hand the result back to `App` through callbacks. |
-| `js/ui.js` | Drawing only: `drawGrid`, `paintPads` (per frame), `drawLibrary` (the tree), `drawStop`, `setPanel`, `setBook`, `toast`, `say`. Decides nothing. |
+| `js/ui.js` | Drawing only: `drawGrid`, `paintPads` (per frame), `fitNames` (pad names set smaller to fit), `drawEdges` (the *edge fades*), `drawLibrary` (the tree), `drawStop`, `setPanel`, `setBook`, `toast`, `say`. Decides nothing. |
 | `js/gels.js` | The eleven *gels* and `DEFAULT_GEL`. |
 | `js/bundled.js` | The *bundled sounds*, how the *Default board* sets up each one's pad (`bundledSetup`), and the `default/` path prefix. |
 | `sw.js` | The service worker: network first, cache as fallback. |
@@ -225,6 +225,23 @@ two: `.lib__play` (hear it) and `.lib__add` (the **+**). The pencil is a
 another): every pad is placed in its grid cell by hand (`grid-area`) and the
 pencil shares the cell, laid over the pad's corner. `padOf()` in `app.js`
 maps a pencil back to its pad for drags and drops.
+
+**Reading the board** (`ui.js`, wired by `App.wireStage`): names wrap between
+words only (`overflow-wrap: normal`). `fitNames()` runs after every
+`drawGrid` and whenever the stage or the grid changes size (a
+`ResizeObserver`, one frame later), and again once the fonts have loaded: each
+name back at its own size, all measured in one layout, then any that overflow
+its pad across or down set smaller step by step, down to `NAME_FLOOR` (11px);
+only a word that still does not fit gets `.pad__name--break` and may break.
+`drawEdges()` runs on the same occasions and on every scroll of `#stage`,
+setting `stage--more-left/right/up/down`; the stage's CSS mask fades each
+marked side. Clocks go through `fmtLength` (`model.js`): under a second, tenths
+rounded up. A looping pad has `.pad--loop`, which puts the loop mark before its
+clock. The toast lies over `#rail`, as tall as it, never over the pads; it lets
+taps through (`pointer-events: none`). `onbroken` remembers in `toldBroken`
+which files it has said will not load, so a move or a resize that primes the
+pads again says nothing new; a file that loads, or that is no longer on any
+pad at a redraw, is forgotten there.
 
 **Saving**: `queueSave()` debounces 500 ms, only for the master volume and
 measured lengths; `saveNow()` on every other change (a save left for the page
