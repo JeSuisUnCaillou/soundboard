@@ -93,6 +93,9 @@ export async function showSounds(page) {
   // Asked by the button rather than by the tree's visibility: the board may
   // already be opening the tree itself (after a reload, or for a waiting pad),
   // and a press then would close it.
+  // After a reload the board draws its pads before it goes back to editing
+  // and reopens the tree, so wait for edit mode before asking.
+  await expect(page.locator('#btnEdit')).toHaveAttribute('aria-pressed', 'true');
   const browse = page.locator('#btnBrowse');
   if (isNarrow(page) && (await browse.getAttribute('aria-expanded')) !== 'true') await browse.click();
   await expect(page.locator('#book')).toBeVisible();

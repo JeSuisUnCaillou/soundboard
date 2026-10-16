@@ -20,16 +20,15 @@ screen wake lock.
 
 ## Known bugs
 
-- [#84](https://github.com/JeSuisUnCaillou/soundboard/issues/84): a smaller
-  board says how many sounds came off, not which ones.
 - [#103](https://github.com/JeSuisUnCaillou/soundboard/issues/103): on a
   phone, "Add more sounds" says the sounds are picked again each launch,
   though the board keeps them.
 
 ## Test coverage
 
-92 tests, all green: each runs at desktop and phone size, except the 12 drag
-tests, which run by mouse on desktop or by finger on phone. Covered: the first
+95 tests, all green: each runs at desktop and phone size, except the 12 drag
+tests, which run by mouse on desktop or by finger on phone, and the 6 that drag a
+sound from the tree, which run on desktop only. Covered: the first
 launch and its improv board, the default board loaded back onto an empty board,
 a board file with the crickets' old name, tapping, Stop, Escape, the master
 volume, fade and second-tap edge cases, a fading pad's light and taking a stop
@@ -38,7 +37,9 @@ kinds of loop, start and stop points (also with the tab hidden), solo, a pad
 stopped while it is still starting, no pad answering a key, Space and Escape
 after a button or the volume has the focus, a cross-origin sound, edit mode,
 renaming a pad and its level, fades and gel (with reload), Board settings rows and columns
-(both at once too), shrinking the board, the waiting pad, emptying the board,
+(pads keeping their row and column, wider and narrower), shrinking the board and
+naming what came off, growing it back (across a reload), a sound put back set
+up as it was, an emptied board growing empty, the waiting pad, emptying the board,
 adding sounds through the file input, hearing a sound from the tree, the filter,
 saving a board file and loading it back (missing sounds struck through, an old
 file's keys dropped),

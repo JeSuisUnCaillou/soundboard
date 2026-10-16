@@ -102,14 +102,19 @@ with you; press and release without moving and it just plays. While editing, the
 board scrolls from its empty places and the gaps between pads. Dropping a pad
 on the folder beside the board, or on the bar beneath it, takes it off the board
 and leaves the sound where it is; that place is marked in red as soon as a pad
-is picked up. There is no limit on how many sounds a board holds. **Empty the
+is picked up. A pad's settings belong to its sound: put a sound back on the
+board, after taking it off, emptying its pad or emptying the board, and it
+comes back with the name, colour, level, fades, loop and second tap it had,
+even after a reload. There is no limit on how many sounds a board holds. **Empty the
 board** clears the pads without touching the sounds, and asks twice. On an empty board the same button reads **Load the default
 board** and lays the twelve sounds back out, set up as on a first launch.
 
 **Board settings** sets how many rows and columns the board has — three columns by
 four rows to begin with. That is the whole board: twelve pads hold twelve sounds, and the rest
-wait in the folder until there is room. A smaller board says what it could not
-keep. It also holds the fades new pads start with — a second in, a second and a half out,
+wait in the folder until there is room. Changing the size keeps every pad at its
+row and column: more columns add empty pads on the right, more rows add them at
+the bottom. A smaller board names the pads it could not keep, and growing it
+back puts them back where they were. It also holds the fades new pads start with — a second in, a second and a half out,
 so nothing begins or ends on a hard edge unless a pad is told to. **Done** keeps what was
 changed there, and so does saving a board file from it; `Esc` leaves the board as it was.
 
