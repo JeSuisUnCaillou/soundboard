@@ -1,6 +1,8 @@
-// The board: a run of pads, each pointing at a file inside the open folder.
+// The board: a grid of pads, each pointing at a file inside the open folder.
 // It is exactly as many rows and columns as it was set to. Index = row * cols +
-// col, so changing the column count re-wraps the same pads in the same order.
+// col; a resize keeps every pad at its row and column. What was set on a pad
+// belongs to its sound: a sound that leaves the board is remembered with its
+// settings, and comes back with them.
 
 import { DEFAULT_GEL } from './gels.js';
 
@@ -26,6 +28,9 @@ export function newBoard({ id, cols = 3, rows = 4 }) {
     // Nothing starts or stops on a hard edge unless a pad asks for it.
     defaults: { fadeIn: 1, fadeOut: 1.5 },
     pads: [],
+    // Sounds that left the board, by path, each with the pad it had and, if a
+    // resize took it off, the row and column it had: { pad, row?, col? }.
+    remembered: {},
   };
   fitPads(board);
   return board;
@@ -98,22 +103,77 @@ export function newPad(board, i, file) {
 /**
  * The board is exactly the size it was set to. Nothing grows it: a board of
  * twelve pads holds twelve sounds, and the thirteenth waits in the folder until
- * there is room for it. Returns how many sounds fell off the end, which only a
- * smaller board can do.
+ * there is room for it.
  */
 export function fitPads(board) {
   const want = board.cols * board.rows;
-  const lost = board.pads.slice(want).filter((pad) => pad && pad.file).length;
   board.pads.length = Math.min(board.pads.length, want);
   while (board.pads.length < want) board.pads.push(null);
-  return lost;
 }
 
-/** Re-wrap the same pads into a different shape. Returns how many fell off. */
+/**
+ * A new shape, every pad at the row and column it had: a wider board gains
+ * empty pads on the right, a taller one at the bottom. A pad with no place left
+ * is remembered with its place, and a later resize that has room for that
+ * place again puts it back as it was, if nothing has been put there since.
+ * Returns the pads that came off, in reading order, and how many came back.
+ */
 export function resize(board, cols, rows) {
+  const was = board.cols;
+  const old = board.pads;
   board.cols = clampInt(cols, 1, MAX_COLS);
   board.rows = clampInt(rows, 1, MAX_ROWS);
-  return fitPads(board);
+  board.pads = [];
+  fitPads(board);
+  const lost = [];
+  old.forEach((pad, i) => {
+    if (!pad) return;
+    const row = Math.floor(i / was);
+    const col = i % was;
+    if (row < board.rows && col < board.cols) board.pads[row * board.cols + col] = pad;
+    else if (pad.file) {
+      lost.push(pad);
+      remember(board, pad, { row, col });
+    }
+  });
+
+  const onBoard = new Set(filled(board).map(({ pad }) => pad.file));
+  let back = 0;
+  for (const [path, { pad, row, col }] of Object.entries(board.remembered)) {
+    if (row === undefined || row >= board.rows || col >= board.cols || onBoard.has(path)) continue;
+    const i = row * board.cols + col;
+    if (board.pads[i] && board.pads[i].file) continue;
+    board.pads[i] = pad;
+    delete board.remembered[path];
+    onBoard.add(path);
+    back += 1;
+  }
+  return { lost, back };
+}
+
+/**
+ * A sound leaving the board takes nothing with it: what was set on its pad is
+ * kept under its path, to come back when the sound does (`recall`). `place` is
+ * the row and column a resize took it off from.
+ */
+export function remember(board, pad, place = {}) {
+  board.remembered[pad.file] = { pad: { ...pad }, ...place };
+}
+
+/** An emptied board is empty: growing it later puts nothing back by itself. */
+export function forgetPlaces(board) {
+  for (const kept of Object.values(board.remembered)) {
+    delete kept.row;
+    delete kept.col;
+  }
+}
+
+/** What a sound had on its last pad, if it has been on one: taken back, once. */
+export function recall(board, path) {
+  const kept = board.remembered[path];
+  if (!kept) return null;
+  delete board.remembered[path];
+  return { ...kept.pad, file: path };
 }
 
 export function filled(board) {
@@ -192,6 +252,15 @@ export function migrate(raw, { id } = {}) {
     board.pads[i] = pad ? migratePad(board, i, pad, version) : null;
   });
   fitPads(board);
+  const remembered = raw.remembered && typeof raw.remembered === 'object' ? raw.remembered : {};
+  for (const kept of Object.values(remembered)) {
+    if (!kept || !kept.pad || !kept.pad.file) continue;
+    const pad = migratePad(board, 0, kept.pad, version);
+    const place = Number.isInteger(kept.row) && Number.isInteger(kept.col) && kept.row >= 0 && kept.col >= 0
+      ? { row: kept.row, col: kept.col }
+      : {};
+    remember(board, pad, place);
+  }
   return board;
 }
 
