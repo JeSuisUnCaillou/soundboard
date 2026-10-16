@@ -10,3 +10,16 @@ Head reviewed: 82ffe82
 None of these is in code blocking.md lists (`.claude/skills/` is not), so no second pass.
 
 Reviewed head: 5c601610b071f9e303cf0d1bae45a6442bc540fc
+
+# PR #102, pass 1
+
+Head reviewed: 06eefb2
+
+- bugs: driving.md did not say a second stage needs its own `--out`, so two would share a profile. Fixed in 6365b81.
+- bugs and architect: the `need` label the skill files with does not exist yet. Fixed in 6365b81: the skill makes it when missing.
+- architect: driving.md said 4174 as if it were the only site port. Fixed in 6365b81.
+- architect: a play-the-show line edited past 80 columns. Fixed in 6365b81.
+
+All text, none blocking, so no second pass.
+
+Reviewed head: 6365b81cce0bebbdff7c4ecbe717c175946af4e9
