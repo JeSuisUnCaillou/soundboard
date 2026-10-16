@@ -2,7 +2,7 @@
 // calls in to redraw. Pad text is set as text, never markup, because the words
 // come from filenames on someone else's disk.
 
-import { fmtLength, filled, rowCol, padTitle } from './model.js';
+import { fmtLength, filled, rowCol, padTitle, MAX_COLS, MAX_ROWS } from './model.js';
 import { GELS, gelHex } from './gels.js';
 import { prefs } from './store.js';
 
@@ -10,7 +10,7 @@ export const refs = {};
 
 export function bindRefs() {
   const ids = [
-    'rail', 'stage', 'grid', 'btnAddCol', 'btnDropCol', 'btnAddRow', 'btnDropRow', 'stageEmpty', 'btnAddEmpty', 'book', 'lib', 'libEmpty', 'libFilter',
+    'rail', 'stage', 'grid', 'stageEmpty', 'btnAddEmpty', 'book', 'lib', 'libEmpty', 'libFilter',
     'btnReconnect', 'btnAdd', 'btnEdit', 'btnEmpty', 'btnSetup',
     'browse', 'btnBrowse', 'btnBrowseDone',
     'picker', 'pickerTitle', 'pickerBlurb', 'pickerNote', 'pickerKeys', 'pickerClose',
@@ -30,9 +30,10 @@ const openDirs = new Set(prefs.get('openDirs', []));
 
 // ── grid ──────────────────────────────────────────────────────────────────
 
-export function drawGrid(board, { editing, missing = () => false, broken = () => false, waiting = -1 }) {
+export function drawGrid(board, { editing, missing = () => false, broken = () => false, waiting = -1, armed = null }) {
   const grid = refs.grid;
   grid.style.setProperty('--cols', board.cols);
+  grid.style.setProperty('--rows', board.rows);
   grid.replaceChildren();
   padEls.clear();
 
@@ -86,6 +87,43 @@ export function drawGrid(board, { editing, missing = () => false, broken = () =>
       grid.append(pen);
     }
   });
+  if (editing) drawBins(board, armed);
+}
+
+/**
+ * While editing, a bin under each column and beside each row takes it off, and
+ * the + in the corner adds a row and a column. `armed` is the bin that has
+ * been tapped once and waits for the second tap.
+ */
+function drawBins(board, armed) {
+  const bin = (line, at, area, label) => {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'bin';
+    el.dataset.line = line;
+    el.dataset.at = String(at);
+    el.style.gridArea = area;
+    el.title = label;
+    el.setAttribute('aria-label', label);
+    if (armed && armed.line === line && armed.at === at) el.classList.add('bin--armed');
+    if (board[line] <= 1) el.disabled = true;
+    return el;
+  };
+  for (let col = 0; col < board.cols; col++) {
+    refs.grid.append(bin('cols', col, `${board.rows + 1} / ${col + 1}`, `Remove column ${col + 1}`));
+  }
+  for (let row = 0; row < board.rows; row++) {
+    refs.grid.append(bin('rows', row, `${row + 1} / ${board.cols + 1}`, `Remove row ${row + 1}`));
+  }
+  const add = document.createElement('button');
+  add.type = 'button';
+  add.className = 'grow';
+  add.id = 'btnGrow';
+  add.style.gridArea = `${board.rows + 1} / ${board.cols + 1}`;
+  add.title = 'Add a row and a column';
+  add.setAttribute('aria-label', 'Add a row and a column');
+  add.disabled = board.cols >= MAX_COLS && board.rows >= MAX_ROWS;
+  refs.grid.append(add);
 }
 
 // The smallest a pad's name is set, to fit a long word on its own line. Below

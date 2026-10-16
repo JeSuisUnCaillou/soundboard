@@ -5,7 +5,7 @@ import { Library, CAN_PERSIST } from './library.js';
 import { Engine, probeDuration } from './engine.js';
 import { store, prefs } from './store.js';
 import {
-  newBoard, newPad, migrate, resize, MAX_COLS, MAX_ROWS, fitPads, filled, slug, move, rowCol, padTitle,
+  newBoard, newPad, migrate, resize, removeLine, fitPads, filled, slug, move, rowCol, padTitle,
   applyLengthDefaults, giveSound, remember, recall, forgetPlaces,
 } from './model.js';
 import { bundledPaths, bundledSetup, isBundledPath } from './bundled.js';
@@ -41,13 +41,6 @@ function padOf(node) {
   if (pen) return refs.grid.querySelector(`.pad[data-i="${pen.dataset.i}"]`);
   return node.closest('.pad');
 }
-
-// The buttons that ask again before they undo work (`App.arm`).
-const ARMS = {
-  empty: { ref: 'btnEmpty', ask: 'Really empty it?' },
-  cols: { ref: 'btnDropCol', ask: 'Really remove it?', label: 'Remove column' },
-  rows: { ref: 'btnDropRow', ask: 'Really remove it?', label: 'Remove row' },
-};
 
 class App {
   constructor() {
@@ -136,10 +129,6 @@ class App {
     refs.btnEdit.addEventListener('click', () => this.setEditing(!this.editing));
     refs.btnEmpty.addEventListener('click', () => this.emptyBoard());
     refs.btnSetup.addEventListener('click', () => this.board && this.setup.open(this.board));
-    refs.btnAddCol.addEventListener('click', () => this.growOrShrink('cols', 1));
-    refs.btnDropCol.addEventListener('click', () => this.growOrShrink('cols', -1));
-    refs.btnAddRow.addEventListener('click', () => this.growOrShrink('rows', 1));
-    refs.btnDropRow.addEventListener('click', () => this.growOrShrink('rows', -1));
 
     refs.btnBrowse.addEventListener('click', () => setBook(true));
     refs.btnBrowseDone.addEventListener('click', () => setBook(false));
@@ -161,6 +150,16 @@ class App {
     });
 
     refs.grid.addEventListener('click', (e) => {
+      // The bins and the + round the board, while editing.
+      const bin = e.target.closest('.bin');
+      if (bin) {
+        this.removeLine(bin.dataset.line, Number(bin.dataset.at));
+        return;
+      }
+      if (e.target.closest('.grow')) {
+        this.grow();
+        return;
+      }
       // The pencil sets the pad up; it sits beside the pad, not inside it.
       const pen = e.target.closest('.pad__pencil');
       if (pen && this.editing) {
@@ -850,7 +849,7 @@ class App {
       ? asked
       : this.board.pads.findIndex((pad) => !pad || !pad.file);
     if (free === -1) {
-      toast('Every pad is taken. Add a row under the pads, or tap a pad to replace what is on it.');
+      toast('Every pad is taken. Add a row with the + at the corner of the board, or tap a pad to replace what is on it.');
       return;
     }
     this.wantSound(-1);
@@ -867,27 +866,37 @@ class App {
     this.resizeTo(cols, rows);
   }
 
+  /** The + in the corner of the board while editing: a row and a column more. */
+  grow() {
+    this.disarmBin();
+    this.resizeTo(this.board.cols + 1, this.board.rows + 1);
+  }
+
   /**
-   * The edges round the grid while editing: one tap adds a column on the
-   * right or a row at the bottom; removing the last one asks again first when
-   * it has sounds on it.
+   * A bin under a column or beside a row takes it out. With sounds on it, the
+   * first tap only asks, and a second within four seconds takes it.
    */
-  growOrShrink(which, by) {
-    if (!this.board) return;
-    const { cols, rows } = this.board;
-    if (by < 0) {
-      const last = which === 'cols'
-        ? (i) => i % cols === cols - 1
-        : (i) => Math.floor(i / cols) === rows - 1;
-      const sounds = filled(this.board).filter(({ i }) => last(i)).length;
-      if (sounds && this.armed !== which) {
-        this.arm(which);
-        return;
-      }
+  removeLine(line, at) {
+    const key = line === 'cols' ? 'col' : 'row';
+    const sounds = filled(this.board).filter(({ i }) => rowCol(this.board, i)[key] === at);
+    const armed = this.binArmed;
+    if (sounds.length && !(armed && armed.line === line && armed.at === at)) {
+      this.disarmBin();
+      this.binArmed = { line, at };
+      this.binTimer = setTimeout(() => this.disarmBin(), 4000);
+      refs.grid.querySelector(`.bin[data-line="${line}"][data-at="${at}"]`)?.classList.add('bin--armed');
+      toast(`Tap the bin again to take ${key === 'col' ? 'column' : 'row'} ${at + 1} off, with ${listOf(sounds.map(({ pad }) => padTitle(pad)))}.`);
+      return;
     }
-    this.disarm();
-    if (which === 'cols') this.resizeTo(cols + by, rows);
-    else this.resizeTo(cols, rows + by);
+    this.disarmBin();
+    const { lost } = removeLine(this.board, line, at);
+    this.resized(lost, true);
+  }
+
+  disarmBin() {
+    clearTimeout(this.binTimer);
+    this.binArmed = null;
+    refs.grid.querySelector('.bin--armed')?.classList.remove('bin--armed');
   }
 
   resizeTo(cols, rows) {
@@ -896,10 +905,15 @@ class App {
     // when the board grows to hold them again.
     const was = { cols: this.board.cols, rows: this.board.rows };
     const { lost, back } = resize(this.board, cols, rows);
-    if (this.board.cols !== was.cols) this.write(() => store.setMeta('cols', this.board.cols));
-    if (this.board.rows !== was.rows) this.write(() => store.setMeta('rows', this.board.rows));
+    this.resized(lost, back || this.board.cols !== was.cols);
+  }
+
+  /** After any change of size: what came off is named, and the pads primed again if they moved. */
+  resized(lost, moved) {
+    this.write(() => store.setMeta('cols', this.board.cols));
+    this.write(() => store.setMeta('rows', this.board.rows));
     // A pad's channel is its index, which a change of columns moves.
-    if (lost.length || back || this.board.cols !== was.cols) {
+    if (lost.length || moved) {
       this.padWanting = -1;
       this.engine.reset();
       this.primeAll();
@@ -1034,8 +1048,12 @@ class App {
       this.loadDefault();
       return;
     }
-    if (this.armed !== 'empty') {
-      this.arm('empty');
+    if (!this.armed) {
+      this.armed = true;
+      refs.btnEmpty.textContent = 'Really empty it?';
+      refs.btnEmpty.classList.add('btn--danger');
+      clearTimeout(this.armTimer);
+      this.armTimer = setTimeout(() => this.disarm(), 4000);
       return;
     }
     this.disarm();
@@ -1053,31 +1071,15 @@ class App {
     toast('The board is empty. The sounds are still under Sounds.');
   }
 
-  /**
-   * A button that undoes work asks again: its first tap turns it into the
-   * question, a second within four seconds does it. One asks at a time.
-   */
-  arm(what) {
-    this.disarm();
-    this.armed = what;
-    const btn = ARMS[what];
-    refs[btn.ref].textContent = btn.ask;
-    refs[btn.ref].classList.add('btn--danger');
-    this.armTimer = setTimeout(() => this.disarm(), 4000);
-  }
-
   disarm() {
     clearTimeout(this.armTimer);
-    const btn = ARMS[this.armed];
-    this.armed = null;
-    if (!btn) return;
-    refs[btn.ref].classList.remove('btn--danger');
-    if (btn.label) refs[btn.ref].textContent = btn.label;
-    else this.labelEmpty();
+    this.armed = false;
+    refs.btnEmpty.classList.remove('btn--danger');
+    this.labelEmpty();
   }
 
   labelEmpty() {
-    if (this.armed === 'empty') return;
+    if (this.armed) return;
     const empty = !!this.board && !filled(this.board).length;
     refs.btnEmpty.textContent = empty ? 'Load the default board' : 'Empty the board';
     refs.btnEmpty.classList.toggle('btn--danger-quiet', !empty);
@@ -1091,6 +1093,7 @@ class App {
     this.editing = on;
     this.padWanting = -1;
     this.disarm();
+    this.disarmBin();
     setPanel(on);
     if (on) drawLibrary(this.board, this.library, refs.libFilter.value);
     // The board stays in view: the sounds list is opened from the button when
@@ -1117,15 +1120,12 @@ class App {
       missing: (path) => !this.library.has(path),
       broken: (i) => this.engine.wontLoad(i, this.board.pads[i]),
       waiting: this.padWanting,
+      armed: this.binArmed,
     });
     fitNames();
     drawEdges();
     drawStop(this.engine);
     this.labelEmpty();
-    refs.btnAddCol.disabled = this.board.cols >= MAX_COLS;
-    refs.btnDropCol.disabled = this.board.cols <= 1;
-    refs.btnAddRow.disabled = this.board.rows >= MAX_ROWS;
-    refs.btnDropRow.disabled = this.board.rows <= 1;
     if (this.editing) drawLibrary(this.board, this.library, refs.libFilter.value);
     this.paint();
     this.run();

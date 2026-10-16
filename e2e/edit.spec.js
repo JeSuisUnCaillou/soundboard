@@ -676,84 +676,111 @@ test('a wider or narrower board keeps every pad at its row and column', async ({
   await expect(pad(page, 'Hero')).toHaveAttribute('aria-label', /row 4 column 2/);
 });
 
-test('a column or a row is added in one tap at the edge of the board, and stays after a reload', async ({ page }) => {
+/** A bin under a column or beside a row, found by its label: `Remove column 2`. */
+function bin(page, label) {
+  return page.getByRole('button', { name: label, exact: true });
+}
+
+test('the + at the corner of the board adds a row and a column in one tap, and they stay after a reload', async ({ page }) => {
   await openBoard(page);
   await page.locator('#btnEdit').click();
 
-  await page.locator('#btnAddCol').click();
-  await expect(page.locator('#grid .pad')).toHaveCount(16);
-  await expect(page.locator('#grid .pad').nth(3)).toHaveAttribute('aria-label', /row 1 column 4/);
-  await expect(pad(page, 'Sting')).toHaveAttribute('aria-label', /row 2 column 1/);
-
-  await page.locator('#btnAddRow').click();
+  await page.locator('#btnGrow').click();
   await expect(page.locator('#grid .pad')).toHaveCount(20);
-  await expect(page.locator('#grid .pad').last()).toHaveAttribute('aria-label', /row 5 column 4/);
+  await expect(pad(page, 'Sting')).toHaveAttribute('aria-label', /row 2 column 1/);
   await expect(pad(page, 'Happy')).toHaveAttribute('aria-label', /row 4 column 3/);
+  await expect(page.locator('#grid .pad').last()).toHaveAttribute('aria-label', /row 5 column 4/);
+  await expect(bin(page, 'Remove column 4')).toBeVisible();
+  await expect(bin(page, 'Remove row 5')).toBeVisible();
 
   await page.reload();
   await expect(page.locator('#grid .pad')).toHaveCount(20);
   await expect(page.locator('#grid .pad--filled')).toHaveCount(BUNDLED_TITLES.length);
 });
 
-test('removing a column with sounds on it asks twice, and they come back as they were when it is added again', async ({ page }) => {
+test('a column with sounds on it goes at the second tap on its bin, and the pads beyond it close up', async ({ page }) => {
   await openBoard(page);
   await page.locator('#btnEdit').click();
-  const drop = page.locator('#btnDropCol');
+  const second = bin(page, 'Remove column 2');
 
-  await drop.click();
-  await expect(drop).toHaveText('Really remove it?');
+  await second.click();
+  await expect(page.locator('#toast')).toHaveText(
+    'Tap the bin again to take column 2 off, with Explosion, Storm, Suspense and Hero.',
+  );
+  await expect(second).toHaveClass(/bin--armed/);
   await expect(page.locator('#grid .pad')).toHaveCount(12);
 
-  await drop.click();
+  await second.click();
   await expect(page.locator('#toast')).toHaveText(
-    'Phone, Crickets, Romance and Happy came off the board. Back on a pad, they come back as they were.',
+    'Explosion, Storm, Suspense and Hero came off the board. Back on a pad, they come back as they were.',
   );
   await expect(page.locator('#grid .pad')).toHaveCount(8);
-  await expect(drop).toHaveText('Remove column');
+  await expect(pad(page, 'Phone')).toHaveAttribute('aria-label', /row 1 column 2/);
+  await expect(pad(page, 'Happy')).toHaveAttribute('aria-label', /row 4 column 2/);
 
-  await page.locator('#btnAddCol').click();
-  await expect(page.locator('#grid .pad--filled')).toHaveCount(BUNDLED_TITLES.length);
-  await expect(pad(page, 'Happy')).toHaveAttribute('aria-label', /row 4 column 3/);
+  await page.reload();
+  await expect(page.locator('#grid .pad')).toHaveCount(8);
+  await expect(pad(page, 'Phone')).toHaveAttribute('aria-label', /row 1 column 2/);
 });
 
-test('an empty row goes in one tap, and a row with sounds on it waits for the second', async ({ page }) => {
+test('an empty row goes at one tap on its bin, and a bin left alone after one tap stops asking', async ({ page }) => {
   await openBoard(page);
   await page.locator('#btnEdit').click();
-  const drop = page.locator('#btnDropRow');
-  await page.locator('#btnAddRow').click();
-  await expect(page.locator('#grid .pad')).toHaveCount(15);
+  await page.locator('#btnGrow').click();
+  await expect(page.locator('#grid .pad')).toHaveCount(20);
 
-  // Nothing is lost with the empty fifth row, so nothing is asked.
-  await drop.click();
-  await expect(page.locator('#grid .pad')).toHaveCount(12);
-  await expect(drop).toHaveText('Remove row');
+  await bin(page, 'Remove row 5').click();
+  await expect(page.locator('#grid .pad')).toHaveCount(16);
 
-  // The fourth row holds Sad, Hero and Happy: one tap only asks.
-  await drop.click();
-  await expect(drop).toHaveText('Really remove it?');
-  await expect(page.locator('#grid .pad')).toHaveCount(12);
-  // Left alone, the question goes back to being the button.
-  await expect(drop).toHaveText('Remove row', { timeout: 6000 });
-  await expect(page.locator('#grid .pad')).toHaveCount(12);
+  const first = bin(page, 'Remove row 1');
+  await first.click();
+  await expect(first).toHaveClass(/bin--armed/);
+  await expect(first).not.toHaveClass(/bin--armed/, { timeout: 6000 });
+  await expect(page.locator('#grid .pad')).toHaveCount(16);
+  await expect(pad(page, 'Gunshot')).toBeVisible();
 });
 
-test('the edges that grow and shrink the board show only while editing, and stop at its limits', async ({ page }) => {
+test('a sound a smaller board took off comes back to its place, moved with the column taken out before it', async ({ page }) => {
   await openBoard(page);
-  await expect(page.locator('#btnAddCol')).toBeHidden();
-  await expect(page.locator('#btnAddRow')).toBeHidden();
+  await page.locator('#btnEdit').click();
+  // Two columns: Phone, Crickets, Romance and Happy are kept for column 3.
+  await page.locator('#btnSetup').click();
+  await page.locator('#setCols').fill('2');
+  await page.locator('#setupDone').click();
+  await expect(page.locator('#grid .pad')).toHaveCount(8);
+
+  // The first column goes, so the third is now the second.
+  await bin(page, 'Remove column 1').click();
+  await bin(page, 'Remove column 1').click();
+  await expect(page.locator('#grid .pad')).toHaveCount(4);
+
+  await page.locator('#btnGrow').click();
+  await expect(pad(page, 'Phone')).toHaveAttribute('aria-label', /row 1 column 2/);
+  await expect(pad(page, 'Happy')).toHaveAttribute('aria-label', /row 4 column 2/);
+  await expect(pad(page, 'Gunshot')).toHaveCount(0);
+});
+
+test('the bins and the + show only while editing, and stop at the limits of the board', async ({ page }) => {
+  await openBoard(page);
+  await expect(page.locator('#btnGrow')).toHaveCount(0);
+  await expect(page.locator('#grid .bin')).toHaveCount(0);
 
   await page.locator('#btnEdit').click();
-  await expect(page.locator('#btnAddCol')).toBeVisible();
-  await expect(page.locator('#btnDropRow')).toBeVisible();
+  await expect(page.locator('#btnGrow')).toBeVisible();
+  await expect(page.locator('#grid .bin')).toHaveCount(7);
 
   await page.locator('#btnSetup').click();
   await page.locator('#setCols').fill('1');
   await page.locator('#setRows').fill('12');
   await page.locator('#setupDone').click();
-  await expect(page.locator('#btnDropCol')).toBeDisabled();
-  await expect(page.locator('#btnAddRow')).toBeDisabled();
-  await expect(page.locator('#btnAddCol')).toBeEnabled();
-  await expect(page.locator('#btnDropRow')).toBeEnabled();
+  await expect(bin(page, 'Remove column 1')).toBeDisabled();
+  await expect(bin(page, 'Remove row 12')).toBeEnabled();
+  await expect(page.locator('#btnGrow')).toBeEnabled();
+
+  await page.locator('#btnSetup').click();
+  await page.locator('#setCols').fill('12');
+  await page.locator('#setupDone').click();
+  await expect(page.locator('#btnGrow')).toBeDisabled();
 });
 
 test('sounds added while others are being kept are kept too, past one that cannot be', async ({ page }) => {
