@@ -31,3 +31,17 @@ Head reviewed: 695ea08
 No finding from either reviewer.
 
 Reviewed head: 695ea08acd84e2604e8ee4e487344320b26edf68
+
+# PR #118, pass 1
+
+Head reviewed: e24e2f2
+
+- architect: `PadEditor.save` kept an unused `board` and three blank lines from the removed clash check. Fixed in 9e1eaf0.
+- architect: manifest.webmanifest still described pads "with keys". Fixed in 9e1eaf0.
+- architect: the comments at the top of app.js and on `TYPED` described letters firing pads. Fixed in 9e1eaf0.
+- architect: docs/status.md had a line past 80 columns and an old review date. Fixed in 9e1eaf0.
+- bugs: no finding. Leftover references, old boards loading, the pad grid and the tests were all checked.
+
+All text or dead code, none blocking, so no second pass. The owner asked for the change, but it alters a rule of docs/decisions.md and removes a control, so it waits for the owner (step 7).
+
+Reviewed head: 9e1eaf0479f0cf06dc6a236de274889b37ec948c
