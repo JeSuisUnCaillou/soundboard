@@ -125,6 +125,56 @@ async function addFiles(page, files, room = ['Sting']) {
   await (await chooser).setFiles(files);
 }
 
+test('a ringtone under ten seconds comes up as a hit, a longer bed as a cue', async ({ page }) => {
+  await addFiles(page, [
+    { name: 'ringtone.wav', mimeType: 'audio/wav', buffer: silentWav(7) },
+    { name: 'bed.wav', mimeType: 'audio/wav', buffer: silentWav(12) },
+  ], ['Sting', 'Happy']);
+  const gel = (name) => page.locator(`#padGels .gel[aria-label^="${name}"]`);
+
+  await page.locator('#lib .lib__item', { hasText: 'ringtone' }).locator('.lib__add').click();
+  await pencil(page, 'Ringtone').click();
+  await expect(page.locator('#padTap')).toHaveValue('overlay');
+  await expect(page.locator('#padFadeIn')).toHaveValue('0');
+  await expect(gel('Daylight Blue')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#padCancel').click();
+
+  await showSounds(page);
+  await page.locator('#lib .lib__item', { hasText: 'bed' }).locator('.lib__add').click();
+  await pencil(page, 'Bed').click();
+  await expect(page.locator('#padTap')).toHaveValue('fadeout');
+  await expect(gel('Moss Green')).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('Add more sounds says the board keeps its own copies, when it cannot hold on to a folder', async ({ page }) => {
+  await addFiles(page, [{ name: 'door slam.wav', mimeType: 'audio/wav', buffer: silentWav() }]);
+  await expect(page.locator('#lib .lib__item', { hasText: 'door slam' })).toBeVisible();
+  if (isNarrow(page)) await showSounds(page);
+  await page.locator('#btnAdd').click();
+  await expect(page.locator('#pickerTitle')).toHaveText('Add more sounds');
+  await expect(page.locator('#picker')).toContainText('nothing has to be picked again');
+  await expect(page.locator('#picker')).not.toContainText('chosen again each launch');
+});
+
+test('a full board says to make room, not to tap a pad', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await showSounds(page);
+  await page.locator('#lib .tree__name', { hasText: 'default' }).click();
+  await page.locator('#lib .lib__item', { hasText: 'crickets' }).locator('.lib__add').click();
+  await expect(page.locator('#toast')).toHaveText('Every pad is taken. Add rows in Board settings, or empty a pad to make room.');
+});
+
+test('the pad sheet brings no keyboard up on a touch screen', async ({ page, isMobile }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await pencil(page, 'Gunshot').click();
+  await expect(page.locator('#padEditor')).toBeVisible();
+  // A keyboard gets the name at once; a finger taps it when it wants it.
+  if (isMobile) await expect(page.locator('#padName')).not.toBeFocused();
+  else await expect(page.locator('#padName')).toBeFocused();
+});
+
 test('a pad whose file will not load says so before it is tapped', async ({ page }) => {
   await addFiles(page, [notASound('thunder.wav')]);
   await page.locator('#lib .lib__item', { hasText: 'thunder' }).locator('.lib__add').click();

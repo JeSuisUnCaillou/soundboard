@@ -17,7 +17,7 @@ why things are the way they are is in [decisions.md](decisions.md).
 | `js/library.js` | `Library`: every sound the board can reach, from every *source*, keyed by path. Folder walking, pickers, drops, dedup, blob URLs. |
 | `js/model.js` | The board and pad data: `newBoard`, `newPad`, `migrate`, resizing, `applyLengthDefaults`, `giveSound`, formatting helpers. Pure functions, no DOM. |
 | `js/store.js` | `store` (IndexedDB) and `prefs` (localStorage). |
-| `js/editor.js` | `PadEditor` (the pad sheet) and `SetupSheet` (Board settings). Read fields, validate, hand the result back to `App` through callbacks. |
+| `js/editor.js` | `PadEditor` (the pad sheet) and `SetupSheet` (Board settings). Read fields, validate, hand the result back to `App` through callbacks. The pad sheet focuses its name field on opening, except under a coarse pointer, where it would bring the keyboard up. |
 | `js/ui.js` | Drawing only: `drawGrid`, `paintPads` (per frame), `fitNames` (pad names set smaller to fit), `drawEdges` (the *edge fades*), `drawLibrary` (the tree), `drawStop`, `setPanel`, `setBook`, `toast`, `say`. Decides nothing. |
 | `js/gels.js` | The eleven *gels* and `DEFAULT_GEL`. |
 | `js/bundled.js` | The *bundled sounds*, how the *Default board* sets up each one's pad (`bundledSetup`), and the `default/` path prefix. |
@@ -95,7 +95,7 @@ entry through `migratePad`.
 Pads have no key. A `key` from an older board file or store is dropped by
 `migratePad`, and a board saved now carries none.
 
-**Length decides the kind** (`applyLengthDefaults`): under `SHORT_SOUND` (5 s)
+**Length decides the kind** (`applyLengthDefaults`): under `SHORT_SOUND` (10 s)
 a sound is a *hit* (tap set to `overlay`, fade in 0); otherwise a *cue* (gel
 `moss`). Only fields still at their untouched default move, and only once the
 length is known. It runs when a pad is made (`App.padFor`), when a pad is given
