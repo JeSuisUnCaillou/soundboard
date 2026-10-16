@@ -28,8 +28,7 @@ and the screenshot it took after: **read the screenshot**, it is your eyes.
 Look before each move: the board remembers edit mode across a reload, so a
 press of Edit board may take you out of it. A move that cannot be made fails
 after five seconds. Only one stage is open at a time; to switch device,
-`close`, then `open`
-again with or without `--phone`.
+`close`, then `open` again with or without `--phone`.
 
 ## What `do` gives you
 
