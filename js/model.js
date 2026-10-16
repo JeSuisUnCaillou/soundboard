@@ -116,7 +116,7 @@ export function fitPads(board) {
  * empty pads on the right, a taller one at the bottom. A pad with no place left
  * is remembered with its place, and a later resize that has room for that
  * place again puts it back as it was, if nothing has been put there since.
- * Returns the pads that came off and the ones that came back, in reading order.
+ * Returns the pads that came off, in reading order, and how many came back.
  */
 export function resize(board, cols, rows) {
   const was = board.cols;
@@ -138,7 +138,7 @@ export function resize(board, cols, rows) {
   });
 
   const onBoard = new Set(filled(board).map(({ pad }) => pad.file));
-  const back = [];
+  let back = 0;
   for (const [path, { pad, row, col }] of Object.entries(board.remembered)) {
     if (row === undefined || row >= board.rows || col >= board.cols || onBoard.has(path)) continue;
     const i = row * board.cols + col;
@@ -146,10 +146,9 @@ export function resize(board, cols, rows) {
     board.pads[i] = pad;
     delete board.remembered[path];
     onBoard.add(path);
-    back.push({ i, pad });
+    back += 1;
   }
-  back.sort((a, b) => a.i - b.i);
-  return { lost, back: back.map(({ pad }) => pad) };
+  return { lost, back };
 }
 
 /**
@@ -160,6 +159,14 @@ export function resize(board, cols, rows) {
 export function remember(board, pad, place = {}) {
   if (!pad || !pad.file) return;
   board.remembered[pad.file] = { pad: { ...pad }, ...place };
+}
+
+/** An emptied board is empty: growing it later puts nothing back by itself. */
+export function forgetPlaces(board) {
+  for (const kept of Object.values(board.remembered)) {
+    delete kept.row;
+    delete kept.col;
+  }
 }
 
 /** What a sound had on its last pad, if it has been on one: taken back, once. */

@@ -6,7 +6,7 @@ import { Engine, probeDuration } from './engine.js';
 import { store, prefs } from './store.js';
 import {
   newBoard, newPad, migrate, resize, fitPads, filled, slug, move, rowCol, padTitle,
-  applyLengthDefaults, giveSound, remember, recall,
+  applyLengthDefaults, giveSound, remember, recall, forgetPlaces,
 } from './model.js';
 import { bundledPaths, bundledSetup, isBundledPath } from './bundled.js';
 import { PadEditor, SetupSheet } from './editor.js';
@@ -747,8 +747,6 @@ class App {
     if (i === this.padWanting && pad) this.padWanting = -1;
     const was = this.board.pads[i];
     if (was && was.file && (!pad || pad.file !== was.file)) remember(this.board, was);
-    // The pad now holds what is set for its sound, so an older memory of it goes.
-    if (pad && pad.file) delete this.board.remembered[pad.file];
     this.board.pads[i] = pad;
     fitPads(this.board);
     this.engine.stop(i, { fade: 0 });
@@ -827,7 +825,7 @@ class App {
     if (this.board.cols !== was.cols) this.write(() => store.setMeta('cols', this.board.cols));
     if (this.board.rows !== was.rows) this.write(() => store.setMeta('rows', this.board.rows));
     // A pad's channel is its index, which a change of columns moves.
-    if (lost.length || back.length || this.board.cols !== was.cols) {
+    if (lost.length || back || this.board.cols !== was.cols) {
       this.padWanting = -1;
       this.engine.reset();
       this.primeAll();
@@ -970,10 +968,7 @@ class App {
     this.engine.reset();
     // Every sound keeps its settings for when it is put back, but an emptied
     // board is empty: growing it later puts nothing back by itself.
-    for (const kept of Object.values(this.board.remembered)) {
-      delete kept.row;
-      delete kept.col;
-    }
+    forgetPlaces(this.board);
     for (const { pad } of filled(this.board)) remember(this.board, pad);
     this.board.pads = [];
     fitPads(this.board);

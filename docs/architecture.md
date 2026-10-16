@@ -77,17 +77,18 @@ board that has not been through it.
 grows a board. `resize` builds a new array and puts every pad at the row and
 column it had; a pad outside the new size is *remembered* with its place, and
 returned in `lost`, which the app names in a toast. A later `resize` that has
-room for a remembered place, still empty, puts that pad back (`back`).
+room for a remembered place, still empty, puts that pad back (`back` counts them).
 Changing `cols` moves pads to other indexes, so the app resets the engine and
 primes again: a pad's *channel* is its index.
 
 **Remembered sounds.** `board.remembered` holds, by path, the pad a sound had
 when it left the board. `App.setPad` remembers whatever a pad loses (taken
 off, emptied, or given another sound), and `emptyBoard` remembers every pad,
-dropping the places a resize noted so an emptied board stays empty when it
-grows. `App.padFor` takes a sound's memory back (`recall`) before making a new
-pad, so the sound returns as it was; a sound put on a pad any other way
-forgets it. It is saved and exported with the board, and `migrate` reads each
+dropping the places a resize noted (`forgetPlaces`) so an emptied board stays
+empty when it grows. `App.padFor` takes a sound's memory back (`recall`)
+before making a new pad, so the sound returns as it was. A sound dropped on a
+filled pad keeps that pad's settings (`giveSound`) and leaves its own memory
+for the next time it is put on a pad. It is saved and exported with the board, and `migrate` reads each
 entry through `migratePad`.
 
 Pads have no key. A `key` from an older board file or store is dropped by

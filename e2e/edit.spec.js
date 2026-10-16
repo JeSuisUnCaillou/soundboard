@@ -859,9 +859,13 @@ test('a pad taken off the board comes back set up as it was when its sound is pu
   await expect(page.locator('#padGels .gel[aria-label^="Primary Red"]')).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('an emptied board puts nothing back by itself when it grows', async ({ page }) => {
+test('an emptied board puts nothing back by itself when it grows, and a sound put back comes as it was', async ({ page }) => {
   await openBoard(page);
   await page.locator('#btnEdit').click();
+  await pencil(page, 'Gunshot').click();
+  await page.locator('#padName').fill('Pistol');
+  await page.locator('#padSave').click();
+  await expect(pad(page, 'Pistol')).toBeVisible();
   await page.locator('#btnSetup').click();
   await page.locator('#setRows').fill('3');
   await page.locator('#setupDone').click();
@@ -875,6 +879,35 @@ test('an emptied board puts nothing back by itself when it grows', async ({ page
   await page.locator('#setupDone').click();
   await expect(page.locator('#grid .pad')).toHaveCount(12);
   await expect(page.locator('#grid .pad--filled')).toHaveCount(0);
+
+  await showSounds(page);
+  await page.locator('#lib .tree__name', { hasText: 'default' }).click();
+  await page.getByRole('button', { name: /^Put gunshot\.mp3 on a pad$/i }).click();
+  await expect(pad(page, 'Pistol')).toBeVisible();
+});
+
+test('a sound dropped on a filled pad leaves its own settings for the next time it is put on a pad', async ({ page }) => {
+  test.skip(isNarrow(page), 'On a phone the tree covers the board, so nothing is dragged onto a pad.');
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await pencil(page, 'Gunshot').click();
+  await page.locator('#padName').fill('Pistol');
+  await page.locator('#padSave').click();
+  await pencil(page, 'Pistol').click();
+  await page.locator('#padClear').click();
+  await expect(pad(page, 'Pistol')).toHaveCount(0);
+
+  // On Explosion's pad, the sound takes that pad's settings.
+  await showSounds(page);
+  await page.locator('#lib .tree__name', { hasText: 'default' }).click();
+  await page.locator('#lib .lib__item', { hasText: 'gunshot' }).dragTo(pad(page, 'Explosion'));
+  await pencil(page, 'Explosion').click();
+  await expect(page.locator('#padFileName')).toHaveText('gunshot.mp3');
+  await page.locator('#padCancel').click();
+
+  // Put on a pad of its own, it comes back as it was set up.
+  await page.getByRole('button', { name: /^Put gunshot\.mp3 on a pad$/i }).click();
+  await expect(pad(page, 'Pistol')).toBeVisible();
 });
 
 test('a pad under a toast still answers a tap', async ({ page }) => {
