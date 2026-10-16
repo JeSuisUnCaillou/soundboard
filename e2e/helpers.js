@@ -69,12 +69,15 @@ export function isNarrow(page) {
 
 /** Show the folder's tree, wherever this layout keeps it, if it is not open already. */
 export async function showSounds(page) {
-  // Asked by the button rather than by the tree's visibility: the board may
-  // already be opening the tree itself (after a reload, or for a waiting pad),
-  // and a press then would close it.
+  // Asked by the button rather than by the tree's visibility, and asked again
+  // until the tree shows: the board may be opening the tree itself (after a
+  // reload, or for a waiting pad), and once open it covers the button.
   const browse = page.locator('#btnBrowse');
-  if (isNarrow(page) && (await browse.getAttribute('aria-expanded')) !== 'true') await browse.click();
-  await expect(page.locator('#book')).toBeVisible();
+  const book = page.locator('#book');
+  await expect(async () => {
+    if (isNarrow(page) && (await browse.getAttribute('aria-expanded')) !== 'true') await browse.click({ timeout: 1000 });
+    await expect(book).toBeVisible({ timeout: 1000 });
+  }).toPass();
 }
 
 /**
