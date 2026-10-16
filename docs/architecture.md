@@ -95,7 +95,7 @@ entry through `migratePad`.
 Pads have no key. A `key` from an older board file or store is dropped by
 `migratePad`, and a board saved now carries none.
 
-**Length decides the kind** (`applyLengthDefaults`): under `SHORT_SOUND` (5 s)
+**Length decides the kind** (`applyLengthDefaults`): under `SHORT_SOUND` (10 s)
 a sound is a *hit* (tap set to `overlay`, fade in 0); otherwise a *cue* (gel
 `moss`). Only fields still at their untouched default move, and only once the
 length is known. It runs when a pad is made (`App.padFor`), when a pad is given
