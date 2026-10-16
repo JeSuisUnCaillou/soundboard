@@ -23,6 +23,8 @@ export class Engine {
     this.extras = new Set();   // layered one-shot voices
     this.masterLevel = 0.8;
     this.onchange = () => {};
+    this.broken = new Map();   // pad index -> the file it would not load
+    this.onbroken = () => {};  // (i, broken): a pad's file failed, or loaded after all
   }
 
   /**
@@ -312,7 +314,24 @@ export class Engine {
     for (const v of this.extras) this._teardown(v);
     this.channels.clear();
     this.extras.clear();
+    this.broken.clear();       // the files may come from somewhere else now
     this.onchange();
+  }
+
+  /**
+   * Whether a pad's file was tried and would not load. Kept apart from the
+   * channel, which a failed tap throws away, and tied to the file, so a pad
+   * given another sound is not drawn as broken before it has been tried.
+   */
+  wontLoad(i, pad) {
+    return !!pad && this.broken.get(i) === pad.file;
+  }
+
+  _loaded(i, path, ok) {
+    if (ok ? this.broken.get(i) !== path : this.broken.get(i) === path) return;
+    if (ok) this.broken.delete(i);
+    else this.broken.set(i, path);
+    this.onbroken(i, !ok);
   }
 
   // ── internals ───────────────────────────────────────────────────────────
@@ -334,6 +353,14 @@ export class Engine {
         this.onchange();
       };
       el.addEventListener('ended', ch.onEnded);
+      // Found out while the board is being set up, not at the tap in the
+      // show: a file the browser cannot read, or one player too many.
+      el.addEventListener('error', () => {
+        if (this.channels.get(i) === ch && ch.path) this._loaded(i, ch.path, false);
+      });
+      el.addEventListener('loadeddata', () => {
+        if (this.channels.get(i) === ch && ch.path) this._loaded(i, ch.path, true);
+      });
       this.channels.set(i, ch);
       if (this.woke) this._nudge(ch);
     }
@@ -341,6 +368,8 @@ export class Engine {
       ch.el.src = await this.lib.url(pad.file);
       ch.path = pad.file;
       ch.el.load();
+    } else if (ch.el.error) {
+      ch.el.load();   // try again: whatever stopped it may have passed
     }
     return ch;
   }

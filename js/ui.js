@@ -30,7 +30,7 @@ const openDirs = new Set(prefs.get('openDirs', []));
 
 // ── grid ──────────────────────────────────────────────────────────────────
 
-export function drawGrid(board, { editing, missing = () => false, waiting = -1 }) {
+export function drawGrid(board, { editing, missing = () => false, broken = () => false, waiting = -1 }) {
   const grid = refs.grid;
   grid.style.setProperty('--cols', board.cols);
   grid.replaceChildren();
@@ -51,6 +51,9 @@ export function drawGrid(board, { editing, missing = () => false, waiting = -1 }
       if (missing(pad.file)) {
         el.classList.add('pad--missing');
         el.title = `${pad.file} is not in the open folder`;
+      } else if (broken(i)) {
+        el.classList.add('pad--broken');
+        el.title = `${pad.file} will not load`;
       }
       el.style.setProperty('--gel', gelHex(pad.gel));
       el.append(
@@ -61,7 +64,8 @@ export function drawGrid(board, { editing, missing = () => false, waiting = -1 }
         span('pad__travel', ''),
       );
       pen = pencil(i, padTitle(pad));
-      el.setAttribute('aria-label', `${padLabel(pad, row, col)}${missing(pad.file) ? ', file missing' : ''}`);
+      const trouble = missing(pad.file) ? ', file missing' : broken(i) ? ', will not load' : '';
+      el.setAttribute('aria-label', `${padLabel(pad, row, col)}${trouble}`);
       if (!el.title) el.title = padTitle(pad);   // the whole name, when it is clipped
     } else {
       el.classList.add('pad--empty');

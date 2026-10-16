@@ -129,7 +129,12 @@ made once per path, and revoked when a real file replaces the copy behind it.
 ```
 
 - **Channel**: one per pad index, created on `prime()` and kept with its file
-  buffered, so a tap is immediate. `channels: Map<i, channel>`.
+  buffered, so a tap is immediate. `channels: Map<i, channel>`. If its
+  element fails to load, the engine notes the pad and its file in
+  `broken: Map<i, path>` and calls `onbroken(i, true)`; the app redraws the
+  pad as `.pad--broken` (`wontLoad(i, pad)`) and says so. The note outlives
+  the channel, which a failed tap drops, and only a load of that file clears
+  it (`onbroken(i, false)`). A tap on a broken pad loads the file again.
 - **Extras**: throwaway voices for `overlay` taps and for previews (channel
   `PREVIEW = -1`), dropped when they end. `extras: Set`.
 - **Voice state**: `idle` → `starting` → `playing` ⇄ `paused` → `idle`. Two

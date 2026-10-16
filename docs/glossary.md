@@ -18,6 +18,7 @@ it from context, and define new terms here, not elsewhere.
 | **Handle** | A `FileSystemHandle` from the File System Access API (desktop Chromium only), stored so the real files can be reopened. | `store.saveHandles`, `CAN_PERSIST` |
 | **Reconnect / Reopen** | Granting read permission on stored handles again. *Reconnect* (rail) when pads already play from copies; *Reopen* (picker) when nothing can play. | `#btnReconnect`, `#btnReopen`, `App.reconnect` |
 | **Missing** | A pad whose path is not in the library. Shown struck through, never dropped. | `.pad--missing` |
+| **Will not load** | A pad whose file was tried and failed to load: unreadable, or a player the browser refused. Shown with a red dashed border, never dropped. | `.pad--broken`, `Engine.wontLoad` |
 | **Edit mode** | Building the board: the book, Board settings, Empty the board, pencils on pads. Off is "running the show". | `App.editing`, `body[data-editing="on"]`, `#btnEdit` |
 | **Book** / **Sounds** | The panel holding the library tree. Beside the board when wide, over it from **Browse files** when narrow. | `#book`, `setBook`, `body[data-book]` |
 | **Narrow** | Viewport ≤ 900px. The book covers the board; Stop and the volume give way to **Browse files** in edit mode. | `NARROW` in `app.js`, `isNarrow` in tests |

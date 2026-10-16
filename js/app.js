@@ -52,6 +52,13 @@ class App {
       this.paint();
       this.run();
     };
+    this.engine.onbroken = (i, broken) => {
+      this.redraw();
+      if (!broken || !this.board) return;
+      const all = filled(this.board).filter(({ i: at, pad }) => this.engine.wontLoad(at, pad));
+      if (all.length === 1) toast(`“${padTitle(all[0].pad)}” will not load, so it will not play.`);
+      else if (all.length) toast(`${all.length} pads will not load, so they will not play.`);
+    };
   }
 
   async boot() {
@@ -1006,6 +1013,7 @@ class App {
     drawGrid(this.board, {
       editing: this.editing,
       missing: (path) => !this.library.has(path),
+      broken: (i) => this.engine.wontLoad(i, this.board.pads[i]),
       waiting: this.padWanting,
     });
     drawStop(this.engine);
