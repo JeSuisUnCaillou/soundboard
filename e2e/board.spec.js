@@ -179,6 +179,7 @@ test('a pad told to stop shows its sound fading, its light going down with it', 
   await setUpPad(page, 'Romance', { padFadeIn: '0', padFadeOut: '4' });
   const romance = pad(page, 'Romance');
   const level = () => romance.evaluate((el) => Number(el.style.getPropertyValue('--level')));
+  const full = await secondsLeft(romance);
 
   await romance.click();
   await expect(romance).toHaveClass(/pad--playing/);
@@ -190,7 +191,8 @@ test('a pad told to stop shows its sound fading, its light going down with it', 
   await expect(romance).not.toHaveClass(/pad--playing/);
   await expect(romance).toHaveClass(/pad--fading/);
   await expect(romance.locator('.pad__lamp')).toHaveClass(/lamp--fading/);
-  await expect(romance.locator('.pad__time')).toHaveText(/^\d+:\d\d$/);
+  // Its clock still counts down what is left, not the sound's whole length.
+  await expect.poll(() => secondsLeft(romance)).toBeLessThan(full);
   const first = await level();
   expect(first).toBeGreaterThan(0);
   await expect.poll(level).toBeLessThan(first - 0.1);
