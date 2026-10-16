@@ -58,13 +58,14 @@ The method, and the texts it comes from, are in [`synthesis.md`](synthesis.md).
    confidence, observations, and two or three directions that would meet it,
    not a design. Done when the owner could choose the next work from it alone.
 
-7. **File one issue per need and fold in the rest.** For each need worth
-   the owner's decision, find the issues it explains: open one issue for the
-   need (labels `ux` and `need`) that lists them, then close each one it
-   wholly covers as a duplicate with a line pointing to it; an issue that
-   holds a bug of its own stays open, linked. A need that matches an open
-   need issue gets a comment with the new evidence instead. Done when no
-   open `ux` issue is explained by another, and the report names each issue.
+7. **File one issue per need and fold in the rest.** For each need worth the
+   owner's decision, find the issues it explains: open one issue for the need
+   (labels `ux` and `need`, made if the repository lacks them) that lists them,
+   then close each one it wholly covers as a duplicate with a line pointing to
+   it; an issue that holds a bug of its own stays open, linked. A need that
+   matches an open need issue gets a comment with the new evidence instead. Done
+   when no open `ux` issue is explained by another, and the report names each
+   issue.
 
 ## What you return
 
