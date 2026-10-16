@@ -33,3 +33,15 @@ Head reviewed: d8e3c64
 - No finding from either reviewer.
 
 Reviewed head: d8e3c6471eec6d7e9888dbbea4f64194c0bc9b6e
+
+## Pass 5 (after merging #122)
+
+Main brought in #122 (a stop taken back while it fades, two quick taps as one).
+The conflicts were side by side, not in the same logic: the constructor keeps
+both `toldBroken` and `tapped`, the glossary keeps main's Lamp row with
+`lamp--fading` beside this branch's Toast, Edge fade and Loop mark rows, and
+testing.md and status.md carry both sets of tests (102 per project). The diff
+of the merge against main's side is this branch's change and nothing else.
+Whole suite: 185 passed, 19 skipped, none failed. No new findings.
+
+Reviewed head: 3bd88beb57667ed2a9601f05458ee5bb78137687
