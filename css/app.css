@@ -796,7 +796,7 @@ select.field option:checked { background: var(--warn); color: #241a07; }
 }
 
 @media (max-width: 560px) {
-  /* Four columns fit across a phone held upright, from 386px wide; a fifth goes past the edge,
+  /* Four columns fit across most phones held upright; a fifth goes past the edge,
      and the edge says so. */
   .grid { grid-template-columns: repeat(var(--cols, 4), minmax(84px, 1fr)); grid-auto-rows: minmax(76px, 1fr); }
   .go { gap: 10px; }
