@@ -43,6 +43,11 @@ is in [architecture.md](architecture.md).
   touch screen has none to press. Space and Escape stay, for a keyboard that
   happens to be there. (The owner, 2026-10-16: "we are always going to use the
   touch screen".)
+- **A glance at the board tells the truth.** Every pad that may be needed is
+  on screen or the edge says there is more; a name is read whole, broken only
+  between words; a clock says what will happen (a loop is marked as one, a
+  sound under a second is not `0:00`); and nothing is laid over the pads, so a
+  message never hides whether a pad lit. (#108, from the 2026-10-16 study.)
 - **Gels mean something once chosen.** Every pad starts the same blue; colour
   is the operator's code for a group, a scene, an act.
 - **The screen stays awake** while a board is open, and the board says so if
@@ -91,8 +96,8 @@ The UI, the docs, the comments and the commit messages share one voice.
 - **Say what happened and what is left**, never blame: "Without permission to
   read them, the board stays on the copies it kept."
 - **The board does not chatter.** A toast appears when something happened that
-  the operator could not see, or needs to act on. No confirmations of the
-  obvious.
+  the operator could not see, or needs to act on, and says it once. No
+  confirmations of the obvious.
 - **Comments say why**, in full sentences, and only where the code cannot.
   They describe what the code does now, never what it used to do.
 - **Commit and PR titles describe the behaviour, not the code change**, as a

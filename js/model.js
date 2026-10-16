@@ -158,6 +158,18 @@ export function fmtTime(seconds) {
   return `${h ? `${h}:` : ''}${mm}:${String(s).padStart(2, '0')}`;
 }
 
+/**
+ * A pad's length or time left. Under a second it is given in tenths: a 0.6 s
+ * whistle that reads "0:00" looks like a pad with nothing on it. Rounded up,
+ * so a sound still playing never reads as over.
+ */
+export function fmtLength(seconds) {
+  if (Number.isFinite(seconds) && seconds >= 0 && seconds < 1) {
+    return `${(Math.max(1, Math.ceil(seconds * 10 - 1e-9)) / 10).toFixed(1)}s`;
+  }
+  return fmtTime(seconds);
+}
+
 export function slug(text) {
   return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'board';
 }

@@ -694,3 +694,106 @@ test('a pad with a start point plays from there', async ({ page }) => {
   expect(await secondsLeft(crickets)).toBeGreaterThan(2);
 });
 
+
+test.describe('a glance at the board', () => {
+  /** Board settings, from the running board and back to it. */
+  async function size(page, cols, rows) {
+    await page.locator('#btnEdit').click();
+    await page.locator('#btnSetup').click();
+    await page.locator('#setCols').fill(String(cols));
+    await page.locator('#setRows').fill(String(rows));
+    await page.locator('#setupDone').click();
+    await expect(page.locator('#setup')).toBeHidden();
+    await page.locator('#btnEdit').click();
+  }
+
+  test('says when the board goes on past the edge of the screen, and which way', async ({ page }) => {
+    await openBoard(page);
+    const stage = page.locator('#stage');
+    // The first board fits the screen: no side is marked.
+    await expect(stage).not.toHaveClass(/stage--more/);
+
+    // Taller than the screen, and on a phone wider too.
+    const cols = isNarrow(page) ? 6 : 3;
+    await size(page, cols, 12);
+    await expect(stage).toHaveClass(/stage--more-down/);
+    await expect(stage).not.toHaveClass(/stage--more-up/);
+    if (isNarrow(page)) await expect(stage).toHaveClass(/stage--more-right/);
+
+    // Scrolled to the far corner, the marks change sides.
+    await stage.evaluate((el) => el.scrollTo(el.scrollWidth, el.scrollHeight));
+    await expect(stage).toHaveClass(/stage--more-up/);
+    await expect(stage).not.toHaveClass(/stage--more-down/);
+    if (isNarrow(page)) {
+      await expect(stage).toHaveClass(/stage--more-left/);
+      await expect(stage).not.toHaveClass(/stage--more-right/);
+    }
+  });
+
+  test('a phone shows four columns whole', async ({ page }) => {
+    test.skip(!isNarrow(page), 'a wide screen fits any board across');
+    await openBoard(page);
+    await size(page, 4, 3);
+    await expect(page.locator('#stage')).not.toHaveClass(/stage--more-right/);
+    const right = await page.locator('#grid .pad').nth(3).evaluate((el) => el.getBoundingClientRect().right);
+    expect(right).toBeLessThanOrEqual(page.viewportSize().width);
+  });
+
+  test('a long name is not broken in the middle of a word', async ({ page }) => {
+    await openBoard(page);
+    // Pads a long word only just fits across, set smaller: eight across a wide
+    // screen, three across a phone.
+    await size(page, isNarrow(page) ? 3 : 8, 2);
+    await setUpPad(page, 'Gunshot', { padName: 'Applaudissements' });
+    await setUpPad(page, 'Explosion', { padName: 'Coup de feu tiré dans la nuit noire' });
+
+    // The word is on one line, whole, and none of it is cut off.
+    const lines = (title) => pad(page, title).locator('.pad__name').evaluate((el) => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const tops = new Set([...range.getClientRects()].map((r) => Math.round(r.top)));
+      return { lines: tops.size, clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1 };
+    });
+    await expect.poll(() => lines('Applaudissements')).toEqual({ lines: 1, clipped: false });
+    // A name of several words wraps between them, and all of it shows.
+    const long = await lines('Coup de feu tiré dans la nuit noire');
+    expect(long.clipped).toBe(false);
+  });
+
+  test('a sound under a second gives its length in tenths', async ({ page }) => {
+    await page.addInitScript(() => {
+      delete window.showOpenFilePicker;
+      delete window.showDirectoryPicker;
+    });
+    await openBoard(page);
+    await page.locator('#btnEdit').click();
+    await pencil(page, 'Sting').click();
+    await page.locator('#padClear').click();
+    await showSounds(page);
+    await page.locator('#btnAdd').click();
+    const chooser = page.waitForEvent('filechooser');
+    await page.locator('#btnAddFiles').click();
+    await (await chooser).setFiles({ name: 'whistle.wav', mimeType: 'audio/wav', buffer: silentWav(0.6) });
+    await page.locator('#lib .lib__item', { hasText: 'whistle' }).locator('.lib__add').click();
+
+    const whistle = pad(page, 'Whistle');
+    await expect(whistle.locator('.pad__time')).toHaveText('0.6s');
+    await expect(whistle).toHaveAttribute('aria-label', /^whistle, 0\.6s,/i);
+  });
+
+  test('a looping pad is marked as one', async ({ page }) => {
+    await openBoard(page);
+    // The places and the moods loop on the first board; the effects do not.
+    await expect(pad(page, 'Crickets')).toHaveClass(/pad--loop/);
+    await expect(pad(page, 'Crickets')).toHaveAttribute('aria-label', /, loops,/);
+    await expect(pad(page, 'Gunshot')).not.toHaveClass(/pad--loop/);
+    const mark = (title) => pad(page, title).locator('.pad__time')
+      .evaluate((el) => getComputedStyle(el, '::before').maskImage || getComputedStyle(el, '::before').webkitMaskImage);
+    expect(await mark('Crickets')).toContain('svg');
+    expect(await mark('Gunshot')).toBe('none');
+
+    // Taken off loop, the mark goes with it.
+    await setUpPad(page, 'Crickets', { padLoop: false });
+    await expect(pad(page, 'Crickets')).not.toHaveClass(/pad--loop/);
+  });
+});
