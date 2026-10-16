@@ -82,23 +82,22 @@ test('the master volume follows its slider', async ({ page }) => {
   await expect(page.locator('#masterValue')).toHaveText('35');
 });
 
-test('the keys still work after the master volume is touched', async ({ page }) => {
+test('Space and Escape still work after the master volume is touched', async ({ page }) => {
   await openBoard(page);
   const crickets = pad(page, 'Crickets');
-  const key = (await crickets.locator('.pad__key').textContent()).trim();
+  const master = page.locator('#master');
 
   // Grabbing the slider leaves the focus on it, as a hand on a mouse does.
-  const master = page.locator('#master');
+  await crickets.click();
+  await expect(crickets).toHaveClass(/pad--playing/);
   await master.click();
   await expect(master).toBeFocused();
-
-  await page.keyboard.press(key);
-  await expect(crickets).toHaveClass(/pad--playing/);
   await page.keyboard.press('Escape');
   await expect(page.locator('#grid .pad--playing')).toHaveCount(0);
 
-  await page.keyboard.press(key);
+  await crickets.click();
   await expect(crickets).toHaveClass(/pad--playing/);
+  await master.click();
   await page.keyboard.press(' ');
   await expect(crickets).not.toHaveClass(/pad--playing/);
 });
@@ -368,10 +367,11 @@ test('a looping pad with a start point goes round when its file ends', async ({ 
   await expect(gunshot).not.toHaveClass(/pad--playing/);
 });
 
-test('the keys still work after a button is clicked, and Space does not press it again', async ({ page }) => {
+test('Space stops the show after a button is clicked, and does not press it again', async ({ page }) => {
   await openBoard(page);
   const crickets = pad(page, 'Crickets');
-  const key = (await crickets.locator('.pad__key').textContent()).trim();
+  await crickets.click();
+  await expect(crickets).toHaveClass(/pad--playing/);
 
   // Into edit mode and out again: the focus stays on the button, as it does
   // under a mouse.
@@ -381,16 +381,9 @@ test('the keys still work after a button is clicked, and Space does not press it
   await expect(edit).toHaveAttribute('aria-pressed', 'false');
   await expect(edit).toBeFocused();
 
-  await page.keyboard.press(key);
-  await expect(crickets).toHaveClass(/pad--playing/);
   await page.keyboard.press(' ');
   await expect(crickets).not.toHaveClass(/pad--playing/);
   await expect(edit).toHaveAttribute('aria-pressed', 'false');
-
-  await page.keyboard.press(key);
-  await expect(crickets).toHaveClass(/pad--playing/);
-  await page.keyboard.press('Escape');
-  await expect(page.locator('#grid .pad--playing')).toHaveCount(0);
 });
 
 test('a stop point is honoured while the board is in another tab', async ({ page }) => {
@@ -423,16 +416,15 @@ test('a stop point is honoured while the board is in another tab', async ({ page
   await expect(crickets).not.toHaveClass(/pad--playing/);
 });
 
-test('holding a pad’s key is one tap', async ({ page }) => {
+test('the pads are played by touch: a letter on a keyboard fires none of them', async ({ page }) => {
   await openBoard(page);
-  const crickets = pad(page, 'Crickets');
-  const key = (await crickets.locator('.pad__key').textContent()).trim();
+  await expect(page.locator('#grid .pad__key')).toHaveCount(0);
 
-  // Every keydown after the first is a key repeat.
-  for (let n = 0; n < 4; n++) await page.keyboard.down(key);
-  await page.keyboard.up(key);
-  await expect(crickets).toHaveClass(/pad--playing/);
-  await expect(page.locator('#btnStop')).toBeEnabled();
+  // The keys the first board's pads used to answer to.
+  for (const key of ['1', 'q', 'e', 'a', 'z', 'x']) await page.keyboard.press(key);
+  await page.locator('#btnStop').focus();
+  await expect(page.locator('#grid .pad--playing')).toHaveCount(0);
+  await expect(page.locator('#btnStop')).toBeDisabled();
 });
 
 test.describe('a sound served from another origin', () => {
@@ -606,18 +598,6 @@ test('Reconnect in the middle of a cue cuts nothing', async ({ page }) => {
   await rain.click();
   await expect(rain).toHaveClass(/pad--playing/);
   await expect(rain.locator('.pad__time')).toHaveText(/^-0:4[0-5]$/);
-});
-
-test('a pad’s own key fires it', async ({ page }) => {
-  await openBoard(page);
-  await setUpPad(page, 'Crickets', { padKey: 'm' });
-  const crickets = pad(page, 'Crickets');
-  await expect(crickets.locator('.pad__key')).toHaveText('m');
-
-  await page.keyboard.press('m');
-  await expect(crickets).toHaveClass(/pad--playing/);
-  await page.keyboard.press('m');
-  await expect(crickets).not.toHaveClass(/pad--playing/);
 });
 
 test.describe('a second tap', () => {

@@ -117,7 +117,7 @@ The rules are in [CLAUDE.md](../CLAUDE.md#end-to-end-tests). Beyond them:
 
 | Spec | Covers |
 | --- | --- |
-| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades, each second-tap mode (layering up to ×3), tapping back on during a fade out, solo, priming a big board, start and stop points (also in a hidden tab), both kinds of loop, a pad stopped while starting, keys (held, a pad's own, after the volume or a button has the focus), cross-origin sound, Reconnect during a cue. |
+| `board.spec.js` | Running the show: the first board, tapping, Stop, Escape, master volume, fades, each second-tap mode (layering up to ×3), tapping back on during a fade out, solo, priming a big board, start and stop points (also in a hidden tab), both kinds of loop, a pad stopped while starting, no pad answering a key, Space and Escape after the volume or a button has the focus, cross-origin sound, Reconnect during a cue. |
 | `edit.spec.js` | Building a board: edit mode, the pad sheet (name, level, fades, gel, kept after a reload), Board settings (rows and columns, growing and shrinking, both at once), saving a board file and loading it back, emptying, adding sounds (by the file input and by a drop), dropping a sound on a pad (empty or filled), a pad set up before its sound is open, keeping copies of sounds, the keyboard in edit mode, hearing a sound from the tree, the filter. |
 | `kept.spec.js` | Coming back to it: the kept copies of picked sounds after a reload and offline, a folder handle that comes back by itself, Reconnect refused, and a browser out of room for the copies. |
 | `offline.spec.js` | The service worker: reload with the network off, wifi that never answers, a server error, the board's own fonts. |

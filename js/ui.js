@@ -60,7 +60,6 @@ export function drawGrid(board, { editing, missing = () => false, broken = () =>
         lamp('pad__lamp'),
         span('pad__name', padTitle(pad)),
         span('pad__time', pad.duration ? fmtTime(pad.duration) : ''),
-        span('pad__key', pad.key || ''),
         span('pad__travel', ''),
       );
       pen = pencil(i, padTitle(pad));
@@ -90,7 +89,6 @@ export function drawGrid(board, { editing, missing = () => false, broken = () =>
 function padLabel(pad, row, col) {
   const bits = [padTitle(pad)];
   if (pad.duration) bits.push(fmtTime(pad.duration));
-  if (pad.key) bits.push(`key ${pad.key}`);
   bits.push(`row ${row + 1} column ${col + 1}`);
   return bits.join(', ');
 }

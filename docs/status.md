@@ -12,7 +12,7 @@ _Last reviewed: 2026-10-15._
 Everything the [README](../README.md) describes is built and live, apart from
 the known bugs below: the default board on a first launch, adding folders and
 files by picker or drop, the library tree with filter, pad settings (name, gel,
-level, fades, loop, trims, key, second tap, solo), board settings (size,
+level, fades, loop, trims, second tap, solo), board settings (size,
 default fades, save and load a board file), moving and removing pads by mouse
 and by finger, Stop / Space / Escape, the master volume, kept copies and
 Reconnect, offline through the service worker, install as an app, and the
@@ -28,18 +28,19 @@ screen wake lock.
 
 ## Test coverage
 
-91 tests, all green: each runs at desktop and phone size, except the 12 drag
+90 tests, all green: each runs at desktop and phone size, except the 12 drag
 tests, which run by mouse on desktop or by finger on phone. Covered: the first
 launch and its improv board, the default board loaded back onto an empty board,
 a board file with the crickets' old name, tapping, Stop, Escape, the master
 volume, fade and second-tap edge cases, every second-tap mode, layering, both
 kinds of loop, start and stop points (also with the tab hidden), solo, a pad
-stopped while it is still starting, held keys, a pad's own key, keys after a
-button or the volume has the focus, a cross-origin sound, edit mode, renaming a
+stopped while it is still starting, no pad answering a key, Space and Escape
+after a button or the volume has the focus, a cross-origin sound, edit mode, renaming a
 pad and its level, fades and gel (with reload), Board settings rows and columns
 (both at once too), shrinking the board, the waiting pad, emptying the board,
 adding sounds through the file input, hearing a sound from the tree, the filter,
-saving a board file and loading it back (missing sounds struck through),
+saving a board file and loading it back (missing sounds struck through, an old
+file's keys dropped),
 pads whose file will not load, dropping several sounds or folders at once, the kept copies after a reload and
 offline, Reconnect (also refused, and during a cue), a browser out of room for
 the copies, keeping sounds added mid-copy and skipping one that cannot be kept,

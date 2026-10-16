@@ -16,7 +16,7 @@ so a show is played a move at a time: act, look, decide.
 
 ```sh
 S=.claude/skills/play-the-show/scripts/stage.mjs
-node $S open --fresh --out <dir>      # in the background; add --phone for a Pixel 7
+node $S open --fresh --out <dir>      # in the background; --phone (Pixel 7) or --tablet (Galaxy Tab S9)
 node $S do "await pad('Storm').click(); await wait(2); return await ear()"
 node $S close
 ```
@@ -28,16 +28,15 @@ since the last command, and the screenshot it took after: **read the
 screenshot**, it is your eyes. Look before each move: the board remembers edit
 mode across a reload, so a press of Edit board may take you out of it. A move
 that cannot be made fails after five seconds. One stage holds one browser: to
-switch device, `close`, then `open` again with or without `--phone`. Two stages
-play side by side when each command of the second carries `STAGE_PORT=4190` (any
-free port whose number less 6 is free too) and its `open` has an `--out` of its
-own.
+switch device, `close`, then `open` again with another flag. Two stages play
+side by side when each command of the second carries `STAGE_PORT=4190` (any free
+port whose number less 6 is free too) and its `open` has an `--out` of its own.
 
 ## What `do` gives you
 
 | Name | What it is |
 | --- | --- |
-| `page`, `context` | Playwright's, for clicks, keys, a finger (`page.touchscreen`), downloads |
+| `page`, `context` | Playwright's, for clicks, a finger (`page.touchscreen`), downloads |
 | `pad(title)` | a filled pad by the name it shows |
 | `pick(paths)` | the files or the folder the next file dialog answers with |
 | `ear()` | the loudest level reaching the speakers now, in dB; -100 is silence |
@@ -52,7 +51,7 @@ not tell sounds apart; the screen says which pads are playing.
 ## Where things are on the screen
 
 Use what the operator sees: a pad's name, a button's text
-(`page.getByRole('button', { name: 'Edit board' })`), a key. When a name is
+(`page.getByRole('button', { name: 'Edit board' })`). When a name is
 ambiguous, the ids in `index.html` are a fallback: `#btnEdit`, `#btnAdd`
 (Add files, then `#btnAddFolder` or `#btnAddFiles`), `#btnBrowse` and
 `#btnBrowseDone` on a phone, `#libFilter`, `#btnSetup` (Board settings, with
@@ -83,8 +82,8 @@ An operator brings their own sounds, with the names they came with.
 
 | Moment | How |
 | --- | --- |
-| tap, key | `pad('Hero').click()`, `page.keyboard.press('x')` |
-| a finger on a phone | `pad('Hero').tap()`; a drag through `page.touchscreen` |
+| a finger | `pad('Hero').tap()`; a drag through `page.touchscreen` |
+| a click, Space, Escape | `pad('Hero').click()`, `page.keyboard.press('Escape')` |
 | add sounds | `pick(path)`, then Add files, and Add a folder or Add sound files |
 | save the board file | `const d = page.waitForEvent('download')`, click Save board file, `(await d).saveAs(path)` |
 | load a board file | `pick(path)`, then Board settings and Load board file |

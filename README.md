@@ -2,8 +2,8 @@
 
 A sound-cue board for theatre, run from the audio on your own machine. Point it
 at the folder that holds the show's sound — or at a handful of files, and more
-of them whenever you like — lay them out on a grid of pads, and fire them by
-click or by key.
+of them whenever you like — lay them out on a grid of pads, and fire them with
+a tap, on a phone or a tablet as well as a laptop.
 
 No build step, no server, no account, and nothing is uploaded: the files are read
 straight off the disk by the browser and never leave it.
@@ -115,7 +115,7 @@ changed there, and so does saving a board file from it; `Esc` leaves the board a
 
 **Each pad holds**: the file it plays, a name of its own if the file's will not
 do, a colour, its level, fade in and fade out times, a loop switch, start and
-stop points to the hundredth of a second, a keyboard key, and what a second tap
+stop points to the hundredth of a second, and what a second tap
 does — fade it out, start it over, pause it, layer another copy on top, or
 nothing at all. A pad can also be set to fade everything else out when it starts,
 for a hard scene change.
@@ -131,9 +131,11 @@ are there to mean something once one is chosen — a group, a scene, an act. The
 playing out, each sound on its own fade; `Esc` cuts the lot dead the moment you
 hit it.
 
+The pads are played by touch, or by a click: they have no keys. Where there is
+a keyboard, two keys stand in for the buttons:
+
 | Key | |
 | --- | --- |
-| pad keys | fire that pad, from the key shown in its corner |
 | `Space` | stop what is playing, fading it out |
 | `Esc` | cut everything dead |
 

@@ -23,7 +23,8 @@ have read; the code is not open on your desk.
    `npm install`, then start the stage in the background with
    `node .claude/skills/play-the-show/scripts/stage.mjs open --fresh --out <dir>`,
    `<dir>` in your scratchpad, and read [`driving.md`](driving.md). Pick the
-   device your operator runs the show on: a laptop, or `--phone`. Done when
+   device your operator runs the show on: `--phone` or `--tablet`, since the
+   board is played by touch; a laptop (no flag) is for building a board. Done when
    the first screenshot shows the board.
 
 2. **Imagine the show.** Pick a format, a troupe, a venue and the operator's
@@ -35,7 +36,7 @@ have read; the code is not open on your desk.
 
 3. **Prepare the board.** Build it from the run sheet, starting from what the
    first launch gives you: add the library, place the pads, name them, colour
-   the groups, set levels, fades, loops, keys and second taps, size the board,
+   the groups, set levels, fades, loops and second taps, size the board,
    save the board file. Look at the screenshot after each move and say what an
    operator would think. Done when the board matches the run sheet, or the log
    says why it could not.

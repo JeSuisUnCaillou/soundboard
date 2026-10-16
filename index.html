@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Soundboard — sound cues for the stage</title>
-<meta name="description" content="Fire sound cues from a folder on your own machine. A grid of pads with fades, loops and keys. Nothing is uploaded.">
+<meta name="description" content="Fire sound cues from a folder on your own machine. A grid of pads with fades and loops, played by touch. Nothing is uploaded.">
 <meta name="theme-color" content="#1a1512">
 <link rel="icon" href="icon.svg">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -91,7 +91,6 @@
       <dl class="keys" id="pickerKeys">
         <dt><kbd>Space</kbd></dt><dd>stop what is playing, fading it out</dd>
         <dt><kbd>Esc</kbd></dt><dd>cut everything dead</dd>
-        <dt>pad keys</dt><dd>fire that pad, from the key shown in its corner</dd>
       </dl>
     </div>
   </div>
@@ -111,10 +110,6 @@
           <input type="text" id="padName" class="field" maxlength="40" placeholder="The file's name">
         </label>
       </div>
-
-      <label class="row"><span class="row__label">Key</span>
-        <input type="text" id="padKey" class="field field--tiny" maxlength="1" placeholder="q">
-      </label>
 
       <fieldset class="row row--gels">
         <legend class="row__label">Gel</legend>

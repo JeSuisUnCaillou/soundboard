@@ -5,7 +5,7 @@ import { Library, CAN_PERSIST } from './library.js';
 import { Engine, probeDuration } from './engine.js';
 import { store, prefs } from './store.js';
 import {
-  newBoard, newPad, migrate, resize, fitPads, filled, slug, move, padByKey, rowCol, padTitle,
+  newBoard, newPad, migrate, resize, fitPads, filled, slug, move, rowCol, padTitle,
   applyLengthDefaults, giveSound,
 } from './model.js';
 import { bundledPaths, bundledSetup, isBundledPath } from './bundled.js';
@@ -407,15 +407,6 @@ class App {
       e.preventDefault();
       this.engine.stopAll({ fade: 0 });
       say('Everything cut');
-      return;
-    }
-    // A held key is one tap, not a pad flicking on and off with the repeat.
-    if (e.key.length === 1 && !e.repeat) {
-      const hit = padByKey(this.board, e.key);
-      if (hit) {
-        e.preventDefault();
-        this.tap(hit.i);
-      }
     }
   }
 
