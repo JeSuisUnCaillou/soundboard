@@ -157,7 +157,6 @@ export function resize(board, cols, rows) {
  * the row and column a resize took it off from.
  */
 export function remember(board, pad, place = {}) {
-  if (!pad || !pad.file) return;
   board.remembered[pad.file] = { pad: { ...pad }, ...place };
 }
 
