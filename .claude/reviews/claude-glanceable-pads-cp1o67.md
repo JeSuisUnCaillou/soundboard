@@ -24,3 +24,12 @@ Head reviewed: deba6de
 - No finding from either reviewer.
 
 Reviewed head: deba6de43645818eb86999afc1080c088c7e9e18
+
+# Pass 4 (after merging main, #120)
+
+Head reviewed: d8e3c64
+
+- Merge resolved: docs/testing.md and docs/status.md combined; e2e/helpers.js takes main's showSounds fix (waits for edit mode), dropping this branch's retry; the said-once test reads #120's new "came off" message.
+- No finding from either reviewer.
+
+Reviewed head: d8e3c6471eec6d7e9888dbbea4f64194c0bc9b6e
