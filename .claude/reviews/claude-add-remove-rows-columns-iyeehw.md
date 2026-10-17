@@ -29,4 +29,8 @@ Head reviewed: b6fedd2 (icons as inline SVG, 56px edges, after Caillou saw no ic
 
 Head reviewed: 5357933 ("Add sound" centred on empty pads, asked by Caillou). No finding from either reviewer.
 
-Reviewed head: 5357933cd89eb34a65889258db823b05ec6bf1a3
+# Pass 6
+
+Head reviewed: 740145e (main merged in: #126, #127, #130; conflicts in the "Every pad is taken" toast, its test, and the edit.spec row of testing.md). No finding from either reviewer.
+
+Reviewed head: 740145ece51f74cfe9ff35714e13ff4b507a1173
