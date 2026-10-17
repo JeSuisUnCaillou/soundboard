@@ -27,8 +27,6 @@
 
   --speaker: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 6h2.6L8.6 3v10L5.1 10H2.5z' fill='%23000'/%3E%3Cpath d='M10.8 6.1c1 1 1 2.8 0 3.8M13 4c1.8 1.8 1.8 6.2 0 8' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
   --loop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13 8a5 5 0 1 1-1.5-3.6' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M12.6 1.2v3.7H8.9z' fill='%23000'/%3E%3C/svg%3E");
-  --bin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 4h12M6 4V2h4v2M3.5 4l.8 10h7.4l.8-10M6.5 7v4.5M9.5 7v4.5' fill='none' stroke='%23000' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --plus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 2v12M2 8h12' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
   --pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M11.6 1.1l3.3 3.3-8.3 8.3-4.3.9.9-4.3zM10.2 2.5l3.3 3.3' fill='none' stroke='%23000' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");
 
   --sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
@@ -193,15 +191,16 @@ body[data-editing="on"] .desk { grid-template-columns: 1fr var(--book); }
 /* While editing, a bin under each column and beside each row, and the + in
    the corner between them. */
 body[data-editing="on"] .grid {
-  grid-template-columns: repeat(var(--cols, 4), minmax(var(--pad-w), 1fr)) 44px;
-  grid-template-rows: repeat(var(--rows, 4), minmax(var(--pad-h), 1fr)) 44px;
+  grid-template-columns: repeat(var(--cols, 4), minmax(var(--pad-w), 1fr)) 56px;
+  grid-template-rows: repeat(var(--rows, 4), minmax(var(--pad-h), 1fr)) 56px;
 }
+/* Each fills its track: the bins beside the rows as wide as the bins under
+   the columns are tall, and the + square in the corner. */
 .bin, .grow {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
-  place-self: center;
+  min-width: 0;
+  min-height: 0;
   padding: 0;
   border: 1px dashed var(--line);
   border-radius: 8px;
@@ -209,14 +208,14 @@ body[data-editing="on"] .grid {
   color: var(--ink-dim);
   cursor: pointer;
 }
-.bin::before, .grow::before {
-  content: "";
-  width: 18px; height: 18px;
-  background: currentColor;
-  -webkit-mask: var(--bin) center / contain no-repeat;
-  mask: var(--bin) center / contain no-repeat;
+.bin svg, .grow svg {
+  width: 24px; height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
-.grow::before { -webkit-mask-image: var(--plus); mask-image: var(--plus); }
 .grow { border-style: solid; color: var(--ink); }
 .bin:hover:not(:disabled), .grow:hover:not(:disabled) { color: var(--ink); border-color: color-mix(in oklab, var(--ink) 35%, var(--line)); }
 .bin:disabled, .grow:disabled { opacity: 0.3; cursor: default; }

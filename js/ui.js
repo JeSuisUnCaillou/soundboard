@@ -96,11 +96,16 @@ export function drawGrid(board, { editing, missing = () => false, broken = () =>
  * been tapped once and waits for the second tap; `can` says which of them
  * the board's limits leave working.
  */
+// Drawn in the page rather than masked from CSS, so that every browser shows them.
+const BIN_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M6 4V2h4v2M3.5 4l.8 10h7.4l.8-10M6.5 7v4.5M9.5 7v4.5"/></svg>';
+const PLUS_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg>';
+
 function drawBins(board, armed, can) {
   const bin = (line, at, area, label) => {
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'bin';
+    el.innerHTML = BIN_ICON;
     el.dataset.line = line;
     el.dataset.at = String(at);
     el.style.gridArea = area;
@@ -119,6 +124,7 @@ function drawBins(board, armed, can) {
   const add = document.createElement('button');
   add.type = 'button';
   add.className = 'grow';
+  add.innerHTML = PLUS_ICON;
   add.id = 'btnGrow';
   add.style.gridArea = `${board.rows + 1} / ${board.cols + 1}`;
   add.title = 'Add a row and a column';
