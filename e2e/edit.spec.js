@@ -777,6 +777,22 @@ test('a sound a smaller board took off comes back to its place, moved with the c
   await expect(pad(page, 'Gunshot')).toHaveCount(0);
 });
 
+test('the words on an empty pad sit in its middle, even on two lines', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  await page.locator('#btnGrow').click();
+  const empty = page.locator('#grid .pad--empty').first();
+  await expect(empty).toHaveText('Add sound');
+  // Each line of the words, wherever they wrap, is centred on the pad.
+  const offsets = await empty.evaluate((el) => {
+    const box = el.getBoundingClientRect();
+    const range = document.createRange();
+    range.selectNodeContents(el.querySelector('.pad__add'));
+    return [...range.getClientRects()].map((r) => Math.abs(r.left + r.width / 2 - (box.left + box.width / 2)));
+  });
+  for (const off of offsets) expect(off).toBeLessThan(2);
+});
+
 test('the bins and the + show only while editing, and stop at the limits of the board', async ({ page }) => {
   await openBoard(page);
   await expect(page.locator('#btnGrow')).toHaveCount(0);

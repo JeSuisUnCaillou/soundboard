@@ -335,7 +335,7 @@ body[data-editing="on"] .grid {
   position: absolute;
   top: 9px; right: 10px;
 }
-.pad__add { grid-area: name; align-self: center; justify-self: center; font: 600 15px/1 var(--cond); }
+.pad__add { grid-area: name; align-self: center; justify-self: center; font: 600 15px/1 var(--cond); text-align: center; }
 
 .pad__travel {
   position: absolute;
