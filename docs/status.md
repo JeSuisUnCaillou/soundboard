@@ -20,13 +20,11 @@ screen wake lock.
 
 ## Known bugs
 
-- [#103](https://github.com/JeSuisUnCaillou/soundboard/issues/103): on a
-  phone, "Add more sounds" says the sounds are picked again each launch,
-  though the board keeps them.
+None open.
 
 ## Test coverage
 
-103 tests, all green: each runs at desktop and phone size, except the 12 drag
+107 tests, all green: each runs at desktop and phone size, except the 12 drag
 tests, which run by mouse on desktop or by finger on phone, the 6 that drag a
 sound from the tree, which run on desktop only, and four columns whole on a
 phone, which runs on phone only. Covered: the first
@@ -54,7 +52,9 @@ sound is open, a browser whose storage refuses or fails once, saving when the
 page is hidden, a change kept when the page goes without a word, clearing an
 abandoned board, the screen wake lock, a picker dismissed without a word, coming
 back offline, opening on weak wifi, keeping a good copy over a server error,
-asking no other site for anything, and setting up a pad, hearing a sound and
+asking no other site for anything, a ringtone under ten seconds coming up as a
+hit, Add more sounds and a full board saying what the board does, the pad sheet
+bringing no keyboard up on a touch screen, and setting up a pad, hearing a sound and
 putting it on a pad from the keyboard.
 
 Not covered yet: nothing known beyond the suite's limits in

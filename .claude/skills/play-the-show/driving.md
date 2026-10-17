@@ -74,7 +74,7 @@ An operator brings their own sounds, with the names they came with.
   ffmpeg -loglevel error -f lavfi -i "sine=frequency=220:duration=200" "Act 2 - waltz.mp3"
   ```
 
-  Under five seconds a sound is a hit, longer a cue (README). Vary the
+  Under ten seconds a sound is a hit, longer a cue (README). Vary the
   lengths and the loudness, and keep a broken one (`head -c 2000 /dev/urandom
   > cracked.mp3`): libraries have them.
 

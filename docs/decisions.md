@@ -36,7 +36,7 @@ is in [architecture.md](architecture.md).
   default board again on an empty board.
   Added sounds wait under Sounds until the operator puts them on a pad, and
   adding sounds never moves a pad.
-- **A sound's length sets what it is.** Under five seconds it is a *hit* (no
+- **A sound's length sets what it is.** Under ten seconds it is a *hit* (no
   fade in, layers on a second tap, blue); otherwise a *cue* (green). It only
   sets defaults the operator has not touched, and it is decided before the pad
   is drawn so a pad never changes colour in front of them.

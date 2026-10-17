@@ -465,8 +465,8 @@ class App {
     refs.btnReopen.hidden = !this.pendingHandles;
     refs.pickerNote.textContent = CAN_PERSIST
       ? 'Install the board from the browser menu and it can hold on to these folders instead of asking at every launch.'
-      : 'This browser cannot hold on to a folder between visits, so the sounds are chosen again each launch. '
-        + 'The pads themselves are remembered.';
+      : 'The board keeps its own copy of every sound, so nothing has to be picked again. '
+        + 'This browser cannot go back to the files on your disk, though: a sound changed there has to be added again.';
     refs.picker.showModal();
     (this.pendingHandles ? refs.btnReopen : refs.btnAddFolder).focus();
   }
@@ -839,7 +839,7 @@ class App {
       ? asked
       : this.board.pads.findIndex((pad) => !pad || !pad.file);
     if (free === -1) {
-      toast('Every pad is taken. Add rows in Board settings, or tap a pad to replace what is on it.');
+      toast('Every pad is taken. Add rows in Board settings, or empty a pad to make room.');
       return;
     }
     this.wantSound(-1);

@@ -24,7 +24,7 @@ test('the first board comes set up for an improv show', async ({ page }) => {
   await page.locator('#padCancel').click();
   await expect(sheet).toBeHidden();
 
-  // Phone runs past five seconds and is still an effect, in the effects' blue.
+  // Phone is set up to fade out on a second tap, and stays in the effects' blue.
   await pencil(page, 'Phone').click();
   await expect(page.locator('#padTap')).toHaveValue('fadeout');
   await expect(gel('Daylight Blue')).toHaveAttribute('aria-pressed', 'true');
@@ -179,6 +179,7 @@ test('a pad told to stop shows its sound fading, its light going down with it', 
   await setUpPad(page, 'Romance', { padFadeIn: '0', padFadeOut: '4' });
   const romance = pad(page, 'Romance');
   const level = () => romance.evaluate((el) => Number(el.style.getPropertyValue('--level')));
+  const full = await secondsLeft(romance);
 
   await romance.click();
   await expect(romance).toHaveClass(/pad--playing/);
@@ -190,7 +191,8 @@ test('a pad told to stop shows its sound fading, its light going down with it', 
   await expect(romance).not.toHaveClass(/pad--playing/);
   await expect(romance).toHaveClass(/pad--fading/);
   await expect(romance.locator('.pad__lamp')).toHaveClass(/lamp--fading/);
-  await expect(romance.locator('.pad__time')).toHaveText(/^-/);
+  // Its clock still counts down what is left, not the sound's whole length.
+  await expect.poll(() => secondsLeft(romance)).toBeLessThan(full);
   const first = await level();
   expect(first).toBeGreaterThan(0);
   await expect.poll(level).toBeLessThan(first - 0.1);
@@ -360,7 +362,7 @@ test('a pad fading towards its stop point still answers a tap by stopping', asyn
  * only and a busy machine can poll straight past.
  */
 async function secondsLeft(padEl) {
-  const [m, sec] = (await padEl.locator('.pad__time').textContent()).replace('-', '').split(':');
+  const [m, sec] = (await padEl.locator('.pad__time').textContent()).split(':');
   return Number(m) * 60 + Number(sec);
 }
 
@@ -653,7 +655,7 @@ test('Reconnect in the middle of a cue cuts nothing', async ({ page }) => {
   await expect(rain).not.toHaveClass(/pad--playing/);
   await rain.click();
   await expect(rain).toHaveClass(/pad--playing/);
-  await expect(rain.locator('.pad__time')).toHaveText(/^-0:4[0-5]$/);
+  await expect(rain.locator('.pad__time')).toHaveText(/^0:4[0-5]$/);
 });
 
 test.describe('a second tap', () => {
@@ -842,7 +844,7 @@ test.describe('a glance at the board', () => {
     await setUpPad(page, 'Whistle', { padLoop: true });
     await whistle.click();
     await expect(whistle).toHaveClass(/pad--playing/);
-    await expect(whistle.locator('.pad__time')).toHaveText(/^-0\.[1-6]s$/);
+    await expect(whistle.locator('.pad__time')).toHaveText(/^0\.[1-6]s$/);
     await page.keyboard.press('Escape');
     await expect(whistle).not.toHaveClass(/pad--playing/);
   });
