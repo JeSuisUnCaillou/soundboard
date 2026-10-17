@@ -90,16 +90,16 @@ export function drawGrid(board, { editing, missing = () => false, broken = () =>
   if (editing) drawBins(board, armed, can);
 }
 
+// Drawn in the page rather than masked from CSS, so that every browser shows them.
+const BIN_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M6 4V2h4v2M3.5 4l.8 10h7.4l.8-10M6.5 7v4.5M9.5 7v4.5"/></svg>';
+const PLUS_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg>';
+
 /**
  * While editing, a bin under each column and beside each row takes it off, and
  * the + in the corner adds a row and a column. `armed` is the bin that has
  * been tapped once and waits for the second tap; `can` says which of them
  * the board's limits leave working.
  */
-// Drawn in the page rather than masked from CSS, so that every browser shows them.
-const BIN_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M6 4V2h4v2M3.5 4l.8 10h7.4l.8-10M6.5 7v4.5M9.5 7v4.5"/></svg>';
-const PLUS_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg>';
-
 function drawBins(board, armed, can) {
   const bin = (line, at, area, label) => {
     const el = document.createElement('button');
