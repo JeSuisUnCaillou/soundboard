@@ -7,4 +7,8 @@ Head reviewed: cea1a3f
 
 No blocking finding: one pass.
 
-Reviewed head: 3ed4a11d71858e5c33d3e9974608ea16ad87c8c1
+# Pass 2
+
+Head: 05a37ff, main (#126, #127) merged in. Conflict only in the test count of docs/status.md (now 107); no code of this branch changed. Suite: 195 passed. No finding.
+
+Reviewed head: 05a37ffa85f5def8586ebb918d1633dddc5e49a9
