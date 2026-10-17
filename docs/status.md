@@ -39,10 +39,8 @@ kinds of loop, start and stop points (also with the tab hidden), solo, a pad
 stopped while it is still starting, no pad answering a key, Space and Escape
 after a button or the volume has the focus, a cross-origin sound, edit mode,
 renaming a pad and its level, fades and gel (with reload), Board settings rows and columns
-(pads keeping their row and column, wider and narrower), the + adding a row and
-a column, a bin taking out a column (asking first when it has sounds) or an
-empty row (at once), the places a resize remembered moving with it, the bins
-and the + shown only while editing and stopping at the board's limits, shrinking the board and
+(pads keeping their row and column, wider and narrower), the bins and the +
+round the board, shrinking the board and
 naming what came off, growing it back (across a reload), a sound put back set
 up as it was, an emptied board growing empty, the waiting pad, emptying the board,
 adding sounds through the file input, hearing a sound from the tree, the filter,

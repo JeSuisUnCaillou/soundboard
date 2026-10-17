@@ -5,7 +5,7 @@ import { Library, CAN_PERSIST } from './library.js';
 import { Engine, probeDuration } from './engine.js';
 import { store, prefs } from './store.js';
 import {
-  newBoard, newPad, migrate, resize, removeLine, fitPads, filled, slug, move, rowCol, padTitle,
+  newBoard, newPad, migrate, resize, removeLine, MAX_COLS, MAX_ROWS, fitPads, filled, slug, move, rowCol, padTitle,
   applyLengthDefaults, giveSound, remember, recall, forgetPlaces,
 } from './model.js';
 import { bundledPaths, bundledSetup, isBundledPath } from './bundled.js';
@@ -879,24 +879,30 @@ class App {
   removeLine(line, at) {
     const key = line === 'cols' ? 'col' : 'row';
     const sounds = filled(this.board).filter(({ i }) => rowCol(this.board, i)[key] === at);
-    const armed = this.binArmed;
-    if (sounds.length && !(armed && armed.line === line && armed.at === at)) {
-      this.disarmBin();
-      this.binArmed = { line, at };
-      this.binTimer = setTimeout(() => this.disarmBin(), 4000);
-      refs.grid.querySelector(`.bin[data-line="${line}"][data-at="${at}"]`)?.classList.add('bin--armed');
+    // The second tap takes only what the first one named: if the line has
+    // changed since, it asks again.
+    const named = sounds.map(({ pad }) => pad.file).join('\n');
+    const armed = this.disarmBin();
+    if (sounds.length && !(armed && armed.line === line && armed.at === at && armed.named === named)) {
+      this.binArmed = { line, at, named };
+      this.binTimer = setTimeout(() => {
+        this.disarmBin();
+        this.redraw();
+      }, 4000);
+      this.redraw();
       toast(`Tap the bin again to take ${key === 'col' ? 'column' : 'row'} ${at + 1} off, with ${listOf(sounds.map(({ pad }) => padTitle(pad)))}.`);
       return;
     }
-    this.disarmBin();
     const { lost } = removeLine(this.board, line, at);
     this.resized(lost, true);
   }
 
+  /** A bin no longer waits for its second tap. Returns what it was waiting for. */
   disarmBin() {
     clearTimeout(this.binTimer);
+    const was = this.binArmed;
     this.binArmed = null;
-    refs.grid.querySelector('.bin--armed')?.classList.remove('bin--armed');
+    return was;
   }
 
   resizeTo(cols, rows) {
@@ -1121,6 +1127,11 @@ class App {
       broken: (i) => this.engine.wontLoad(i, this.board.pads[i]),
       waiting: this.padWanting,
       armed: this.binArmed,
+      can: {
+        cols: this.board.cols > 1,
+        rows: this.board.rows > 1,
+        grow: this.board.cols < MAX_COLS || this.board.rows < MAX_ROWS,
+      },
     });
     fitNames();
     drawEdges();

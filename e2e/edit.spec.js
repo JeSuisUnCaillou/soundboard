@@ -723,6 +723,23 @@ test('a column with sounds on it goes at the second tap on its bin, and the pads
   await expect(pad(page, 'Phone')).toHaveAttribute('aria-label', /row 1 column 2/);
 });
 
+test('a bin asks again when its column has changed since the first tap', async ({ page }) => {
+  await openBoard(page);
+  await page.locator('#btnEdit').click();
+  const second = bin(page, 'Remove column 2');
+  await second.click();
+  await expect(second).toHaveClass(/bin--armed/);
+
+  // Explosion comes off column 2 between the two taps.
+  await pencil(page, 'Explosion').click();
+  await page.locator('#padClear').click();
+  await expect(page.locator('#grid .pad').nth(1)).toHaveClass(/pad--empty/);
+
+  await second.click();
+  await expect(page.locator('#toast')).toHaveText('Tap the bin again to take column 2 off, with Storm, Suspense and Hero.');
+  await expect(page.locator('#grid .pad')).toHaveCount(12);
+});
+
 test('an empty row goes at one tap on its bin, and a bin left alone after one tap stops asking', async ({ page }) => {
   await openBoard(page);
   await page.locator('#btnEdit').click();

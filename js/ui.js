@@ -2,7 +2,7 @@
 // calls in to redraw. Pad text is set as text, never markup, because the words
 // come from filenames on someone else's disk.
 
-import { fmtLength, filled, rowCol, padTitle, MAX_COLS, MAX_ROWS } from './model.js';
+import { fmtLength, filled, rowCol, padTitle } from './model.js';
 import { GELS, gelHex } from './gels.js';
 import { prefs } from './store.js';
 
@@ -30,7 +30,7 @@ const openDirs = new Set(prefs.get('openDirs', []));
 
 // ── grid ──────────────────────────────────────────────────────────────────
 
-export function drawGrid(board, { editing, missing = () => false, broken = () => false, waiting = -1, armed = null }) {
+export function drawGrid(board, { editing, missing = () => false, broken = () => false, waiting = -1, armed = null, can = {} }) {
   const grid = refs.grid;
   grid.style.setProperty('--cols', board.cols);
   grid.style.setProperty('--rows', board.rows);
@@ -87,15 +87,16 @@ export function drawGrid(board, { editing, missing = () => false, broken = () =>
       grid.append(pen);
     }
   });
-  if (editing) drawBins(board, armed);
+  if (editing) drawBins(board, armed, can);
 }
 
 /**
  * While editing, a bin under each column and beside each row takes it off, and
  * the + in the corner adds a row and a column. `armed` is the bin that has
- * been tapped once and waits for the second tap.
+ * been tapped once and waits for the second tap; `can` says which of them
+ * the board's limits leave working.
  */
-function drawBins(board, armed) {
+function drawBins(board, armed, can) {
   const bin = (line, at, area, label) => {
     const el = document.createElement('button');
     el.type = 'button';
@@ -106,7 +107,7 @@ function drawBins(board, armed) {
     el.title = label;
     el.setAttribute('aria-label', label);
     if (armed && armed.line === line && armed.at === at) el.classList.add('bin--armed');
-    if (board[line] <= 1) el.disabled = true;
+    el.disabled = !can[line];
     return el;
   };
   for (let col = 0; col < board.cols; col++) {
@@ -122,7 +123,7 @@ function drawBins(board, armed) {
   add.style.gridArea = `${board.rows + 1} / ${board.cols + 1}`;
   add.title = 'Add a row and a column';
   add.setAttribute('aria-label', 'Add a row and a column');
-  add.disabled = board.cols >= MAX_COLS && board.rows >= MAX_ROWS;
+  add.disabled = !can.grow;
   refs.grid.append(add);
 }
 
