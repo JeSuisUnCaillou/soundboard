@@ -938,10 +938,13 @@ class App {
       return;
     }
     // Two taps closer than this are one nervous tap, not a second tap: a cue
-    // tapped twice in a panic must start, not start and fade straight out.
+    // tapped twice in a panic must start, not start and fade straight out. A
+    // pad that layers answers every tap at once: each one is another shot.
     const now = performance.now();
-    if (now - (this.tapped.get(i) ?? -Infinity) < DOUBLE_TAP) return;
-    this.tapped.set(i, now);
+    if (pad.tap !== 'overlay') {
+      if (now - (this.tapped.get(i) ?? -Infinity) < DOUBLE_TAP) return;
+      this.tapped.set(i, now);
+    }
     try {
       await this.engine.fire(i, pad);
       say(padTitle(pad));
