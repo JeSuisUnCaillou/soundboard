@@ -30,9 +30,10 @@ const openDirs = new Set(prefs.get('openDirs', []));
 
 // ── grid ──────────────────────────────────────────────────────────────────
 
-export function drawGrid(board, { editing, missing = () => false, broken = () => false, waiting = -1 }) {
+export function drawGrid(board, { editing, missing = () => false, broken = () => false, waiting = -1, armed = null, can = {} }) {
   const grid = refs.grid;
   grid.style.setProperty('--cols', board.cols);
+  grid.style.setProperty('--rows', board.rows);
   grid.replaceChildren();
   padEls.clear();
 
@@ -86,6 +87,50 @@ export function drawGrid(board, { editing, missing = () => false, broken = () =>
       grid.append(pen);
     }
   });
+  if (editing) drawBins(board, armed, can);
+}
+
+// Drawn in the page rather than masked from CSS, so that every browser shows them.
+const BIN_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M6 4V2h4v2M3.5 4l.8 10h7.4l.8-10M6.5 7v4.5M9.5 7v4.5"/></svg>';
+const PLUS_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg>';
+
+/**
+ * While editing, a bin under each column and beside each row takes it off, and
+ * the + in the corner adds a row and a column. `armed` is the bin that has
+ * been tapped once and waits for the second tap; `can` says which of them
+ * the board's limits leave working.
+ */
+function drawBins(board, armed, can) {
+  const bin = (line, at, area, label) => {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'bin';
+    el.innerHTML = BIN_ICON;
+    el.dataset.line = line;
+    el.dataset.at = String(at);
+    el.style.gridArea = area;
+    el.title = label;
+    el.setAttribute('aria-label', label);
+    if (armed && armed.line === line && armed.at === at) el.classList.add('bin--armed');
+    el.disabled = !can[line];
+    return el;
+  };
+  for (let col = 0; col < board.cols; col++) {
+    refs.grid.append(bin('cols', col, `${board.rows + 1} / ${col + 1}`, `Remove column ${col + 1}`));
+  }
+  for (let row = 0; row < board.rows; row++) {
+    refs.grid.append(bin('rows', row, `${row + 1} / ${board.cols + 1}`, `Remove row ${row + 1}`));
+  }
+  const add = document.createElement('button');
+  add.type = 'button';
+  add.className = 'grow';
+  add.innerHTML = PLUS_ICON;
+  add.id = 'btnGrow';
+  add.style.gridArea = `${board.rows + 1} / ${board.cols + 1}`;
+  add.title = 'Add a row and a column';
+  add.setAttribute('aria-label', 'Add a row and a column');
+  add.disabled = !can.grow;
+  refs.grid.append(add);
 }
 
 // The smallest a pad's name is set, to fit a long word on its own line. Below

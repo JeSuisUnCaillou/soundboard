@@ -152,6 +152,36 @@ export function resize(board, cols, rows) {
 }
 
 /**
+ * Take one column (`line` 'cols') or one row ('rows') out of the board, at
+ * index `at`; the pads beyond it close up. Its sounds are remembered without a
+ * place, as a pad taken off is, and returned in `lost`. A place a resize
+ * remembered moves with the pads around it, and is dropped if it was in the
+ * line taken out.
+ */
+export function removeLine(board, line, at) {
+  const key = line === 'cols' ? 'col' : 'row';
+  const lost = [];
+  const pads = [];
+  board.pads.forEach((pad, i) => {
+    if (rowCol(board, i)[key] !== at) pads.push(pad);
+    else if (pad && pad.file) {
+      lost.push(pad);
+      remember(board, pad);
+    }
+  });
+  for (const memory of Object.values(board.remembered)) {
+    if (memory[key] === undefined) continue;
+    if (memory[key] === at) {
+      delete memory.row;
+      delete memory.col;
+    } else if (memory[key] > at) memory[key] -= 1;
+  }
+  board[line] -= 1;
+  board.pads = pads;
+  return { lost };
+}
+
+/**
  * A sound leaving the board takes nothing with it: what was set on its pad is
  * kept under its path, to come back when the sound does (`recall`). `place` is
  * the row and column a resize took it off from.

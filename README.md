@@ -114,7 +114,13 @@ four rows to begin with. That is the whole board: twelve pads hold twelve sounds
 wait in the folder until there is room. Changing the size keeps every pad at its
 row and column: more columns add empty pads on the right, more rows add them at
 the bottom. A smaller board names the pads it could not keep, and growing it
-back puts them back where they were. It also holds the fades new pads start with — a second in, a second and a half out,
+back puts them back where they were. While editing, the board also changes
+size from its edges: a bin under each column and beside each row takes that
+one out, and the pads beyond it close up; the **+** in the corner adds a row and
+a column at once. When the row or column has sounds on it, the first tap on
+its bin only asks, and the second takes it; its sounds wait in the folder and
+come back as they were when put back on a pad.
+Board settings also holds the fades new pads start with — a second in, a second and a half out,
 so nothing begins or ends on a hard edge unless a pad is told to. **Done** keeps what was
 changed there, and so does saving a board file from it; `Esc` leaves the board as it was.
 

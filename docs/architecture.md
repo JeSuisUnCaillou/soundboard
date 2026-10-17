@@ -78,7 +78,10 @@ grows a board. `resize` builds a new array and puts every pad at the row and
 column it had; a pad outside the new size is *remembered* with its place, and
 returned in `lost`, which the app names in a toast. A later `resize` that has
 room for a remembered place, still empty, puts that pad back (`back` counts them).
-Changing `cols` moves pads to other indexes, so the app resets the engine and
+`removeLine` takes one row or column out of the middle and closes the pads
+up; its sounds are remembered without a place, and the places a resize
+remembered move with the pads around them. Changing `cols`, or taking a line
+out, moves pads to other indexes, so the app resets the engine and
 primes again: a pad's *channel* is its index.
 
 **Remembered sounds.** `board.remembered` holds, by path, the pad a sound had
@@ -218,6 +221,13 @@ dropping on `#book`, or anywhere on `#transport` while `#browse` shows in it,
 takes the pad off. Whichever of the two the layout shows is marked
 `.drop--ready` for as long as a pad is in hand, and `.drop--off` while the pad
 is over it. Sounds dragged from the tree use HTML5 drag and drop with the `application/x-soundboard-path` type.
+
+Round the grid, while editing, `drawGrid` adds a *bin* under each column and
+beside each row, and the **+** (`#btnGrow`) in the corner, in an extra track
+of the grid. The + is `App.grow` (a row and a column, through `resizeTo`, as
+Board settings does). A bin is `App.removeLine`: on a line with sounds the
+first tap arms it (`binArmed`, `.bin--armed`, a toast that names them) and only
+a second tap within four seconds takes it out.
 
 Everything in edit mode is a button the keyboard reaches. A tree row holds
 two: `.lib__play` (hear it) and `.lib__add` (the **+**). The pencil is a

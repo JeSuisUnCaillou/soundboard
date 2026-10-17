@@ -5,7 +5,7 @@ import { Library, CAN_PERSIST } from './library.js';
 import { Engine, probeDuration } from './engine.js';
 import { store, prefs } from './store.js';
 import {
-  newBoard, newPad, migrate, resize, fitPads, filled, slug, move, rowCol, padTitle,
+  newBoard, newPad, migrate, resize, removeLine, MAX_COLS, MAX_ROWS, fitPads, filled, slug, move, rowCol, padTitle,
   applyLengthDefaults, giveSound, remember, recall, forgetPlaces,
 } from './model.js';
 import { bundledPaths, bundledSetup, isBundledPath } from './bundled.js';
@@ -150,6 +150,16 @@ class App {
     });
 
     refs.grid.addEventListener('click', (e) => {
+      // The bins and the + round the board, while editing.
+      const bin = e.target.closest('.bin');
+      if (bin) {
+        this.removeLine(bin.dataset.line, Number(bin.dataset.at));
+        return;
+      }
+      if (e.target.closest('.grow')) {
+        this.grow();
+        return;
+      }
       // The pencil sets the pad up; it sits beside the pad, not inside it.
       const pen = e.target.closest('.pad__pencil');
       if (pen && this.editing) {
@@ -839,7 +849,7 @@ class App {
       ? asked
       : this.board.pads.findIndex((pad) => !pad || !pad.file);
     if (free === -1) {
-      toast('Every pad is taken. Add rows in Board settings, or empty a pad to make room.');
+      toast('Every pad is taken. Add a row with the + at the corner of the board, or empty a pad to make room.');
       return;
     }
     this.wantSound(-1);
@@ -853,15 +863,63 @@ class App {
   applySetup({ cols, rows, fadeIn, fadeOut }) {
     if (!this.board) return;
     this.board.defaults = { fadeIn, fadeOut };
+    this.resizeTo(cols, rows);
+  }
+
+  /** The + in the corner of the board while editing: a row and a column more. */
+  grow() {
+    this.disarmBin();
+    this.resizeTo(this.board.cols + 1, this.board.rows + 1);
+  }
+
+  /**
+   * A bin under a column or beside a row takes it out. With sounds on it, the
+   * first tap only asks, and a second within four seconds takes it.
+   */
+  removeLine(line, at) {
+    const key = line === 'cols' ? 'col' : 'row';
+    const sounds = filled(this.board).filter(({ i }) => rowCol(this.board, i)[key] === at);
+    // The second tap takes only what the first one named: if the line has
+    // changed since, it asks again.
+    const named = sounds.map(({ pad }) => pad.file).join('\n');
+    const armed = this.disarmBin();
+    if (sounds.length && !(armed && armed.line === line && armed.at === at && armed.named === named)) {
+      this.binArmed = { line, at, named };
+      this.binTimer = setTimeout(() => {
+        this.disarmBin();
+        this.redraw();
+      }, 4000);
+      this.redraw();
+      toast(`Tap the bin again to take ${key === 'col' ? 'column' : 'row'} ${at + 1} off, with ${listOf(sounds.map(({ pad }) => padTitle(pad)))}.`);
+      return;
+    }
+    const { lost } = removeLine(this.board, line, at);
+    this.resized(lost, true);
+  }
+
+  /** A bin no longer waits for its second tap. Returns what it was waiting for. */
+  disarmBin() {
+    clearTimeout(this.binTimer);
+    const was = this.binArmed;
+    this.binArmed = null;
+    return was;
+  }
+
+  resizeTo(cols, rows) {
     // Every pad keeps its row and column. A smaller board names what it has
     // no room for; those pads are remembered, and come back to their places
     // when the board grows to hold them again.
     const was = { cols: this.board.cols, rows: this.board.rows };
     const { lost, back } = resize(this.board, cols, rows);
-    if (this.board.cols !== was.cols) this.write(() => store.setMeta('cols', this.board.cols));
-    if (this.board.rows !== was.rows) this.write(() => store.setMeta('rows', this.board.rows));
+    this.resized(lost, back || this.board.cols !== was.cols);
+  }
+
+  /** After any change of size: what came off is named, and the pads primed again if they moved. */
+  resized(lost, moved) {
+    this.write(() => store.setMeta('cols', this.board.cols));
+    this.write(() => store.setMeta('rows', this.board.rows));
     // A pad's channel is its index, which a change of columns moves.
-    if (lost.length || back || this.board.cols !== was.cols) {
+    if (lost.length || moved) {
       this.padWanting = -1;
       this.engine.reset();
       this.primeAll();
@@ -1044,6 +1102,7 @@ class App {
     this.editing = on;
     this.padWanting = -1;
     this.disarm();
+    this.disarmBin();
     setPanel(on);
     if (on) drawLibrary(this.board, this.library, refs.libFilter.value);
     // The board stays in view: the sounds list is opened from the button when
@@ -1070,6 +1129,12 @@ class App {
       missing: (path) => !this.library.has(path),
       broken: (i) => this.engine.wontLoad(i, this.board.pads[i]),
       waiting: this.padWanting,
+      armed: this.binArmed,
+      can: {
+        cols: this.board.cols > 1,
+        rows: this.board.rows > 1,
+        grow: this.board.cols < MAX_COLS || this.board.rows < MAX_ROWS,
+      },
     });
     fitNames();
     drawEdges();
