@@ -36,9 +36,9 @@ export function newBoard({ id, cols = 3, rows = 4 }) {
   return board;
 }
 
-// Under this, a sound is a hit — a shot, a door, a slap. Above it, it is a cue
-// that runs: music, ambience, a recording.
-export const SHORT_SOUND = 5;
+// Under this, a sound is a hit — a shot, a door, a slap, a phone ringing, a
+// sting. Above it, it is a cue that runs: music, ambience, a recording.
+export const SHORT_SOUND = 10;
 
 // Hits keep the default blue; anything that runs comes up green, so a glance
 // at the board says which pads will still be making noise in a minute.

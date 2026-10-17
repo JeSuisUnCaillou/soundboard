@@ -217,7 +217,7 @@ export function paintPads(board, engine) {
     el.style.setProperty('--travel', live && len > 0 ? Math.min(1, done / len) : 0);
 
     const time = el.querySelector('.pad__time');
-    if (live && len > 0) time.textContent = `-${fmtLength(Math.max(0, len - done))}`;
+    if (live && len > 0) time.textContent = fmtLength(Math.max(0, len - done));
     else time.textContent = pad.duration ? fmtLength(pad.duration) : '';
 
     let stack = el.querySelector('.pad__stack');

@@ -25,8 +25,8 @@ it from context, and define new terms here, not elsewhere.
 | **Narrow** | Viewport ≤ 900px. The book covers the board; Stop and the volume give way to **Browse files** in edit mode. | `NARROW` in `app.js`, `isNarrow` in tests |
 | **Waiting pad** | An empty pad clicked in edit mode; the next **+** lands on it. | `App.padWanting`, `.pad--waiting` |
 | **Preview** / **listen** | Hearing a sound from the tree. A voice on channel `PREVIEW` (-1); tapping the same sound again stops it. | `Engine.preview`, `.lib__item--playing` |
-| **Hit** | A sound under 5 s: starts at full level, layers on a second tap, stays blue. | `SHORT_SOUND`, `applyLengthDefaults` |
-| **Cue** | A sound of 5 s or more: fades in, fades out on a second tap, comes up green (Moss). | idem, `LONG_GEL` |
+| **Hit** | A sound under 10 s: starts at full level, layers on a second tap, stays blue. | `SHORT_SOUND`, `applyLengthDefaults` |
+| **Cue** | A sound of 10 s or more: fades in, fades out on a second tap, comes up green (Moss). | idem, `LONG_GEL` |
 | **Gel** | A pad colour, named after a theatre lighting gel. Eleven of them. | `gels.js`, `DEFAULT_GEL = 'daylight'` |
 | **Second tap** | What tapping a playing pad does: `fadeout`, `restart`, `pause`, `overlay` (layer), `ignore`. | `pad.tap`, `Engine.fire`, `#padTap` |
 | **Layer** | Another copy of a pad's sound played on top; the pad shows `×n`. | `overlay`, `Engine._extra`, `.pad__stack` |
@@ -38,7 +38,7 @@ it from context, and define new terms here, not elsewhere.
 | **Live** | Playing and not yet told to stop. What a pad's look, Stop and a tap all go by. | `Engine.live` |
 | **Released** | Told to stop; may still be fading out. The pad is no longer lit as playing; while its sound fades it is *fading*. | `voice.released` |
 | **Fading** | A pad released while its sound is still heard: its light goes down with the sound, and a tap brings the sound back from where it is. | `state: 'fading'`, `.pad--fading`, `--level`, `.lamp--fading` |
-| **Double tap** | Two taps on a pad within 300 ms. They count as one tap. | `DOUBLE_TAP`, `App.tap` |
+| **Double tap** | Two taps on a pad within 300 ms. They count as one tap, except on a pad that layers. | `DOUBLE_TAP`, `App.tap` |
 | **Channel** | The kept `<audio>` + gain node of one pad. | `Engine.channels` |
 | **Voice** | Any playing `<audio>` + gain: a channel, a layer or a preview. | `Engine.active` |
 | **Prime** | Create a pad's channel and buffer its file ahead of time. | `Engine.prime`, `App.primeAll` |

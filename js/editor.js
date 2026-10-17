@@ -69,7 +69,10 @@ export class PadEditor {
     });
 
     this.dlg.showModal();
-    el('padName').focus();
+    // On a touch screen a focused field brings the keyboard up over the sheet,
+    // so the name waits for a finger; a keyboard gets it at once.
+    if (matchMedia('(pointer: coarse)').matches) document.activeElement.blur();
+    else el('padName').focus();
   }
 
   save() {

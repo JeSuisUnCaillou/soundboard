@@ -475,8 +475,8 @@ class App {
     refs.btnReopen.hidden = !this.pendingHandles;
     refs.pickerNote.textContent = CAN_PERSIST
       ? 'Install the board from the browser menu and it can hold on to these folders instead of asking at every launch.'
-      : 'This browser cannot hold on to a folder between visits, so the sounds are chosen again each launch. '
-        + 'The pads themselves are remembered.';
+      : 'The board keeps its own copy of every sound, so nothing has to be picked again. '
+        + 'This browser cannot go back to the files on your disk, though: a sound changed there has to be added again.';
     refs.picker.showModal();
     (this.pendingHandles ? refs.btnReopen : refs.btnAddFolder).focus();
   }
@@ -849,7 +849,7 @@ class App {
       ? asked
       : this.board.pads.findIndex((pad) => !pad || !pad.file);
     if (free === -1) {
-      toast('Every pad is taken. Add a row with the + at the corner of the board, or tap a pad to replace what is on it.');
+      toast('Every pad is taken. Add a row with the + at the corner of the board, or empty a pad to make room.');
       return;
     }
     this.wantSound(-1);
@@ -996,10 +996,13 @@ class App {
       return;
     }
     // Two taps closer than this are one nervous tap, not a second tap: a cue
-    // tapped twice in a panic must start, not start and fade straight out.
+    // tapped twice in a panic must start, not start and fade straight out. A
+    // pad that layers answers every tap at once: each one is another shot.
     const now = performance.now();
-    if (now - (this.tapped.get(i) ?? -Infinity) < DOUBLE_TAP) return;
-    this.tapped.set(i, now);
+    if (pad.tap !== 'overlay') {
+      if (now - (this.tapped.get(i) ?? -Infinity) < DOUBLE_TAP) return;
+      this.tapped.set(i, now);
+    }
     try {
       await this.engine.fire(i, pad);
       say(padTitle(pad));
