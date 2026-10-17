@@ -25,4 +25,8 @@ Head reviewed: b6fedd2 (icons as inline SVG, 56px edges, after Caillou saw no ic
 - architect: drawBins' comment separated from it by the icon constants — fixed in 987545e (text only).
 - bugs: no finding.
 
-Reviewed head: 987545e0f27483e76fa12ad90f8c3a44d792a99d
+# Pass 5
+
+Head reviewed: 5357933 ("Add sound" centred on empty pads, asked by Caillou). No finding from either reviewer.
+
+Reviewed head: 5357933cd89eb34a65889258db823b05ec6bf1a3
