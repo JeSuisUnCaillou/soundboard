@@ -18,4 +18,11 @@ Head reviewed: 4d3295e (bins per row and column, one + in the corner).
 
 Head reviewed: c6d7c63. No finding from either reviewer.
 
-Reviewed head: c6d7c63bbc9f3005bbd95c0e14c4ec356291ffe7
+# Pass 4
+
+Head reviewed: b6fedd2 (icons as inline SVG, 56px edges, after Caillou saw no icons).
+
+- architect: drawBins' comment separated from it by the icon constants — fixed in 987545e (text only).
+- bugs: no finding.
+
+Reviewed head: 987545e0f27483e76fa12ad90f8c3a44d792a99d
