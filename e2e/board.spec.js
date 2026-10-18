@@ -41,6 +41,13 @@ test('the first board comes set up for an improv show', async ({ page }) => {
   await page.locator('#padCancel').click();
   await expect(sheet).toBeHidden();
 
+  // Birds is under ten seconds, but it is a place: it fades out on a second tap.
+  await pencil(page, 'Birds').click();
+  await expect(page.locator('#padTap')).toHaveValue('fadeout');
+  await expect(page.locator('#padLoop')).toBeChecked();
+  await page.locator('#padCancel').click();
+  await expect(sheet).toBeHidden();
+
   // Music loops too, in a colour of its own.
   await pencil(page, 'Happy').click();
   await expect(page.locator('#padLoop')).toBeChecked();
