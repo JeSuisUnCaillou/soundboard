@@ -17,8 +17,10 @@
 export const BUNDLED_DIR = 'default';
 
 const HIT = { gel: 'daylight', fadeIn: 0, fadeOut: 0.5, tap: 'overlay' };
-const PLACE = { gel: 'moss', fadeIn: 2, fadeOut: 3, loop: true };
-const MOOD = { gel: 'lavender', fadeIn: 1, fadeOut: 3, loop: true };
+// A place or a tune fades out on a second tap, even one under ten seconds
+// (Birds) that the board would otherwise take for a hit and layer.
+const PLACE = { gel: 'moss', fadeIn: 2, fadeOut: 3, loop: true, tap: 'fadeout' };
+const MOOD = { gel: 'lavender', fadeIn: 1, fadeOut: 3, loop: true, tap: 'fadeout' };
 
 export const BUNDLED = [
   { file: 'gunshot.mp3', name: 'Gunshot', ...HIT },
