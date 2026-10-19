@@ -62,7 +62,9 @@ pull request (`Closes #n`) so merging closes it. Something found along the way
 and not done goes in a new issue, not in a TODO comment; the review loop's
 step 8 weighs these leftovers when the work ends. When an issue opens or closes
 a gap listed in `docs/status.md`, update that table. When you suggest work, say
-which suggestions already have an issue.
+which suggestions already have an issue, and weigh its gain against its cost:
+the board runs from a touch screen in a show, and the owner prefers fewer,
+simpler changes ("isn't all that just over-engineering?", 2026-10-16).
 
 ## End-to-end tests
 
