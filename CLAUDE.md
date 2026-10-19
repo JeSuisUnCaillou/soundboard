@@ -126,7 +126,8 @@ copy of the app.
 Whenever you create a branch and push work to it, open a pull request for it
 against `main` — do not wait to be asked. Give it a title and description that
 say what changed and why, and include the raw.githack link above so the
-reviewer can try it.
+reviewer can try it. A separate piece of work starts its own branch and pull
+request without asking, even while another pull request waits.
 
 Assign the pull request to the owner, Caillou (`JeSuisUnCaillou`), and do not
 request their review: the pull requests are opened under their account, and
