@@ -66,8 +66,9 @@ every `/` of the branch name turned into `-`; each pass appends to it.
    closed the review file, so a commit pushed after the review is never
    merged unreviewed. A PR that conflicts with `main` gets no CI run on a new
    push, so no green event comes: before waiting, read its mergeable state
-   (`pull_request_read`), and if it conflicts, merge `main` in, run the suite
-   and push. Chosen by the user on 2026-10-15: "The only thing I
+   (`pull_request_read`), and if it conflicts, merge `main` in, run the suite,
+   push, and go round the loop once more, so the review file closes on the
+   merge commit and that commit is the `expectedHeadSha`. Chosen by the user on 2026-10-15: "The only thing I
    want to review are medium-big features."
 
 8. **Weigh the leftovers.** List what the work leaves open: questions you

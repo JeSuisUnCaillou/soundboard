@@ -36,9 +36,10 @@ Find what the change gets wrong for whoever meets it: an operator tapping a
 pad mid-show (a sound that does not play, cuts, or keeps playing; a pad that
 lies about its state; something lost after a reload or offline), or, for a
 change under .claude/ or .github/, a session or a CI run. Trace each finding
-from a real event to the failure. Look as well for behaviour the change alters
-beyond what its issue asked: every pad where one kind was meant, a threshold
-that moves a pad of the default board (js/bundled.js) to the other side. Then check each change of behaviour has an
+from a real event to the failure. Look as well for behaviour the change
+alters beyond what its issue asked: every pad where one kind was meant, a
+threshold that moves a pad of the default board (js/bundled.js) to the other
+side. Then check each change of behaviour has an
 end-to-end test in e2e/ that would fail without it.
 ```
 
