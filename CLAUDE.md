@@ -62,7 +62,9 @@ pull request (`Closes #n`) so merging closes it. Something found along the way
 and not done goes in a new issue, not in a TODO comment; the review loop's
 step 8 weighs these leftovers when the work ends. When an issue opens or closes
 a gap listed in `docs/status.md`, update that table. When you suggest work, say
-which suggestions already have an issue.
+which suggestions already have an issue, and weigh its gain against its cost:
+the board runs from a touch screen in a show, and the owner prefers fewer,
+simpler changes ("isn't all that just over-engineering?", 2026-10-16).
 
 ## End-to-end tests
 
@@ -124,7 +126,8 @@ copy of the app.
 Whenever you create a branch and push work to it, open a pull request for it
 against `main` — do not wait to be asked. Give it a title and description that
 say what changed and why, and include the raw.githack link above so the
-reviewer can try it.
+reviewer can try it. A separate piece of work starts its own branch and pull
+request without asking, even while another pull request waits.
 
 Assign the pull request to the owner, Caillou (`JeSuisUnCaillou`), and do not
 request their review: the pull requests are opened under their account, and
