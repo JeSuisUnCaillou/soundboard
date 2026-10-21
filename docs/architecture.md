@@ -12,7 +12,8 @@ why things are the way they are is in [decisions.md](decisions.md).
 | `index.html` | The shell: the rail, the grid, the *book*, the transport, and the three `<dialog>` sheets (`#picker`, `#padEditor`, `#setup`). Every element the code or a test finds has an `id` here. |
 | `css/fonts.css`, `fonts/` | IBM Plex, served with the board (Latin and Latin Extended; licence in `fonts/OFL.txt`). |
 | `css/app.css` | All styling. BEM-ish classes (`pad--playing`, `lib__item--used`). Layout breakpoints at 900px (*narrow*: the book opens over the board) and 560px (pads at least 84px wide, so four columns fit a phone 386px wide or more), and `pointer: coarse` for touch. |
-| `js/app.js` | The `App` class: owns the open board and the edit state, wires every event (taps, keys, drags, drops, pickers), saves, restores, keeps the screen awake. The only module that decides things. |
+| `js/app.js` | The `App` class: owns the open board and the edit state, wires every event (taps, keys, pickers) and decides what a drag or a drop means, saves, restores, keeps the screen awake. The only module that decides things. |
+| `js/dragging.js` | The drag gestures: a pad carried by pointer events (`wirePadDragging`), a sound dragged from the tree and a folder dropped on the window (`wireDrops`). Finds what is under the pointer and marks it; tells `App` what was dropped where, and decides nothing. |
 | `js/engine.js` | `Engine`: Web Audio. One *channel* per pad, extra *voices* for layering and previews, fades, the per-frame `tick()`. Also `probeDuration()`. |
 | `js/library.js` | `Library`: every sound the board can reach, from every *source*, keyed by path. Folder walking, pickers, drops, dedup, blob URLs. |
 | `js/model.js` | The board and pad data: `newBoard`, `newPad`, `migrate`, resizing, `applyLengthDefaults`, `giveSound`, formatting helpers. Pure functions, no DOM. |
@@ -28,7 +29,8 @@ why things are the way they are is in [decisions.md](decisions.md).
 | `.github/workflows/` | `e2e.yml` (tests on every PR) and `pages.yml` (tests, then deploy `main`), see [deployment.md](deployment.md). |
 
 Dependencies point one way: `app.js` imports everything; `editor.js` imports
-`ui.js` and `model.js`; `ui.js` imports `model.js`, `gels.js`, `store.js`;
+`ui.js` and `model.js`; `dragging.js` imports `ui.js`; `ui.js` imports
+`model.js`, `gels.js`, `store.js`;
 `engine.js` and `library.js` know nothing of the DOM beyond creating `Audio`
 elements and pickers. Keep it that way: a new decision goes in `app.js`, a new
 drawing in `ui.js`.
@@ -214,7 +216,7 @@ on pads; only `firstBoard()` and **Load the default board** (`loadDefault()`, wh
 mode a click on a filled pad still fires it (a listen), a click on a sound in
 the tree previews it, the pencil (or shift-click) opens the pad
 sheet, a click on an empty pad makes it the *waiting pad* for the next **+**.
-Pads move by pointer events (`wirePadDragging`): a mouse drags after 6 px, a
+Pads move by pointer events (`wirePadDragging` in `dragging.js`): a mouse drags after 6 px, a
 finger after 10 px; a filled pad has `touch-action: none` while editing, so the
 finger moves the pad rather than the board. Dropping on another pad swaps them (`model.move`);
 dropping on `#book`, or anywhere on `#transport` while `#browse` shows in it,
@@ -233,7 +235,7 @@ Everything in edit mode is a button the keyboard reaches. A tree row holds
 two: `.lib__play` (hear it) and `.lib__add` (the **+**). The pencil is a
 `.pad__pencil` button beside its pad, not inside it (a button cannot hold
 another): every pad is placed in its grid cell by hand (`grid-area`) and the
-pencil shares the cell, laid over the pad's corner. `padOf()` in `app.js`
+pencil shares the cell, laid over the pad's corner. `padOf()` in `dragging.js`
 maps a pencil back to its pad for drags and drops.
 
 **Reading the board** (`ui.js`, wired by `App.wireStage`): names wrap between
