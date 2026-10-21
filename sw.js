@@ -30,6 +30,7 @@ const SHELL = [
   './fonts/ibm-plex-mono-400-latin-ext.woff2',
   './fonts/ibm-plex-mono-500-latin-ext.woff2',
   './js/app.js',
+  './js/dragging.js',
   './js/engine.js',
   './js/library.js',
   './js/model.js',

@@ -10,12 +10,11 @@ import {
 } from './model.js';
 import { bundledPaths, bundledSetup, isBundledPath } from './bundled.js';
 import { PadEditor, SetupSheet } from './editor.js';
+import { wireDrops, wirePadDragging } from './dragging.js';
 import {
   refs, bindRefs, drawGrid, paintPads, drawLibrary,
   drawStop, setPanel, setBook, markPreview, say, toast, fitNames, drawEdges,
 } from './ui.js';
-
-const PATH_TYPE = 'application/x-soundboard-path';
 
 // Below this width the sounds list slides over the pads instead of sitting beside them.
 const NARROW = window.matchMedia('(max-width: 900px)');
@@ -33,13 +32,6 @@ const TYPED = 'textarea, select, '
 function listOf(names) {
   const shown = names.length > 5 ? [...names.slice(0, 4), `${names.length - 4} more`] : names;
   return shown.length === 1 ? shown[0] : `${shown.slice(0, -1).join(', ')} and ${shown.at(-1)}`;
-}
-
-/** The pad under a node: the pad itself, or the pad whose pencil it is. */
-function padOf(node) {
-  const pen = node.closest('.pad__pencil');
-  if (pen) return refs.grid.querySelector(`.pad[data-i="${pen.dataset.i}"]`);
-  return node.closest('.pad');
 }
 
 class App {
@@ -229,64 +221,58 @@ class App {
     });
   }
 
+  /** What a drag or a drop means; the gestures themselves are dragging.js's. */
   wireDragging() {
-    refs.lib.addEventListener('dragstart', (e) => {
-      const item = e.target.closest('.lib__item');
-      if (!item) return;
-      e.dataTransfer.setData(PATH_TYPE, item.dataset.path);
-      e.dataTransfer.setData('text/plain', item.dataset.path);
-      e.dataTransfer.effectAllowed = 'copy';
-    });
-
-    refs.grid.addEventListener('dragover', (e) => {
-      const el = padOf(e.target);
-      if (!el || !e.dataTransfer.types.includes(PATH_TYPE)) return;
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'copy';
-      el.classList.add('pad--drop');
-    });
-
-    refs.grid.addEventListener('dragleave', (e) => {
-      padOf(e.target)?.classList.remove('pad--drop');
-    });
-
-    refs.grid.addEventListener('drop', async (e) => {
-      const el = padOf(e.target);
-      if (!el) return;
-      e.preventDefault();
-      el.classList.remove('pad--drop');
-      const to = Number(el.dataset.i);
-      const path = e.dataTransfer.getData(PATH_TYPE);
-      if (!path || !this.library.has(path)) return;
-      const existing = this.board.pads[to];
-      if (!existing) {
-        this.setPad(to, await this.padFor(to, path));
-        return;
-      }
-      this.setPad(to, giveSound(this.board, existing, path, await this.lengthOf(path)));
-    });
-
-    this.wirePadDragging();
-    this.wireStage();
-
-    // A folder dropped anywhere on the window opens it.
-    document.addEventListener('dragover', (e) => {
-      if (e.dataTransfer && e.dataTransfer.types.includes('Files')) e.preventDefault();
-    });
-    document.addEventListener('drop', async (e) => {
-      if (!e.dataTransfer || !e.dataTransfer.types.includes('Files')) return;
-      e.preventDefault();
-      try {
-        const added = await this.library.addDrop(e.dataTransfer);
-        if (!added.length) {
-          toast('Nothing there the board can play.');
+    wireDrops({
+      onSound: async (to, path) => {
+        if (!this.library.has(path)) return;
+        const existing = this.board.pads[to];
+        if (!existing) {
+          this.setPad(to, await this.padFor(to, path));
           return;
         }
-        await this.absorb(added, { announce: true });
-      } catch (err) {
-        toast(`That could not be read: ${err.message}`);
-      }
+        this.setPad(to, giveSound(this.board, existing, path, await this.lengthOf(path)));
+      },
+      // A folder dropped anywhere on the window opens it.
+      onFiles: async (dropped) => {
+        try {
+          const added = await this.library.addDrop(dropped);
+          if (!added.length) {
+            toast('Nothing there the board can play.');
+            return;
+          }
+          await this.absorb(added, { announce: true });
+        } catch (err) {
+          toast(`That could not be read: ${err.message}`);
+        }
+      },
     });
+
+    wirePadDragging({
+      canDrag: (i) => this.editing && Boolean(this.board.pads[i]?.file),
+      onHold: (on) => {
+        this.dragged = on;
+      },
+      onDrop: (from, to) => {
+        if (to === null) {
+          const pad = this.board.pads[from];
+          this.setPad(from, null);
+          toast(`${padTitle(pad)} is off the board. The sound is still under Sounds.`);
+          say('Taken off the board');
+          return;
+        }
+        move(this.board, from, to);
+        fitPads(this.board);
+        this.engine.reset();
+        this.redraw();
+        this.saveNow();
+        this.primeAll();
+        const { row, col } = rowCol(this.board, to);
+        say(`Moved to row ${row + 1}, column ${col + 1}`);
+      },
+    });
+
+    this.wireStage();
   }
 
   /** The names fit and the edges are marked again whenever the board changes size. */
@@ -305,138 +291,6 @@ class App {
     // A name measured in the stand-in font before the board's own has loaded
     // is measured again in it.
     document.fonts?.ready.then(() => fitNames());
-  }
-
-  /**
-   * Dragging a pad somewhere else. Pointer events rather than HTML5 drag and
-   * drop, which does not exist under a finger.
-   *
-   * The whole pad is a handle, under a mouse or a finger: press anywhere but
-   * the pencil and move, and the pad comes with you; press and release without
-   * moving and it simply plays. While editing, a filled pad does not scroll the
-   * board (its touch-action is none); the empty places and the gaps do.
-   */
-  wirePadDragging() {
-    let drag = null;
-    let armed = null;        // pressed, not yet a drag
-    const SLOP = 6;          // how far a mouse moves before it means to drag
-    const TOUCH_SLOP = 10;   // a finger wobbles more on a tap
-
-    /** Where the pad would land: another pad, or somewhere that takes it off. */
-    const at = (e) => {
-      const el = document.elementFromPoint(e.clientX, e.clientY);
-      if (!el) return null;
-      if (el.closest('#book')) return refs.book;
-      if (drag.bar && el.closest('#transport')) return refs.transport;
-      const pad = padOf(el);
-      return pad && pad !== drag.el ? pad : null;
-    };
-
-    const removes = (el) => el === refs.book || el === refs.transport;
-
-    const over = (el) => {
-      if (drag.target === el) return;
-      drag.target?.classList.remove('pad--drop', 'drop--off');
-      drag.target = el;
-      drag.target?.classList.add(removes(el) ? 'drop--off' : 'pad--drop');
-      drag.ghost.classList.toggle('pad--ghost-off', removes(el));
-    };
-
-    const begin = (el, from, e, handle) => {
-      const box = el.getBoundingClientRect();
-      const ghost = el.cloneNode(true);
-      ghost.classList.add('pad--ghost');
-      ghost.style.width = `${box.width}px`;
-      ghost.style.height = `${box.height}px`;
-      ghost.style.transform = `translate(${box.left}px, ${box.top}px)`;
-      document.body.append(ghost);
-
-      // Where Browse files shows, the whole bar it sits in takes a pad off.
-      const bar = refs.browse.offsetParent !== null;
-      drag = { from, el, ghost, bar, dx: e.clientX - box.left, dy: e.clientY - box.top, target: null };
-      el.classList.add('pad--dragging');
-      // Show where it can be dropped off the board before it gets there.
-      refs.book.classList.add('drop--ready');
-      refs.transport.classList.toggle('drop--ready', bar);
-      this.dragged = true;                  // the click that follows is not a tap
-      try {
-        handle.setPointerCapture(e.pointerId);
-      } catch {
-        /* without capture the grid's own listeners still see the move */
-      }
-    };
-
-    const disarm = () => {
-      armed = null;
-    };
-
-    refs.grid.addEventListener('pointerdown', (e) => {
-      disarm();
-      const el = e.target.closest('.pad');
-      if (!el || !this.editing || e.button > 0) return;
-      const from = Number(el.dataset.i);
-      if (!this.board.pads[from] || !this.board.pads[from].file) return;
-
-      armed = { el, from, x: e.clientX, y: e.clientY, id: e.pointerId, touch: e.pointerType === 'touch' };
-    });
-
-    refs.grid.addEventListener('pointermove', (e) => {
-      if (!drag) {
-        if (!armed || e.pointerId !== armed.id) return;
-        const moved = Math.hypot(e.clientX - armed.x, e.clientY - armed.y);
-        if (moved < (armed.touch ? TOUCH_SLOP : SLOP)) return;
-        const { el, from, touch } = armed;
-        armed = null;
-        begin(el, from, e, el);
-        if (touch && navigator.vibrate) navigator.vibrate(12);
-      }
-      drag.ghost.style.transform = `translate(${e.clientX - drag.dx}px, ${e.clientY - drag.dy}px)`;
-      over(at(e));
-    });
-
-    // Once a pad is in hand the board must hold still under it. The pad's
-    // touch-action already says so; this covers a browser that ignores it.
-    refs.grid.addEventListener('touchmove', (e) => {
-      if (drag) e.preventDefault();
-    }, { passive: false });
-
-    const end = (e, drop) => {
-      disarm();
-      if (!drag) return;
-      // A click may follow this pointerup; it belongs to the drag, not the pad.
-      setTimeout(() => {
-        this.dragged = false;
-      }, 0);
-      const { from, target } = drag;
-      drag.ghost.remove();
-      drag.el.classList.remove('pad--dragging');
-      refs.book.classList.remove('drop--ready');
-      refs.transport.classList.remove('drop--ready');
-      target?.classList.remove('pad--drop', 'drop--off');
-      drag = null;
-      if (!drop || !target) return;
-
-      if (removes(target)) {
-        const pad = this.board.pads[from];
-        this.setPad(from, null);
-        toast(`${padTitle(pad)} is off the board. The sound is still under Sounds.`);
-        say('Taken off the board');
-        return;
-      }
-
-      const to = Number(target.dataset.i);
-      move(this.board, from, to);
-      fitPads(this.board);
-      this.engine.reset();
-      this.redraw();
-      this.saveNow();
-      this.primeAll();
-      const { row, col } = rowCol(this.board, to);
-      say(`Moved to row ${row + 1}, column ${col + 1}`);
-    };
-
-    refs.grid.addEventListener('pointerup', (e) => end(e, true));
-    refs.grid.addEventListener('pointercancel', (e) => end(e, false));
   }
 
   onKey(e) {
